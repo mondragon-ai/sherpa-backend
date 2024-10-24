@@ -1,0 +1,21 @@
+export interface ShopifyPriceRuleCreate {
+  title: string;
+  target_type: "line_item" | "shipping_line";
+  target_selection: "all" | "entitled";
+  customer_selection: "all" | "prerequisite";
+  value_type: "fixed_amount" | "percentage";
+  value: string;
+  starts_at?: string;
+  ends_at?: string;
+  allocation_method?: "across" | "each";
+  allocation_limit: number;
+  once_per_customer: boolean;
+  prerequisite_collection_ids: number[];
+  entitled_product_ids: number[];
+}
+
+export interface ShopifyPriceRule extends ShopifyPriceRuleCreate {
+  id: number;
+  created_at: string;
+  updated_at: string;
+}

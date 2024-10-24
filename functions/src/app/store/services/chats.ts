@@ -16,7 +16,7 @@ export const fetchChats = async (domain: string) => {
     "chats",
   );
   const chats = data as ChatDocument[];
-  if (!chats) return createResponse(422, "No chats found", null);
+  if (!chats) return createResponse(422, "No chats found", []);
 
   return createResponse(200, "Fetched chats", chats);
 };

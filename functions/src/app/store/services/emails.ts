@@ -15,10 +15,10 @@ export const fetchEmails = async (domain: string) => {
     domain,
     "emails",
   );
-  const email = data as EmailDocument[];
-  if (!email) return createResponse(422, "No emails found", null);
+  const emails = data as EmailDocument[];
+  if (!emails) return createResponse(422, "No emails found", null);
 
-  return createResponse(200, "Fetched emails", email);
+  return createResponse(200, "Fetched emails", emails);
 };
 
 export const fetchNextEmails = async (domain: string, time: string) => {

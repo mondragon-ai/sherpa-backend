@@ -16,9 +16,11 @@ export const fetchConfigs = async (domain: string) => {
   const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "No merchant found", null);
 
-  // TODO: Clean & send config only
-
-  return createResponse(200, "Fetched merchant", merchant);
+  return {
+    status: 200,
+    message: "Fetched merchant",
+    data: {configs: merchant.configurations},
+  };
 };
 
 export const updateConfigs = async (
@@ -35,5 +37,5 @@ export const updateConfigs = async (
   merchant.updated_at = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   await updateRootDocument("shopify_merchant", domain, merchant);
 
-  return createResponse(200, "Update Bot's Confiurations", null);
+  return createResponse(200, "Updated Bot's Configurations", null);
 };

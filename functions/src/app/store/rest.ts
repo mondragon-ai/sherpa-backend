@@ -5,6 +5,7 @@ import * as cors from "cors";
 
 // Routes
 import {configurationRoutes} from "./routes/configuration";
+import {discountRoutes} from "./routes/discounts";
 import {merchantRoutes} from "./routes/merchant";
 import {emailtRoutes} from "./routes/email";
 import {chatRoutes} from "./routes/chats";
@@ -20,6 +21,7 @@ export const rest = () => {
   // CRUD Routes Here
   configurationRoutes(app);
   merchantRoutes(app);
+  discountRoutes(app);
   emailtRoutes(app);
   chatRoutes(app);
 

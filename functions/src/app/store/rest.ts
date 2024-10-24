@@ -4,7 +4,9 @@ import * as bodyParser from "body-parser";
 import * as cors from "cors";
 
 // Routes
+import {configurationRoutes} from "./routes/configuration";
 import {merchantRoutes} from "./routes/merchant";
+import {chatRoutes} from "./routes/chats";
 
 export const rest = () => {
   const app = express();
@@ -15,7 +17,9 @@ export const rest = () => {
   app.use(cors({origin: true}));
 
   // CRUD Routes Here
+  configurationRoutes(app);
   merchantRoutes(app);
+  chatRoutes(app);
 
   return app;
 };

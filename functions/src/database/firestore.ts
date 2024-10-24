@@ -35,7 +35,7 @@ export const simpleSearch = async (
   text: string;
   status: number;
   data: {
-    list: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData> | null;
+    list: admin.firestore.DocumentData[] | null;
   };
 }> => {
   let text = " - Document found 👍🏻";
@@ -62,11 +62,20 @@ export const simpleSearch = async (
     };
   }
 
+  const list = [] as admin.firestore.DocumentData[];
+
+  result.forEach(async (doc) => {
+    if (doc.exists) {
+      const data = doc.data();
+      list.push(data);
+    }
+  });
+
   return {
     text,
     status,
     data: {
-      list: result,
+      list: list,
     },
   };
 };
@@ -488,9 +497,9 @@ export const updateSubcollectionDocument = async (
  * @returns {Promise<FirestoreResponse>} Response object with status, text, and data.
  */
 export const fetchPaginatedSubcollection = async (
-  root: string,
+  root: RootType,
   id: string,
-  collection: string,
+  collection: SubCollectionType,
   timestamp: string | number,
   direction: "next" | "prev" = "next",
 ): Promise<FirestoreResponse> => {

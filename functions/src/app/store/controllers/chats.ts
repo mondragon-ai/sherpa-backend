@@ -1,6 +1,11 @@
 import * as express from "express";
 import * as functions from "firebase-functions";
-import {deleteChat, fetchChats} from "../services/chats";
+import {
+  deleteChat,
+  fetchChats,
+  fetchNextChats,
+  filterChats,
+} from "../services/chats";
 
 /**
  * Fetch chats from DB
@@ -23,6 +28,56 @@ export const handleFetchAllChats = async (
   });
 };
 
+/**
+ * Fetch next chats from DB (infinity scroll pagination)
+ *
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to return the merchant data.
+ */
+export const handleFetchNextChats = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, time} = req.params;
+  functions.logger.info(
+    " 💬 [/FETCH NEXT]: Fetch more chats " + domain + " from " + time,
+  );
+
+  const {data, status, message} = await fetchNextChats(domain, time);
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Fetch next chats from DB (infinity scroll pagination)
+ *
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to return the merchant data.
+ */
+export const handleFilteredChats = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain} = req.params;
+  const {type} = req.query;
+  const filter = typeof type == "string" ? type : "";
+  functions.logger.info(
+    " 💬 [/FETCH NEXT]: Fetch filtered chats for " + domain + " for " + filter,
+  );
+
+  const {data, status, message} = await filterChats(
+    domain,
+    filter as "newest" | "open" | "action_required",
+  );
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
 /**
  * Delete a specific chat
  *

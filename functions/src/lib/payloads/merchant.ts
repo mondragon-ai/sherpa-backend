@@ -20,10 +20,6 @@ const splitName = (fullName: string): {firstName: string; lastName: string} => {
  */
 export const merchantPayload = (
   token: string,
-  webhooks: {
-    shop: number;
-    order: number;
-  },
   store: ShopData,
 ): MerchantDocument => {
   const {firstName, lastName} = splitName(store.shop_owner);
@@ -51,7 +47,6 @@ export const merchantPayload = (
     installed: true,
     status: "DECLINED",
     usage: 0,
-    webhooks: webhooks,
     id: store.domain || "",
     timezone: store.timezone || "",
     access_token: token || "",
@@ -64,7 +59,7 @@ export const merchantPayload = (
     configurations: {
       cancelation: {
         overview:
-          "You cannot cancel orders after shipped, yet we can offer a refund once the item is returned",
+          "Once an order is fulfilled, it cannot be canceled, you must wait to receive the items before we can begin the cancelation processs. Once you've received the order and wish to return it, contact our customer support to start the refund process. We'll provide a return label, and after we receive the items and inspect them, your refund will be processed in 3-7 business days to your original payment method. We aim to make this process as hassle-free as possible for you.",
         faqs: [],
       },
       products: {
@@ -72,7 +67,8 @@ export const merchantPayload = (
         faqs: [],
       },
       subscriptions: {
-        overview: "Subscriptions of $30 are recharge and $9 are stripe",
+        overview:
+          "We have 2 types of subscriptions:1. Only customers with 'Active Subscriber' or 'VIP_MEMBER' tags are $30.00 club members.2. Otherwise, if customers's tag is something different, assume the customer is a $9.00 member.",
         faqs: [],
       },
       discounts: {
@@ -89,10 +85,16 @@ export const merchantPayload = (
           title: "Special Offer",
           description: "Until 30th of october, we are giving x-off",
         },
+        {
+          title: "Inventory",
+          description: "Currently no longer producing xyx shirt.",
+        },
       ],
-      exception: "perashable goods",
-      shipping: "",
-      store: "",
+      exception:
+        "Perishable goods, custom products, sale items and gift cards.",
+      shipping:
+        "Shipping Policy: We offer free standard shipping on orders over $75, and it usually takes 5-7 business days for the package to arrive.",
+      store: "The store is for the influencers.",
       contact_email: store.email || "",
       return: 30,
       exchanges: true,

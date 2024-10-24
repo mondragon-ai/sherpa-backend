@@ -15,8 +15,7 @@ export type Status =
 export type ServicesReponseType = {
   status: Status;
   data: any;
-  error: boolean;
-  text: string;
+  message: string;
 };
 
 export interface Address {

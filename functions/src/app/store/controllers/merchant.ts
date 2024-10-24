@@ -16,11 +16,11 @@ export const handleInstallingApp = async (
   functions.logger.info(" ⬇️ [/INSTALL]: " + domain + " " + shpat);
 
   // Install App
-  const {data, status, text} = await installApp(domain, shpat);
+  const {data, status, message} = await installApp(domain, shpat);
 
   res.status(status).json({
-    text: text,
-    merchant: data,
+    message: message,
+    data: data,
   });
 };
 
@@ -41,11 +41,14 @@ export const handleUpdatingBilling = async (
   );
 
   // Update Billing
-  const {status, text, error} = await updateBilling(
+  const {status, message} = await updateBilling(
     domain,
     payment_status,
     capped_amount,
   );
 
-  res.status(status < 300 ? 204 : status).json({text, error});
+  res.status(status < 300 ? 201 : status).json({
+    message: message,
+    data: null,
+  });
 };

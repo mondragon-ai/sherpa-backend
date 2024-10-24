@@ -19,10 +19,6 @@ export type MerchantDocument = {
   installed: boolean;
   status: "DECLINED" | "ACTIVE" | "EXPIRED";
   usage: number;
-  webhooks: {
-    order: number;
-    shop: number;
-  };
   id: string;
   timezone: string;
   access_token: string;

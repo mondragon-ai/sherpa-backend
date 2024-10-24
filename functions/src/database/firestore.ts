@@ -4,11 +4,10 @@ import {Status} from "../lib/types/shared";
 import * as functions from "firebase-functions";
 import {FirestoreResponse} from "../lib/types/databse";
 
-type RootType = "shopify_pod" | "domain_map";
+type RootType = "shopify_merchant" | "domain_map";
 type SubCollectionType =
-  | "orders"
-  | "products"
-  | "mockups"
+  | "chats"
+  | "emails"
   | "daily_analytics"
   | "monthly_analytics";
 

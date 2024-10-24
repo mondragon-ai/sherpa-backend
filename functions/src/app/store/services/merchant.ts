@@ -3,36 +3,14 @@ import {
   fetchRootDocument,
   updateRootDocument,
 } from "../../../database/firestore";
-import {ServicesReponseType, Status} from "../../../lib/types/shared";
 import * as admin from "firebase-admin";
 import {encryptMsg} from "../../../util/encryption";
 import {MerchantDocument} from "../../../lib/types/merchant";
-import {
-  createWebhooksAndGetId,
-  deleteWebhooks,
-} from "../../../lib/helpers/shopify/webhooks";
-import {fetchShopifyMerchantShop} from "../../../lib/helpers/shopify/shop";
 import {merchantPayload} from "../../../lib/payloads/merchant";
-
-/**
- * Generates a standard response object
- * @param {number} status - HTTP status code.
- * @param {any} data - Response data.
- * @param {boolean} error - Error flag.
- * @param {string} text - Response message.
- * @returns {ServicesReponseType} A response object.
- */
-const createResponse = (
-  status: Status,
-  data: any = null,
-  error: boolean,
-  text: string,
-): ServicesReponseType => ({
-  status,
-  data,
-  error,
-  text,
-});
+import {ServicesReponseType} from "../../../lib/types/shared";
+import {fetchShopifyMerchantShop} from "../../../lib/helpers/shopify/shop";
+import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
+import {createResponse} from "../../../util/errors";
 
 /**
  * Validates the required parameters
@@ -64,18 +42,18 @@ export const installApp = async (
   const shop = domain.split(".")[0];
   const validationError = validateInstallAppParams(domain, shpat);
   if (validationError) {
-    return createResponse(400, null, true, validationError);
+    return createResponse(400, validationError, null);
   }
 
+  console.log({validationError});
   const token = await encryptMsg(shpat);
+  console.log({token});
 
   try {
     // fetch merchant
-    const {data} = await fetchRootDocument("shopify_pod", domain);
-    if (!data) {
-      return createResponse(400, null, true, "Merchant found");
-    }
-    const merchant = data as MerchantDocument;
+    const {data} = await fetchRootDocument("shopify_merchant", domain);
+    const merchant = data ? (data as MerchantDocument) : null;
+    console.log({merchant});
 
     if (
       merchant &&
@@ -84,49 +62,29 @@ export const installApp = async (
       token !== merchant.access_token
     ) {
       console.log("updating...");
-      await handleMerchantInstalled(merchant, shop, shpat, token, domain);
-      return createResponse(201, null, true, "merchant updated");
+      await handleMerchantInstalled(token, domain);
+      return createResponse(201, "merchant updated", null);
     } else if (!merchant || !merchant.installed) {
       console.log("installing...");
       return await handleMerchantNotInstalled(shop, shpat, domain, token);
     }
 
-    return createResponse(400, null, true, "uncought error");
+    return createResponse(400, "uncought error", null);
   } catch (error) {
     console.error("Error installing app:", error); // Log error for debugging
-    return createResponse(
-      500,
-      null,
-      true,
-      "Failed to install app for the merchant.",
-    );
+    return createResponse(500, "Failed to install app for the merchant.", null);
   }
 };
 
 /**
  * Handles the necessary updates when a Shopify merchant has installed an app.
  * This function deletes any existing webhooks and creates new ones, updating the merchant's document with the new information.
- * @param {MerchantDocument} merchant - The merchant's data.
- * @param {string} shop - The merchant's shop name.
- * @param {string} shpat - Shopify API token.
  * @param {string} token - New access token.
  * @param {string} domain - The merchant's domain.
  */
-const handleMerchantInstalled = async (
-  merchant: MerchantDocument,
-  shop: string,
-  shpat: string,
-  token: string,
-  domain: string,
-) => {
-  await deleteWebhooks(merchant);
-  const webhooks = await createWebhooksAndGetId(shpat, shop);
-  await updateRootDocument("shopify_pod", domain, {
+const handleMerchantInstalled = async (token: string, domain: string) => {
+  await updateRootDocument("shopify_merchant", domain, {
     access_token: token,
-    webhooks: {
-      order: webhooks.order || 0,
-      shop: webhooks.shop || 0,
-    },
     updated_at: admin.firestore.Timestamp.now(),
   });
 };
@@ -139,18 +97,19 @@ const handleMerchantInstalled = async (
  * @param {string} shpat - Shopify API token.
  * @param {string} domain - The merchant's domain.
  * @param {string} token - New access token.
- * @returns {Promise<{status: Status; data: any; error: boolean; text: string}>} - Returns a response object detailing the outcome.
+ * @returns {Promise<ServicesReponseType>} - Returns a response object detailing the outcome.
  */
 const handleMerchantNotInstalled = async (
   shop: string,
   shpat: string,
   domain: string,
   token: string,
-): Promise<{status: Status; data: any; error: boolean; text: string}> => {
-  const webhooks = await createWebhooksAndGetId(shpat, shop);
+): Promise<ServicesReponseType> => {
   const store = await fetchShopifyMerchantShop(shpat, shop);
+  console.log({store});
 
-  const payload = merchantPayload(token, webhooks, store);
+  const payload = merchantPayload(token, store);
+  console.log({payload});
 
   await createRootDocument("domain_map", domain, {
     myshopify_domain: store.myshopify_domain,
@@ -159,7 +118,7 @@ const handleMerchantNotInstalled = async (
   });
 
   const {status, text} = await createRootDocument(
-    "shopify_pod",
+    "shopify_merchant",
     domain,
     payload,
   );
@@ -167,17 +126,15 @@ const handleMerchantNotInstalled = async (
   if (status < 300) {
     return createResponse(
       status,
-      null,
-      true,
       "Merchant could not be saved successfully - " + text,
+      null,
     );
   }
 
   return createResponse(
-    201,
-    payload,
-    false,
+    200,
     "App installed for Merchant successfully",
+    payload,
   );
 };
 
@@ -210,46 +167,41 @@ export const updateBilling = async (
 ): Promise<ServicesReponseType> => {
   const validationError = validateBillingParams(domain);
   if (validationError) {
-    return createResponse(400, null, true, validationError);
+    return createResponse(400, validationError, null);
   }
 
-  let res = createResponse(
-    204,
-    null,
-    false,
-    "App billing for Merchant updated successfully",
-  );
-
-  const currentTime =
-    admin.firestore && admin.firestore.Timestamp
-      ? admin.firestore.Timestamp.now()
-      : new Date();
+  const currentTime = getCurrentUnixTimeStampFromTimezone("America/New_York");
 
   try {
     // Perform billing update tasks
-    const {status, text} = await updateRootDocument("shopify_pod", domain, {
-      status: payent_status ?? "DECLINED",
-      capped_usage: capped_limit,
-      updated_at: currentTime,
-    });
+    const {status, text} = await updateRootDocument(
+      "shopify_merchant",
+      domain,
+      {
+        status: payent_status ?? "DECLINED",
+        capped_usage: capped_limit,
+        updated_at: currentTime,
+      },
+    );
 
     if (status < 300) {
-      res = createResponse(
+      return createResponse(
         status,
-        null,
-        true,
         "Failed to update billing for the merchant." + text,
+        null,
       );
     }
+    return createResponse(
+      204,
+      "App billing for Merchant updated successfully",
+      null,
+    );
   } catch (error) {
     console.error("Error updating billing:", error);
-    res = createResponse(
+    return createResponse(
       500,
-      null,
-      true,
       "Failed to update billing for the merchant.",
+      null,
     );
   }
-
-  return res;
 };

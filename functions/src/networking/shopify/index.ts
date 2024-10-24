@@ -13,11 +13,11 @@ export const shopifyGraphQlRequest = async (
   token: string,
   payload: any,
 ) => {
-  const URL = `https://${shop}.myshopify.com/api/2021-07/graphql.json `;
+  const URL = `https://${shop}.myshopify.com/admin/api/2024-10/graphql.json`;
 
   const headers = {
     "Content-Type": "application/json",
-    "X-Shopify-Storefront-Access-Token": token as string,
+    "X-Shopify-Access-Token": token as string,
   };
 
   try {
@@ -30,7 +30,12 @@ export const shopifyGraphQlRequest = async (
     const response = await fetch(URL, options);
     const data = await response.json();
 
-    return {status: response.status, message: "Fetched", data: data.data};
+    if (data.errors) {
+      console.error(data.errors[0]);
+      return {status: 400, message: "Error", data: null};
+    }
+
+    return {status: response.status, message: "Success", data: data.data};
   } catch (error) {
     return {status: 500, message: "Server Error: Fetching Graphql", data: null};
   }

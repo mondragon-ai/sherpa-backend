@@ -45,15 +45,12 @@ export const installApp = async (
     return createResponse(400, validationError, null);
   }
 
-  console.log({validationError});
   const token = await encryptMsg(shpat);
-  console.log({token});
 
   try {
     // fetch merchant
     const {data} = await fetchRootDocument("shopify_merchant", domain);
     const merchant = data ? (data as MerchantDocument) : null;
-    console.log({merchant});
 
     if (
       merchant &&
@@ -69,7 +66,7 @@ export const installApp = async (
       return await handleMerchantNotInstalled(shop, shpat, domain, token);
     }
 
-    return createResponse(400, "uncought error", null);
+    return createResponse(204, "", null);
   } catch (error) {
     console.error("Error installing app:", error); // Log error for debugging
     return createResponse(500, "Failed to install app for the merchant.", null);

@@ -1,6 +1,6 @@
-import {shopifyRequest} from ".";
+import {shopifyGraphQlRequest} from ".";
 import {MerchantDocument} from "../../lib/types/merchant";
-import {ShopifyPriceRule} from "../../lib/types/shopify/discounts";
+import {DiscountCodeCreateResponse} from "../../lib/types/shopify/discounts";
 
 type DiscountRequest = {price: number; token: string};
 export const createDiscountRule = async (
@@ -8,35 +8,43 @@ export const createDiscountRule = async (
   domain: string,
 ) => {
   const value = isNaN(discount.price)
-    ? -5.0
-    : String(Math.abs(Number(discount.price.toFixed(1))) * -1);
+    ? 0.05
+    : Math.abs(Number(discount.price) / 100);
 
   const shop = domain.split(".")[0];
 
-  const price_rule = {
-    title: "Save Order - Sherpa",
-    value_type: "percentage",
-    value: value,
-    customer_selection: "all",
-    target_type: "line_item",
-    target_selection: "all",
-    allocation_method: "across",
-    starts_at: "2018-03-22T00:00:00-00:00",
-  };
-
-  const result: {price_rule: ShopifyPriceRule} | null = await shopifyRequest(
-    "price_rules.json",
-    "POST",
-    {
-      price_rule: price_rule,
+  const payload = {
+    query:
+      "mutation discountCodeBasicCreate($basicCodeDiscount: DiscountCodeBasicInput!) { discountCodeBasicCreate(basicCodeDiscount: $basicCodeDiscount) { codeDiscountNode { id codeDiscount { ... on DiscountCodeBasic { title codes(first: 10) { nodes { id code } } startsAt endsAt } } } userErrors { field code message } } }",
+    variables: {
+      basicCodeDiscount: {
+        title: "20% off all items during the summer of 2022",
+        code: "subs",
+        startsAt: "2022-06-21T00:00:00Z",
+        endsAt: "2025-09-21T00:00:00Z",
+        customerSelection: {
+          all: true,
+        },
+        customerGets: {
+          appliesOnOneTimePurchase: true,
+          items: {
+            all: true,
+          },
+          value: {
+            percentage: value,
+          },
+        },
+        appliesOncePerCustomer: true,
+        usageLimit: 1,
+      },
     },
-    discount.token,
-    shop,
-  );
+  };
+  const {data} = await shopifyGraphQlRequest(shop, discount.token, payload);
+  const result = data as DiscountCodeCreateResponse["data"];
 
-  if (!result) {
+  if (!result.discountCodeBasicCreate) {
     return {
-      id: 0,
+      id: "",
       title: "",
       value: "",
       value_type: "percentage",
@@ -44,9 +52,9 @@ export const createDiscountRule = async (
   }
 
   return {
-    id: result.price_rule.id,
-    title: price_rule.title,
-    value: price_rule.value,
+    id: result.discountCodeBasicCreate.codeDiscountNode.id,
+    title: "Sherpa - Save Order",
+    value: String(value),
     value_type: "percentage",
   } as MerchantDocument["configurations"]["price_rules"];
 };
@@ -57,20 +65,30 @@ export const deleteDiscount = async (
   price_rule_id: string,
 ) => {
   const shop = domain.split(".")[0];
-  const result = await shopifyRequest(
-    `price_rules/${price_rule_id}.json`,
-    "DELETE",
-    {},
-    shpat,
-    shop,
-  );
+  const query = `
+    mutation discountCodeDelete($id: ID!) {
+        discountCodeDelete(id: $id) {
+            deletedCodeDiscountId
+            userErrors {
+                field
+                code
+                message
+            }
+        }
+    }
+  `;
 
-  if (!result) {
+  const variables = {
+    id: price_rule_id,
+  };
+  const {data} = await shopifyGraphQlRequest(shop, shpat, {query, variables});
+
+  if (!data) {
     return null;
   }
 
   return {
-    id: 0,
+    id: "",
     title: "",
     value: "",
     value_type: "percentage",

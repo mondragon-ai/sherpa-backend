@@ -32,7 +32,7 @@ export const createDiscount = async (
   return {
     status: 200,
     message: "Created Discount",
-    data: {discount: null},
+    data: {discount: payload},
   };
 };
 

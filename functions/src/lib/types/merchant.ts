@@ -56,7 +56,7 @@ export type ConfigurationsType = {
   automate_actions: boolean;
   automate_emails: boolean;
   price_rules: {
-    id: number;
+    id: string;
     title: string;
     value: string;
     value_type: "percentage" | "fixed";

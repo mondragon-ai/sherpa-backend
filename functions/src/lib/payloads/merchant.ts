@@ -103,7 +103,7 @@ export const merchantPayload = (
       automate_actions: true,
       automate_emails: false,
       price_rules: {
-        id: 0,
+        id: "",
         title: "",
         value: "",
         value_type: "percentage",

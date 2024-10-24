@@ -19,3 +19,36 @@ export interface ShopifyPriceRule extends ShopifyPriceRuleCreate {
   created_at: string;
   updated_at: string;
 }
+
+export type DiscountCodeCreateResponse = {
+  data: {
+    discountCodeBasicCreate: {
+      codeDiscountNode: {
+        id: string;
+        codeDiscount: {
+          title: string;
+          codes: {
+            nodes: Array<{
+              id: string;
+              code: string;
+            }>;
+          };
+          startsAt: string;
+          endsAt: string;
+        };
+      };
+      userErrors: Array<unknown>;
+    };
+  };
+  extensions: {
+    cost: {
+      requestedQueryCost: number;
+      actualQueryCost: number;
+      throttleStatus: {
+        maximumAvailable: number;
+        currentlyAvailable: number;
+        restoreRate: number;
+      };
+    };
+  };
+};

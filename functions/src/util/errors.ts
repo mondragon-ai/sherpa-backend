@@ -1,5 +1,4 @@
 import {Status} from "../lib/types/shared";
-import * as functions from "firebase-functions";
 
 /**
  * Creates a standardized response object for errors.
@@ -14,7 +13,7 @@ export const createResponse = (
   message: string,
   data: any,
 ): {status: Status; message: string; data: null} => {
-  functions.logger.error(message);
+  console.error(message);
   return {
     status: status,
     message: message,

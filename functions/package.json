@@ -16,6 +16,10 @@
   "main": "lib/index.js",
   "dependencies": {
     "algoliasearch": "^4.24.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-bearer-token": "^2.4.0",
     "firebase-admin": "^11.8.0",
     "firebase-functions": "^4.3.1",
     "luxon": "^3.5.0",

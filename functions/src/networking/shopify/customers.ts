@@ -11,14 +11,15 @@ export const fetchShopifyCustomer = async (
 ): Promise<ShopifyCustomer | null> => {
   const shop = domain.split(".")[0];
   const customer = (await shopifyRequest(
-    `customers/search.json?query=email:"${email}"`,
+    `customers/search.json?query=email:${email}`,
     "GET",
     null,
     shpat,
     shop,
   )) as ShopifyCustomerResponse;
+  console.log(customer.customers);
 
-  if (!customer.customer) return null;
+  if (!customer.customers) return null;
 
-  return customer.customer[0];
+  return customer.customers[0];
 };

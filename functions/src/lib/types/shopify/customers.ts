@@ -1,5 +1,5 @@
 export type ShopifyCustomerResponse = {
-  customer: ShopifyCustomer[];
+  customers: ShopifyCustomer[];
 };
 
 export type ShopifyCustomer = {

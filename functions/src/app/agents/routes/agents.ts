@@ -1,10 +1,15 @@
 import * as express from "express";
-import {handleCustomerSearch} from "../controller/agents";
+import {
+  handleCustomerSearch,
+  handleFetchCustomerOrders,
+  handleProductSearch,
+} from "../controller/agents";
 
 export const agentsRoutes = (app: express.Router) => {
-  app.post("/:domain/agents/customer/:email", handleCustomerSearch);
-  app.post("/:domain/agents/products/:query");
-  app.post("/:domain/agents/initiate");
-  app.post("/:domain/agents/respond");
-  app.post("/:domain/agents/resolve");
+  app.get("/:domain/customer/:email", handleCustomerSearch);
+  app.get("/:domain/customer/:email/orders", handleFetchCustomerOrders);
+  app.get("/:domain/products/:query", handleProductSearch);
+  app.post("/:domain/initiate");
+  app.post("/:domain/respond");
+  app.post("/:domain/resolve");
 };

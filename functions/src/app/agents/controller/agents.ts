@@ -1,6 +1,10 @@
 import * as express from "express";
 import * as functions from "firebase-functions";
-import {searchCustomer} from "../services/agents";
+import {
+  fetchCustomerOrders,
+  searchCustomer,
+  searchProduct,
+} from "../services/agents";
 
 /**
  * Search customer by email
@@ -27,14 +31,36 @@ export const handleCustomerSearch = async (
  * @param {express.Request} req - The request object containing the domain parameter.
  * @param {express.Response} res - The response object to confirm deletion.
  */
-export const handleProductSearch = async (
+export const handleFetchCustomerOrders = async (
   req: express.Request,
   res: express.Response,
 ) => {
   const {domain, email} = req.params;
-  functions.logger.info(` 🤖 [/CUSTOMER]: Search ${domain} customer ${email}`);
+  functions.logger.info(
+    ` 🤖 [/CUSTOMER]: Search ${domain} customer ${email} orders`,
+  );
 
-  const {status, message, data} = await searchCustomer(domain, email);
+  const {status, message, data} = await fetchCustomerOrders(domain, email);
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Search customer by email
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleProductSearch = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, query} = req.params;
+  functions.logger.info(` 🤖 [/PRODUCT]: Search ${domain} products: ${query}`);
+
+  const {status, message, data} = await searchProduct(domain, query);
 
   res.status(status).json({
     message: message,

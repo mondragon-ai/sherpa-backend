@@ -1,7 +1,8 @@
 // Routes
 import {gdpr} from "./app/gdpr";
 import {store} from "./app/store";
-export {gdpr, store};
+import {agents} from "./app/agents";
+export {gdpr, store, agents};
 
 // Triggers
 

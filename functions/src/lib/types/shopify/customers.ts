@@ -61,3 +61,14 @@ export type SmsMarketingConsent = {
   consent_updated_at: string;
   consent_collected_from: string;
 };
+
+export type CleanedCustomerPayload = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  tags: string;
+  address: string;
+  total_spent: string;
+  total_orders: number;
+};

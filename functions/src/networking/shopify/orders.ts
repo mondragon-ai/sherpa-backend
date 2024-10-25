@@ -1,5 +1,8 @@
 import {shopifyGraphQlRequest} from ".";
-import {cleanCustomerOrdersPayload} from "../../lib/payloads/shopify/orders";
+import {
+  cleanCustomerOrderPayload,
+  cleanCustomerOrdersPayload,
+} from "../../lib/payloads/shopify/orders";
 import {
   ShopifOrderResponse,
   ShopifyOrdersResponse,
@@ -97,7 +100,9 @@ export const fetchShopifyOrder = async (
   const {data} = await shopifyGraphQlRequest(shop, shpat, {query});
   if (!data) return null;
   const order = data as ShopifOrderResponse["data"];
-  console.log({Order: order.order});
+  if (!order) return null;
 
-  return null;
+  const cleaned_order = cleanCustomerOrderPayload(order.order);
+
+  return cleaned_order;
 };

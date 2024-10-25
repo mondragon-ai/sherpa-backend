@@ -1,15 +1,21 @@
-import {fetchRootDocument} from "../../../database/firestore";
-import {ChatStartRequest} from "../../../lib/types/chats";
-import {MerchantDocument} from "../../../lib/types/merchant";
-import {updateMerchantUsage} from "../../../networking/shopify/billing";
-import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
+import {
+  fetchRootDocument,
+  fetchSubcollectionDocument,
+} from "../../../database/firestore";
 import {
   fetchCustomerOrderList,
   fetchShopifyOrder,
 } from "../../../networking/shopify/orders";
-import {fetchShopifyProducts} from "../../../networking/shopify/products";
 import {decryptMsg} from "../../../util/encryption";
 import {createResponse} from "../../../util/errors";
+import {MerchantDocument} from "../../../lib/types/merchant";
+import {createChatPayload} from "../../../lib/payloads/chats";
+import {CleanedCustomerOrder} from "../../../lib/types/shopify/orders";
+import {updateMerchantUsage} from "../../../networking/shopify/billing";
+import {ChatDocument, ChatStartRequest} from "../../../lib/types/chats";
+import {fetchShopifyProducts} from "../../../networking/shopify/products";
+import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
+import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -80,21 +86,43 @@ export const startChat = async (
     return createResponse(429, "Could not charge merchant", null);
   }
 
-  // TODO: Fetch customer & order (1-3) -> {customer: null | Customer, order: null | Order}
+  // Fetch customer & order
   const {customer, order} = await fetchCustomerData(merchant, payload);
 
-  console.log(customer, order);
-  // TODO: Validate order & email
+  // Validate order & email
+  if (customer?.email && order?.email !== "") {
+    if (order?.email !== email) {
+      return createResponse(409, "Email Must Match", {chat: null});
+    }
+  }
 
-  // TODO: Find if chat exists (1) -> chat_doc | null
+  // Find if chat exists
+  const {data: chat_doc} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    email,
+  );
+  const chats = chat_doc as ChatDocument;
 
-  // TODO: Create payload -> payload
+  // Create payload
+  const {chat, message} = createChatPayload(
+    merchant,
+    chats,
+    customer,
+    order,
+    payload,
+  );
+  console.log({chat, message});
 
-  // TODO: Inital Chat
+  // Update/Save chat
+  // await updateRootDocument("shopify_merchant", email, chat);
 
-  // TODO: Update/Save payload (1)
-
-  return createResponse(200, "Chat Started", {chat: null});
+  return createResponse(200, "Chat Started", {
+    chat,
+    message,
+    token: merchant.access_token,
+  });
 };
 
 export const fetchCustomerData = async (
@@ -108,16 +136,20 @@ export const fetchCustomerData = async (
   const customer = await fetchShopifyCustomer(domain, shpat, email);
   if (!customer) return {customer: null, order: null};
 
-  const customer_id = customer.id;
-  const last_order = customer.last_order_id;
-
-  let order;
-  if (last_order) {
+  let order: CleanedCustomerOrder | null = null;
+  if (order_id) {
     order = await fetchShopifyOrder(domain, shpat, order_id);
   }
-  console.log(order);
 
-  const orders = await fetchCustomerOrderList(domain, shpat, customer_id);
-  if (!orders) return {customer: customer, order: null};
-  return {customer: null, order: null};
+  const last_order = customer.last_order_id;
+  if (last_order && !order) {
+    order = await fetchShopifyOrder(
+      domain,
+      shpat,
+      `gid://shopify/Order/${last_order}`,
+    );
+  }
+
+  const cleaned_customer = cleanCustomerPayload(customer);
+  return {customer: cleaned_customer, order: order};
 };

@@ -54,14 +54,14 @@ export type CleanedOrderList = {
 
 export type ShopifOrderResponse = {
   data: {
-    order: Order;
+    order: ShopifyOrder;
   };
   extensions: {
     cost: Cost;
   };
 };
 
-export type Order = {
+export type ShopifyOrder = {
   id: string;
   email: string;
   totalPriceSet: PriceSet;
@@ -100,4 +100,23 @@ export type LineItemNode = {
 
 export type Variant = {
   id: string;
+};
+
+export type CleanedCustomerOrder = {
+  tracking_url: string;
+  order_number: string;
+  order_id: string;
+  payment_status: string;
+  fulfillment_status: string;
+  line_items: CleanedLineItems[];
+  created_at: number;
+  current_total_price: string;
+  email: string;
+};
+
+export type CleanedLineItems = {
+  variant_id: string;
+  options: string;
+  title: string;
+  quantity: number;
 };

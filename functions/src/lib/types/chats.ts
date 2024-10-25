@@ -13,13 +13,14 @@ export type ChatDocument = {
   suggested_email: string;
   email_sent: boolean;
   manual: boolean;
+  manually_triggerd: boolean;
   initial_message: string;
   convo_trained: boolean;
   action_trained: boolean;
 
   // chat
-  rating: RatingTypes;
-  classification: ClassificationTypes;
+  rating: RatingTypes | null;
+  classification: ClassificationTypes | null;
   issue: IssueTypes;
   suggested_action_done: boolean;
   summary: string;
@@ -30,7 +31,7 @@ export type ChatDocument = {
   conversation: Conversation[];
   time: number;
   status: "open" | "resolved" | "action_required";
-  suggested_action: SuggestedActions;
+  suggested_action: SuggestedActions | null;
   customer: null | CustomerData;
   email: null | string;
   updated_at: number;

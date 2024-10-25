@@ -24,6 +24,17 @@ export function extractEmailFromString(inputString: string) {
   }
 }
 
+export function capitalizeWords(name: string) {
+  const words = name.replace("_", " ").split(" ");
+
+  let word = "";
+  for (const w of words) {
+    word += w.charAt(0).toLocaleUpperCase() + w.substring(1) + " ";
+  }
+
+  return word;
+}
+
 // const messageToPromptString = (message: EmailMessage): string => {
 //   return `**Subject:**\n${message.subject}\n\n**Email Body:**\n${message.message}`;
 // };

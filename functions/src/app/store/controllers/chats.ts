@@ -5,6 +5,7 @@ import {
   fetchChats,
   fetchNextChats,
   filterChats,
+  rateChat,
 } from "../services/chats";
 
 /**
@@ -78,6 +79,7 @@ export const handleFilteredChats = async (
     data: data,
   });
 };
+
 /**
  * Delete a specific chat
  *
@@ -93,7 +95,34 @@ export const handleDeleteChat = async (
 
   const {status, message} = await deleteChat(domain, id);
 
-  res.status(status < 300 ? 204 : status).json({
+  res.status(status).json({
+    message: message,
+    data: null,
+  });
+};
+
+/**
+ * Rate Chat
+ *
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleRateChat = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, id} = req.params;
+  const {rating} = req.query;
+  const score = typeof rating == "string" ? rating : "";
+  functions.logger.info(` 💬 [/RATE]: Rate chat ${id} ${score} for ${domain}`);
+
+  const {status, message} = await rateChat(
+    domain,
+    id,
+    score as "postive" | "negative" | "neutral",
+  );
+
+  res.status(status).json({
     message: message,
     data: null,
   });

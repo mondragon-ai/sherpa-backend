@@ -39,7 +39,7 @@ export const handleUpdateConfigs = async (
 
   const {status, message} = await updateConfigs(domain, payload);
 
-  res.status(status < 300 ? 204 : status).json({
+  res.status(status).json({
     message: message,
     data: null,
   });

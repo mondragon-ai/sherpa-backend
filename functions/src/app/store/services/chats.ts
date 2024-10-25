@@ -3,9 +3,11 @@ import {
   fetchPaginatedSubcollection,
   fetchSubcollectionCollection,
   simpleSearch,
+  updateSubcollectionDocument,
 } from "../../../database/firestore";
 import {ChatDocument} from "../../../lib/types/chats";
 import {createResponse} from "../../../util/errors";
+import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 export const fetchChats = async (domain: string) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
@@ -57,9 +59,27 @@ export const filterChats = async (
 };
 
 export const deleteChat = async (domain: string, id: string) => {
-  if (!domain || !id) return createResponse(400, "Missing Domain", null);
+  if (!domain || !id) return createResponse(400, "Missing params", null);
 
   await deleteSubcollectionDocument("shopify_merchant", domain, "chats", id);
 
   return createResponse(200, "Deleted chats", null);
+};
+
+export const rateChat = async (
+  domain: string,
+  id: string,
+  rating: "postive" | "negative" | "neutral",
+) => {
+  if (!domain || !id || !rating) {
+    return createResponse(400, "Missing params", null);
+  }
+
+  const time = getCurrentUnixTimeStampFromTimezone("America/New_York");
+  await updateSubcollectionDocument("shopify_merchant", domain, "chats", id, {
+    rating,
+    updated_at: time,
+  });
+
+  return createResponse(200, "Rated chat", null);
 };

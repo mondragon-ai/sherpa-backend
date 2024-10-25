@@ -2,6 +2,7 @@ import {
   deleteSubcollectionDocument,
   fetchPaginatedSubcollection,
   fetchSubcollectionCollection,
+  fetchSubcollectionDocument,
   simpleSearch,
   updateSubcollectionDocument,
 } from "../../../database/firestore";
@@ -82,4 +83,41 @@ export const rateChat = async (
   });
 
   return createResponse(200, "Rated chat", null);
+};
+
+export const submitNote = async (domain: string, id: string, note: string) => {
+  if (!domain || !id || !note) {
+    return createResponse(400, "Missing params", null);
+  }
+
+  const {data} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    id,
+  );
+  const chat = data as ChatDocument;
+  if (!chat) return createResponse(422, "No chat found", []);
+
+  const time = getCurrentUnixTimeStampFromTimezone(chat.timezone);
+  chat.updated_at = time;
+  chat.conversation = [
+    ...chat.conversation,
+    {
+      time: time,
+      is_note: true,
+      message: note,
+      sender: "agent",
+      action: null,
+    },
+  ];
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    id,
+    chat,
+  );
+
+  return createResponse(200, "Add Chat Note", null);
 };

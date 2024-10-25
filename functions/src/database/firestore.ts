@@ -254,7 +254,8 @@ export const updateRootDocument = async (
 
   try {
     await db.collection(root).doc(id).set(data, {merge: true});
-  } catch {
+  } catch (err) {
+    functions.logger.error("ERR: ", err);
     text = " - Could not update document.";
     status = 500;
   }

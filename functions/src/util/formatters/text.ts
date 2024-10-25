@@ -35,6 +35,10 @@ export function capitalizeWords(name: string) {
   return word;
 }
 
+export const encodeEmailForFirestoreId = (email: string): string => {
+  return encodeURIComponent(email.toLowerCase()).replace(".", "-");
+};
+
 // const messageToPromptString = (message: EmailMessage): string => {
 //   return `**Subject:**\n${message.subject}\n\n**Email Body:**\n${message.message}`;
 // };

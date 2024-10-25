@@ -9,6 +9,7 @@ import {
 } from "./shared";
 
 export type ChatDocument = {
+  specific_issue: string;
   edited: boolean;
   suggested_email: string;
   email_sent: boolean;

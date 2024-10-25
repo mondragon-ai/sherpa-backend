@@ -1,6 +1,7 @@
 import {
   fetchRootDocument,
   fetchSubcollectionDocument,
+  updateSubcollectionDocument,
 } from "../../../database/firestore";
 import {
   fetchCustomerOrderList,
@@ -113,10 +114,14 @@ export const startChat = async (
     order,
     payload,
   );
-  console.log({chat, message});
 
-  // Update/Save chat
-  // await updateRootDocument("shopify_merchant", email, chat);
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    chat.id,
+    chat,
+  );
 
   return createResponse(200, "Chat Started", {
     chat,

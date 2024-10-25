@@ -6,6 +6,7 @@ import {
   fetchNextChats,
   filterChats,
   rateChat,
+  submitNote,
 } from "../services/chats";
 
 /**
@@ -121,6 +122,28 @@ export const handleRateChat = async (
     id,
     score as "postive" | "negative" | "neutral",
   );
+
+  res.status(status).json({
+    message: message,
+    data: null,
+  });
+};
+
+/**
+ * Rate Chat
+ *
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleAddNote = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, id} = req.params;
+  const {note} = req.body;
+  functions.logger.info(` 💬 [/NOTE]: Add chat note ${id} for ${domain}`);
+
+  const {status, message} = await submitNote(domain, id, note);
 
   res.status(status).json({
     message: message,

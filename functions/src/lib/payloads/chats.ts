@@ -1,11 +1,11 @@
-import {capitalizeWords} from "../../util/formatters/text";
-import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
-import {generateRandomID} from "../../util/generators";
-import {ChatDocument, ChatStartRequest} from "../types/chats";
 import {MerchantDocument} from "../types/merchant";
+import {generateRandomID} from "../../util/generators";
 import {CustomerData, OrderData} from "../types/shared";
-import {CleanedCustomerPayload} from "../types/shopify/customers";
+import {capitalizeWords} from "../../util/formatters/text";
 import {CleanedCustomerOrder} from "../types/shopify/orders";
+import {ChatDocument, ChatStartRequest} from "../types/chats";
+import {CleanedCustomerPayload} from "../types/shopify/customers";
+import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
 
 export const createChatPayload = (
   merchant: MerchantDocument,
@@ -14,7 +14,16 @@ export const createChatPayload = (
   order: CleanedCustomerOrder | null,
   request: ChatStartRequest,
 ): {chat: ChatDocument; message: string} => {
-  let chat = initializeChatPyaload(merchant, customer, order, request);
+  const first_name = customer
+    ? ` ${capitalizeWords(
+        customer.first_name.toLocaleLowerCase().trim(),
+      ).trim()}`
+    : "";
+  const issue =
+    request.issue == "general" ? `${request.issue} store` : request.issue;
+  const message = `Hello${first_name}, welcome to our store's customer support! How can I assist you with your ${issue} question today?`;
+
+  let chat = initializeChatPyaload(merchant, customer, order, request, message);
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   if (prev_chat) {
     chat = {
@@ -28,19 +37,17 @@ export const createChatPayload = (
           sender: "agent",
           action: "opened",
         },
+        {
+          time: time,
+          is_note: false,
+          message: message,
+          sender: "agent",
+          action: null,
+        },
       ],
       created_at: prev_chat.created_at,
     };
   }
-
-  const first_name = customer
-    ? capitalizeWords(customer.first_name.toLocaleLowerCase().trim())
-    : "";
-
-  const issue =
-    request.issue == "general" ? `${request.issue} store` : request.issue;
-
-  const message = `Hello ${first_name}, welcome to our store's customer support! How can I assist you with your ${issue} question today?`;
 
   return {chat, message};
 };
@@ -50,12 +57,15 @@ export const initializeChatPyaload = (
   customer: CleanedCustomerPayload | null,
   order: CleanedCustomerOrder | null,
   payload: ChatStartRequest,
+  message: string,
 ): ChatDocument => {
   const ID = generateRandomID("chat_");
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+
   return {
     edited: false,
     suggested_email: "",
+    specific_issue: payload.specific_issue,
     email_sent: false,
     manual: false,
     manually_triggerd: false,
@@ -78,6 +88,13 @@ export const initializeChatPyaload = (
         message: "",
         sender: "agent",
         action: "opened",
+      },
+      {
+        time: time,
+        is_note: false,
+        message: message,
+        sender: "agent",
+        action: null,
       },
     ],
     time: time,

@@ -37,3 +37,11 @@ export type ChatDocument = {
   created_at: number;
   order: null | OrderData;
 };
+
+export type ChatStartRequest = {
+  email: string;
+  issue: IssueTypes;
+  specific_issue: string;
+  order_id: string;
+  product_id?: string;
+};

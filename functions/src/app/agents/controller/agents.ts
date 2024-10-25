@@ -4,7 +4,9 @@ import {
   fetchCustomerOrders,
   searchCustomer,
   searchProduct,
+  startChat,
 } from "../services/agents";
+import {ChatStartRequest} from "../../../lib/types/chats";
 
 /**
  * Search customer by email
@@ -49,7 +51,7 @@ export const handleFetchCustomerOrders = async (
 };
 
 /**
- * Search customer by email
+ * Search customer orders by email
  * @param {express.Request} req - The request object containing the domain parameter.
  * @param {express.Response} res - The response object to confirm deletion.
  */
@@ -61,6 +63,33 @@ export const handleProductSearch = async (
   functions.logger.info(` 🤖 [/PRODUCT]: Search ${domain} products: ${query}`);
 
   const {status, message, data} = await searchProduct(domain, query);
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Start chat with Agent
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleInitiateChat = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, email} = req.params;
+  const payload = req.body.chat;
+  functions.logger.info(
+    ` 🤖 [/INITIATE]: Start chat for ${domain} and ${email}`,
+  );
+
+  const {status, message, data} = await startChat(
+    domain,
+    email,
+    payload as ChatStartRequest,
+  );
 
   res.status(status).json({
     message: message,

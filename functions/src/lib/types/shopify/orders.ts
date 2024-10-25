@@ -48,3 +48,56 @@ export type CleanedOrderList = {
   fulfillment_status: string;
   price: string;
 };
+
+// ! SINGLE ORDER
+// * =============================================================================
+
+export type ShopifOrderResponse = {
+  data: {
+    order: Order;
+  };
+  extensions: {
+    cost: Cost;
+  };
+};
+
+export type Order = {
+  id: string;
+  email: string;
+  totalPriceSet: PriceSet;
+  refunds: any[];
+  name: string;
+  createdAt: string;
+  displayFinancialStatus: string;
+  displayFulfillmentStatus: string;
+  returnStatus: string;
+  fulfillments: Fulfillment[];
+  lineItems: LineItems;
+};
+
+export type Fulfillment = {
+  trackingInfo: TrackingInfo[];
+};
+
+export type TrackingInfo = {
+  url: string;
+};
+
+export type LineItems = {
+  edges: LineItemEdge[];
+};
+
+export type LineItemEdge = {
+  node: LineItemNode;
+};
+
+export type LineItemNode = {
+  variant: Variant;
+  variantTitle: string;
+  title: string;
+  quantity: number;
+};
+
+export type Variant = {
+  id: string;
+};

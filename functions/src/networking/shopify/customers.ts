@@ -17,7 +17,6 @@ export const fetchShopifyCustomer = async (
     shpat,
     shop,
   )) as ShopifyCustomerResponse;
-  console.log(customer.customers);
 
   if (!customer.customers) return null;
 

@@ -1,6 +1,6 @@
 import {MerchantDocument} from "../types/merchant";
 import {generateRandomID} from "../../util/generators";
-import {CustomerData, OrderData} from "../types/shared";
+import {CustomerData, OrderData, SuggestedActions} from "../types/shared";
 import {capitalizeWords} from "../../util/formatters/text";
 import {CleanedCustomerOrder} from "../types/shopify/orders";
 import {ChatDocument, ChatStartRequest} from "../types/chats";
@@ -137,5 +137,46 @@ export const respondToChatPayload = (
     ],
     classification: classification,
     updated_at: time,
+  } as ChatDocument;
+};
+
+export const buildResolvedChatPayload = (
+  chat: ChatDocument,
+  merchant: MerchantDocument,
+  suggested: SuggestedActions,
+  actions: {
+    email: boolean;
+    action: boolean;
+    suggested_email: string;
+  },
+  summary = "",
+  error = "",
+) => {
+  const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+  return {
+    ...chat,
+    suggested_email: actions.suggested_email,
+    email_sent: actions.email,
+    suggested_action_done: actions.action,
+    summary: summary,
+    error_info: error,
+    status:
+      suggested == "resolve"
+        ? "resolved"
+        : actions.action
+        ? "resolved"
+        : "action_required",
+    suggested_action: suggested,
+    updated_at: time,
+    conversation: [
+      ...(chat.conversation || []),
+      {
+        time: time,
+        is_note: false,
+        message: "",
+        sender: "agent",
+        action: "closed",
+      },
+    ],
   } as ChatDocument;
 };

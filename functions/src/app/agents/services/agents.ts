@@ -12,6 +12,7 @@ import {decryptMsg} from "../../../util/encryption";
 import {createResponse} from "../../../util/errors";
 import {MerchantDocument} from "../../../lib/types/merchant";
 import {
+  buildResolvedChatPayload,
   createChatPayload,
   respondToChatPayload,
 } from "../../../lib/payloads/chats";
@@ -30,6 +31,7 @@ import {
   generateSuggestedEmail,
   sendEmail,
 } from "../../../lib/helpers/emails/emails";
+import {SuggestedActions} from "../../../lib/types/shared";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -214,6 +216,7 @@ export const respondToChat = async (
     message,
     classification,
   );
+
   await updateSubcollectionDocument(
     "shopify_merchant",
     domain,
@@ -244,6 +247,10 @@ export const resolveChat = async (
   const chat = chat_doc as ChatDocument;
   if (!chat) return createResponse(422, "Chat not found", null);
 
+  if (chat.status == "resolved") {
+    return createResponse(409, "Chat Resovled", null);
+  }
+
   // Delete chat if convo == 2
   if (chat.conversation.length < 2) {
     await deleteSubcollectionDocument("shopify_merchant", domain, "chats", id);
@@ -253,29 +260,46 @@ export const resolveChat = async (
   // Generate Suggested Actions
   const suggested = await generateSuggestedAction(chat, type);
 
-  // TODO: Summarize -> summary
-  //   const summary =
+  // ? Summarize -> summary
 
   // Fetch chat data:
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "Merchant not found", null);
 
+  const actions = await automateAction(chat, merchant, type, suggested);
+  console.log({actions});
+
+  // Build Payload
+  const payload = buildResolvedChatPayload(chat, merchant, suggested, actions);
+  console.log({payload});
+
+  // Update Doc
+  //   await updateSubcollectionDocument(
+  //     "shopify_merchant",
+  //     domain,
+  //     "chats",
+  //     id,
+  //     payload,
+  //   );
+
+  return createResponse(200, "Responded", null);
+};
+
+export const automateAction = async (
+  chat: ChatDocument,
+  merchant: MerchantDocument,
+  type: "email" | "chat",
+  suggested: SuggestedActions,
+) => {
   // Perform Actions
-  const performed = await performActions(chat, type, suggested, merchant);
-  console.log({performed});
+  const performed = await performActions(chat, type, suggested, merchant); // ! Extract action string
 
   // Build Suggested Email
-  const suggested_email = generateSuggestedEmail(chat, suggested);
-  console.log({suggested_email});
+  const suggested_email = generateSuggestedEmail(chat, suggested, merchant); // ! Add action string
 
   // Send Suggested Email
   const email_sent = await sendEmail(chat, type, suggested_email, merchant);
-  console.log({email_sent});
 
-  // TODO: Build Payload -> chat
-
-  // TODO: Update Doc
-
-  return createResponse(200, "Responded", null);
+  return {email: email_sent, action: performed, suggested_email};
 };

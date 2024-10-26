@@ -1,3 +1,5 @@
+import {GmailTokenData} from "./gmail/auth";
+
 export type Status =
   | 500
   | 422
@@ -106,4 +108,9 @@ export type LineItem = {
   quantity: number;
   options: string;
   title: string;
+};
+
+export type OAuthResponse = {
+  data: GmailTokenData;
+  message: string;
 };

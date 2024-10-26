@@ -2,7 +2,8 @@
 import {gdpr} from "./app/gdpr";
 import {store} from "./app/store";
 import {agents} from "./app/agents";
-export {gdpr, store, agents};
+import {apps} from "./app/apps";
+export {gdpr, store, agents, apps};
 
 // Triggers
 

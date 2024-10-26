@@ -34,8 +34,10 @@ export type MerchantDocument = {
 export type AppTypes = {
   name: "gmail" | "outlook" | "stripe" | "recharge";
   token: string;
+  refresh_token: string;
   connected: boolean;
   email: string;
+  time: number;
 };
 
 export type ConfigurationsType = {
@@ -84,3 +86,9 @@ export type FAQTypeNames =
   | "giveaway";
 
 export type ShopifyPolicies = {};
+
+export type DomainMap = {
+  custom_domain: string;
+  id: string;
+  myshopify_domain: string;
+};

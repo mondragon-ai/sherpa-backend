@@ -23,6 +23,7 @@
     "express-bearer-token": "^2.4.0",
     "firebase-admin": "^11.8.0",
     "firebase-functions": "^4.3.1",
+    "googleapis": "^144.0.0",
     "luxon": "^3.5.0",
     "node-fetch": "^2.6.6"
   },

@@ -1,4 +1,5 @@
 import {
+  deleteSubcollectionDocument,
   fetchRootDocument,
   fetchSubcollectionDocument,
   updateSubcollectionDocument,
@@ -23,6 +24,12 @@ import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
 import {classifyMessage} from "../../../lib/helpers/agents/classify";
 import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
 import {respondToChatGPT} from "../../../networking/openAi/respond";
+import {generateSuggestedAction} from "../../../lib/helpers/agents/resolve";
+import {performActions} from "../../../lib/helpers/automation/actions";
+import {
+  generateSuggestedEmail,
+  sendEmail,
+} from "../../../lib/helpers/emails/emails";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -216,4 +223,59 @@ export const respondToChat = async (
   );
 
   return createResponse(200, "Responded", {response});
+};
+
+export const resolveChat = async (
+  domain: string,
+  id: string,
+  type: "email" | "chat",
+) => {
+  if (!domain || !id) {
+    return createResponse(400, "Missing params", null);
+  }
+
+  // Fetch chat data:
+  const {data: chat_doc} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    id,
+  );
+  const chat = chat_doc as ChatDocument;
+  if (!chat) return createResponse(422, "Chat not found", null);
+
+  // Delete chat if convo == 2
+  if (chat.conversation.length < 2) {
+    await deleteSubcollectionDocument("shopify_merchant", domain, "chats", id);
+    return createResponse(204, "Chat Deleted", null);
+  }
+
+  // Generate Suggested Actions
+  const suggested = await generateSuggestedAction(chat, type);
+
+  // TODO: Summarize -> summary
+  //   const summary =
+
+  // Fetch chat data:
+  const {data} = await fetchRootDocument("shopify_merchant", domain);
+  const merchant = data as MerchantDocument;
+  if (!merchant) return createResponse(422, "Merchant not found", null);
+
+  // Perform Actions
+  const performed = await performActions(chat, type, suggested, merchant);
+  console.log({performed});
+
+  // Build Suggested Email
+  const suggested_email = generateSuggestedEmail(chat, suggested);
+  console.log({suggested_email});
+
+  // Send Suggested Email
+  const email_sent = await sendEmail(chat, type, suggested_email, merchant);
+  console.log({email_sent});
+
+  // TODO: Build Payload -> chat
+
+  // TODO: Update Doc
+
+  return createResponse(200, "Responded", null);
 };

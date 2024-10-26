@@ -64,9 +64,12 @@ export type RatingTypes = "positive" | "neutral" | "negative";
 
 export type SuggestedActions =
   | "resolve"
-  | "refund"
+  | "change_product"
   | "exchange"
+  | "change_address"
   | "cancel_order"
+  | "apply_discount"
+  | "unknown"
   | "cancel_subscription";
 
 export type CustomerData = {
@@ -91,7 +94,7 @@ export type Conversation = {
 export type OrderData = {
   id: string;
   total_price: string;
-  fulfillment_status: "hold" | "shipped" | "delivered";
+  fulfillment_status: "hold" | "shipped" | "delivered" | "pending" | "transit";
   payment_status: "hold" | "paid";
   tracking_url: string;
   order_number: number;

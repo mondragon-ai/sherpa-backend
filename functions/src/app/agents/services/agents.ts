@@ -10,7 +10,10 @@ import {
 import {decryptMsg} from "../../../util/encryption";
 import {createResponse} from "../../../util/errors";
 import {MerchantDocument} from "../../../lib/types/merchant";
-import {createChatPayload} from "../../../lib/payloads/chats";
+import {
+  createChatPayload,
+  respondToChatPayload,
+} from "../../../lib/payloads/chats";
 import {CleanedCustomerOrder} from "../../../lib/types/shopify/orders";
 import {updateMerchantUsage} from "../../../networking/shopify/billing";
 import {ChatDocument, ChatStartRequest} from "../../../lib/types/chats";
@@ -19,6 +22,7 @@ import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
 import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
 import {classifyMessage} from "../../../lib/helpers/agents/classify";
 import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
+import {respondToChatGPT} from "../../../networking/openAi/respond";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -178,21 +182,38 @@ export const respondToChat = async (
     id,
   );
   const chat = chat_doc as ChatDocument;
-  if (!chat) return createResponse(400, "Chat not found", null);
+  if (!chat) return createResponse(422, "Chat not found", null);
 
   // Fetch chat data:
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
-  if (!merchant) return createResponse(400, "Merchant not found", null);
+  if (!merchant) return createResponse(422, "Merchant not found", null);
 
   // Classify message
   const classification = await classifyMessage(chat, message);
 
   // Build chat payload
-  const payload = buildResponsePayload(merchant, chat, message, classification);
-  console.log(payload);
+  const blocks = buildResponsePayload(merchant, chat, classification, message);
 
-  // TODO: Respond to chat
+  // Respond to chat
+  const response = await respondToChatGPT(message, blocks);
+  if (!response) return createResponse(400, "Error Sending", {response});
 
-  return createResponse(200, "Responded", null);
+  // update chat
+  const payload = respondToChatPayload(
+    chat,
+    merchant.timezone,
+    response,
+    message,
+    classification,
+  );
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    id,
+    payload,
+  );
+
+  return createResponse(200, "Responded", {response});
 };

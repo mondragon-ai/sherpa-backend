@@ -107,3 +107,35 @@ export const initializeChatPyaload = (
     order: order as OrderData | null,
   };
 };
+
+export const respondToChatPayload = (
+  chat: ChatDocument,
+  timzone: string,
+  repsonse: string,
+  message: string,
+  classification: string,
+) => {
+  const time = getCurrentUnixTimeStampFromTimezone(timzone);
+  return {
+    ...chat,
+    conversation: [
+      ...(chat.conversation || []),
+      {
+        time: time - Math.round(60 * 1.5),
+        is_note: false,
+        message: message,
+        sender: "customer",
+        action: null,
+      },
+      {
+        time: time,
+        is_note: false,
+        message: repsonse,
+        sender: "agent",
+        action: null,
+      },
+    ],
+    classification: classification,
+    updated_at: time,
+  } as ChatDocument;
+};

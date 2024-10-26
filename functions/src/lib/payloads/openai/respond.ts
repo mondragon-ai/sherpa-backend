@@ -1,71 +1,125 @@
 import {ChatDocument} from "../../types/chats";
+import {basePrompt} from "../../prompts/response";
 import {MerchantDocument} from "../../types/merchant";
 import {ClassificationTypes} from "../../types/shared";
+import {buildRefundPayload} from "../../prompts/response/refund";
+import {buildStatusUpdate} from "../../prompts/response/statusUpdate";
+import {buildOrderCancelPayload} from "../../prompts/response/orderCancellation";
+import {buildOrderModifyPayload} from "../../prompts/response/orderModifcation";
+import {buildDiscountPayload} from "../../prompts/response/discount";
+import {buildGeneralPayload} from "../../prompts/response/general";
+import {buildAdressPayload} from "../../prompts/response/address";
+import {buildGiveawayPayload} from "../../prompts/response/giveaway";
+import {buildSubscriptiontPayload} from "../../prompts/response/subscription";
+import {buildProductPayload} from "../../prompts/response/product";
 
 export const buildResponsePayload = (
   merchant: MerchantDocument,
   chat: ChatDocument,
-  message: string,
   classification: ClassificationTypes,
+  message: string,
 ) => {
+  let prompt = "";
+
   switch (classification) {
-    case ClassificationTypes.OrderRefund:
-      return buildRefundPayload(merchant, chat);
-    // case ClassificationTypes.OrderCancellation:
-    //     return   respondToCustomerNew(chatData, message, "classified/order_cancellation");
-    // case ClassificationTypes.OrderModification:
-    //     return   respondToCustomerNew(chatData, message, "classified/order_modification");
-    // case ClassificationTypes.OrderStatus:
-    //     return   respondToCustomerNew(chatData, message, "classified/order_status");
-    // case ClassificationTypes.Discount:
-    //     return   respondToCustomerNew(chatData, message, "classified/discount");
-    // case ClassificationTypes.General:
-    //     return   respondToCustomerNew(chatData, message, "classified/general");
-    // case ClassificationTypes.OrderAddress:
-    //     return   respondToCustomerNew(chatData, message, "classified/order_address");
-    // case ClassificationTypes.Giveaway:
-    //     return   respondToCustomerNew(chatData, message, "classified/giveaway");
-    // case ClassificationTypes.Subscription:
-    //     return   respondToCustomerNew(chatData, message, "classified/subscription");
-    // case ClassificationTypes.Product:
-    //     return   respondToCustomerNew(chatData, message, "classified/product");
-    default:
-      return "";
+    case ClassificationTypes.OrderRefund: {
+      console.log("REFUND");
+      prompt = buildRefundPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.OrderCancellation: {
+      console.log("CANCEL");
+      prompt = buildOrderCancelPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.OrderModification: {
+      console.log("MOD");
+      prompt = buildOrderModifyPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.OrderStatus: {
+      console.log("ORDER_STATUS");
+      prompt = buildStatusUpdate(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.Discount: {
+      console.log("DISCOUNTS");
+      prompt = buildDiscountPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.General: {
+      console.log("GENERAL");
+      prompt = buildGeneralPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.OrderAddress: {
+      console.log("ADDRESS");
+      prompt = buildAdressPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.Giveaway: {
+      console.log("GIVEAWAY");
+      prompt = buildGiveawayPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.Subscription: {
+      console.log("SUBS");
+      prompt = buildSubscriptiontPayload(merchant, chat, classification);
+      break;
+    }
+    case ClassificationTypes.Product: {
+      console.log("PRODUCT");
+      prompt = buildProductPayload(merchant, chat, classification);
+      break;
+    }
+    default: {
+      console.log("BASE");
+      prompt = basePrompt(merchant, chat, classification);
+      break;
+    }
   }
+
+  const payload = openaiResponsePayload(prompt, message, chat);
+  return payload;
 };
 
-export const buildRefundPayload = (
-  merchant: MerchantDocument,
+type BlockType = {
+  role: "user" | "system" | "assistant";
+  content: string;
+};
+
+const openaiResponsePayload = (
+  prompt: string,
+  message: string,
   chat: ChatDocument,
 ) => {
-  const {configurations} = merchant;
-  const today = new Date().toDateString();
-  return `
-        As a customer service agent, respond to a customer's inquiry to return/refund their order. Here's the details about their order:
+  const blocks = [
+    {
+      role: "system",
+      content: prompt,
+    },
+  ] as BlockType[];
 
-        ## Instructions
-        - **DO NOT GENERATE FAKE/DUMMY INFO.**
-        - Maintain a lighthearted and witty tone.
-        - If asked, you are NOT a bot.
-        - DO NOT REPEAT YOURSELF.
-        - **Do not use email/letter format because you'll be in a chat with the customer. Also be concise.**
-        - Supervisor approval may be required for certain actions.
-        - ONLY respond with information included here. Do not "improvise" or "wing it", if the answer is not here, tell them to email the store contact email.
-        - DO NOT insert data that is not included here, like "[Your Name Here]" or similar.
+  for (const msg of chat.conversation || []) {
+    if (msg.sender == "agent" && !msg.action && !msg.is_note) {
+      blocks.push({
+        role: "assistant",
+        content: msg.message,
+      });
+    }
+    if (msg.sender == "customer") {
+      blocks.push({
+        role: "user",
+        content: msg.message,
+      });
+    }
+  }
 
-        ## Customer Summary
-        ${chat.customer || "- not available"}
-
-        ## Order Summary
-        ${chat.order || " - not available"}
-
-        **Store contact email:**  ${configurations.contact_email} 
-
-        **TODAY'S DATE**:  ${today} 
-
-        ## Conditions
-        - Returns accepted within  ${configurations.return}  days.
-        - ${configurations.refund} 
-        - ONLY respond queries regarding refunds. If asked about something else, tell them to email the store contact email.
-    `;
+  if (message) {
+    blocks.push({
+      role: "user",
+      content: message,
+    });
+  }
+  return blocks;
 };

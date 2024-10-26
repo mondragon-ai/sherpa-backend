@@ -5,6 +5,7 @@ import {
   searchCustomer,
   searchProduct,
   startChat,
+  respondToChat,
 } from "../services/agents";
 import {ChatStartRequest} from "../../../lib/types/chats";
 
@@ -90,6 +91,29 @@ export const handleInitiateChat = async (
     email,
     payload as ChatStartRequest,
   );
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Respond to chat with Agent
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleResponse = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, email} = req.params;
+  const msg = req.body.message;
+  functions.logger.info(
+    ` 🤖 [/RESPOND]: Respond to chat for ${domain} and ${email}`,
+  );
+
+  const {status, message, data} = await respondToChat(domain, email, msg);
 
   res.status(status).json({
     message: message,

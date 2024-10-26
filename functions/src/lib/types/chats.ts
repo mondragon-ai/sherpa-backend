@@ -47,3 +47,7 @@ export type ChatStartRequest = {
   order_id: string;
   product_id?: string;
 };
+
+export type ChatConvoRequest = {
+  message: string;
+};

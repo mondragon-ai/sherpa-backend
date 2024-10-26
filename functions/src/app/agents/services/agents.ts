@@ -17,6 +17,8 @@ import {ChatDocument, ChatStartRequest} from "../../../lib/types/chats";
 import {fetchShopifyProducts} from "../../../networking/shopify/products";
 import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
 import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
+import {classifyMessage} from "../../../lib/helpers/agents/classify";
+import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -157,4 +159,40 @@ export const fetchCustomerData = async (
 
   const cleaned_customer = cleanCustomerPayload(customer);
   return {customer: cleaned_customer, order: order};
+};
+
+export const respondToChat = async (
+  domain: string,
+  id: string,
+  message: string,
+) => {
+  if (!domain || !message || !id) {
+    return createResponse(400, "Missing params", null);
+  }
+
+  // Fetch chat data:
+  const {data: chat_doc} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    id,
+  );
+  const chat = chat_doc as ChatDocument;
+  if (!chat) return createResponse(400, "Chat not found", null);
+
+  // Fetch chat data:
+  const {data} = await fetchRootDocument("shopify_merchant", domain);
+  const merchant = data as MerchantDocument;
+  if (!merchant) return createResponse(400, "Merchant not found", null);
+
+  // Classify message
+  const classification = await classifyMessage(chat, message);
+
+  // Build chat payload
+  const payload = buildResponsePayload(merchant, chat, message, classification);
+  console.log(payload);
+
+  // TODO: Respond to chat
+
+  return createResponse(200, "Responded", null);
 };

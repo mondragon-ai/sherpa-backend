@@ -65,13 +65,11 @@ export const shopifyRequest = async (
   };
 
   try {
-    // Prepare request options
     const options: RequestInit = {
       method,
       headers,
     };
 
-    // Add body to options if method is POST
     if (data !== null) {
       options.body = JSON.stringify(data);
     }

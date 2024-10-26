@@ -1,11 +1,5 @@
-import fetch from "node-fetch";
+import fetch, {RequestInit} from "node-fetch";
 import * as functions from "firebase-functions";
-
-const URL = "https://api.openai.com/v1";
-const open_normal_HEADERS = {
-  "Content-Type": "application/json",
-  Authorization: "Bearer " + process.env.OPEN_API_KEY,
-};
 
 /**
  * Makes an asynchronous HTTP request to a specified resource using the provided method and data.
@@ -20,30 +14,36 @@ const open_normal_HEADERS = {
  *   data: unknown;
  * }>} - A Promise that resolves to an object containing the response details.
  */
-export const davinciRequests = async (
+export const openAIRequest = async (
   resource: string,
-  method: string,
+  token: string,
   data: object,
-  _header_token?: string,
 ): Promise<{
   text: string;
   status: number;
   data: unknown;
 }> => {
-  const requestOptions: {
-    headers: {[key: string]: string};
-    method: string;
-    body?: string;
-  } = {
-    method: method || "GET",
-    headers: open_normal_HEADERS,
+  const URL = `https://api.openai.com/v1${resource}`;
+
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + token,
   };
 
-  if (method !== "GET" && data) {
-    requestOptions.body = JSON.stringify(data);
+  const options: RequestInit = {
+    method: "POST",
+    headers,
+  };
+
+  if (data !== null) {
+    options.body = JSON.stringify(data);
   }
 
-  const response = await fetch(URL + resource, requestOptions);
+  const response = await fetch(URL, options);
+
+  if (!response.ok) {
+    functions.logger.warn({resource, data, token, status: response.status});
+  }
 
   if (response.status === 401) {
     const errorText = await response.text();

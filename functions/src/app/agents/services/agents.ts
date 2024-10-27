@@ -217,7 +217,7 @@ export const respondToChat = async (
   const blocks = buildResponsePayload(merchant, chat, classification, message);
 
   // Respond to chat
-  const response = await respondToChatGPT(message, blocks);
+  const response = await respondToChatGPT(blocks);
   if (!response) return createResponse(400, "Error Sending", {response});
 
   // update chat

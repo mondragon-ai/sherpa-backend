@@ -10,9 +10,9 @@ export {gdpr, store, agents, apps};
 // * Triggers
 // ! ============================================================
 import {chatsCreated, chatDeleted} from "./triggers/chats";
-import {gmailEmailCreated, gmailEmailDeleted} from "./triggers/email";
+import {emailCreated, emailDeleted, emailUpdated} from "./triggers/email";
 
-export {chatsCreated, chatDeleted, gmailEmailCreated, gmailEmailDeleted};
+export {chatsCreated, chatDeleted, emailCreated, emailDeleted, emailUpdated};
 
 // * Pubsubs
 // ! ============================================================

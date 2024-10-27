@@ -124,11 +124,13 @@ export const fetchCustomerDataFromEmail = async (
     orders = await fetchShopifyOrderByName(domain, shpat, order_number);
   }
 
+  console.log({customer: customer});
   const last_order = customer.last_order_id;
   if (last_order && !orders) {
     const res = await fetchShopifyOrder(domain, shpat, `${last_order}`);
     if (res) orders = [res];
   }
+  console.log({orders});
 
   const cleaned_customer = cleanCustomerPayload(customer);
   return {customer: cleaned_customer, order: orders};

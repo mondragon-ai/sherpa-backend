@@ -5,6 +5,7 @@ import {
   updateRootDocument,
   updateSubcollectionDocument,
 } from "../../../database/firestore";
+import * as functions from "firebase-functions";
 import {
   EmailFetchResponseData,
   GmailWatchResponse,
@@ -23,11 +24,15 @@ import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time
 import {
   createEmailPayload,
   respondToEmailPayload,
+  updateExistingEmailConversation,
 } from "../../../lib/payloads/emails";
 import {classifyMessage} from "../../../lib/helpers/agents/classify";
 import {fetchCustomerDataFromEmail} from "../../../lib/helpers/emails/emails";
 import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
-import {respondToChatGPT} from "../../../networking/openAi/respond";
+import {
+  respondToChatGPT,
+  validateEmailIsCustomer,
+} from "../../../networking/openAi/respond";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -294,14 +299,26 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
     cleaned[0].from,
   );
 
-  const existing_email = doc as EmailDocument;
-  if (existing_email && existing_email.status == "open") {
-    return createResponse(201, "Still Open", null);
-  }
-
   const msg = `**Subject**: ${
     cleaned[0].subject
-  } **Message**: ${cleaned[0].content.join(" ")} `;
+  }<br><br> **Message**: ${cleaned[0].content.join(" ")} `;
+  functions.logger.info({cleaned: cleaned[0]});
+
+  const is_email = await validateEmailIsCustomer(msg);
+  if (!is_email || is_email.includes("invalid")) {
+    return createResponse(409, "Invalid Email", {is_email});
+  }
+
+  const existing_email = doc as EmailDocument;
+  if (existing_email && existing_email.status == "open") {
+    await updateExistingEmailConversation(
+      existing_email,
+      msg,
+      cleaned[0],
+      merchant,
+    );
+    return createResponse(201, "Still Open", null);
+  }
 
   // Classify message
   const classification = await classifyMessage(existing_email, msg);
@@ -314,7 +331,7 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
     cleaned[0].from,
   );
 
-  if (customer?.email && order && order[0].email !== "") {
+  if (customer?.email && order && order[0] && order[0].email !== "") {
     if (order[0].email !== email) {
       return createResponse(409, "Email Must Match", {chat: null});
     }
@@ -325,7 +342,7 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
     merchant,
     existing_email,
     customer,
-    order && order[0],
+    (order && order[0]) || null,
     cleaned[0],
     msg,
   );
@@ -340,7 +357,7 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
   if (!payload) return createResponse(400, "Couldn't Respond", null);
 
   // Update/Save
-  await updateSubcollectionDocument(
+  const save = await updateSubcollectionDocument(
     "shopify_merchant",
     domain,
     "emails",
@@ -348,7 +365,7 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
     payload,
   );
 
-  return createResponse(200, "Success", payload);
+  return createResponse(save.status, "Success", payload);
 };
 
 export const respondToEmailGPT = async (
@@ -361,7 +378,7 @@ export const respondToEmailGPT = async (
   const blocks = buildResponsePayload(merchant, email, classification, message);
 
   // Respond to chat
-  const response = await respondToChatGPT(message, blocks);
+  const response = await respondToChatGPT(blocks);
   if (!response) return null;
 
   // update chat

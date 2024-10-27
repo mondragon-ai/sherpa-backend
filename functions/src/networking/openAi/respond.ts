@@ -1,4 +1,5 @@
 import {openAIRequest} from ".";
+import {VALID_CUSTOMER_EMAIL_PROMPT} from "../../lib/prompts/validateEmail";
 
 type BlockType = {
   role: "user" | "system" | "assistant";
@@ -6,7 +7,6 @@ type BlockType = {
 };
 
 export const respondToChatGPT = async (
-  messsage: string,
   blocks: BlockType[],
 ): Promise<string | null> => {
   const token = process.env.CLASSIFICATION_API || "";
@@ -25,4 +25,34 @@ export const respondToChatGPT = async (
   if (!agent) return null;
 
   return agent;
+};
+
+export const validateEmailIsCustomer = async (message: string) => {
+  const token = process.env.CLASSIFICATION_API || "";
+
+  const blocks = [
+    {
+      role: "system",
+      content: VALID_CUSTOMER_EMAIL_PROMPT,
+    },
+    {
+      role: "user",
+      content: message,
+    },
+  ];
+
+  const payload = {
+    model: "gpt-4-turbo",
+    messages: blocks,
+    temperature: 0.7,
+    top_p: 1,
+    max_completion_tokens: 400,
+  };
+
+  const {data} = await openAIRequest("/chat/completions", token, payload);
+  const response = data as ChatCompletionResponse;
+  const is_valid = response.choices[0].message.content;
+  if (!is_valid) return null;
+
+  return is_valid;
 };

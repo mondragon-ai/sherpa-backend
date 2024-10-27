@@ -475,7 +475,8 @@ export const updateSubcollectionDocument = async (
       .collection(collection)
       .doc(sub_id)
       .set(data, {merge: true});
-  } catch {
+  } catch (e) {
+    console.error(e);
     text = " - Could not update document.";
     status = 500;
   }

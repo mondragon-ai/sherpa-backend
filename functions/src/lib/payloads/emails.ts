@@ -6,6 +6,7 @@ import {CleanedCustomerPayload} from "../types/shopify/customers";
 import {CustomerData, OrderData, SuggestedActions} from "../types/shared";
 import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
 import {CleanedEmail} from "../types/gmail/email";
+import {updateSubcollectionDocument} from "../../database/firestore";
 
 export const createEmailPayload = (
   merchant: MerchantDocument,
@@ -23,7 +24,7 @@ export const createEmailPayload = (
     cleaned_email,
     message,
   );
-  console.log({prev_email});
+
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   if (prev_email) {
     const internal_date = Number(cleaned_email.internalDate) / 1000;
@@ -31,7 +32,7 @@ export const createEmailPayload = (
       ...prev_email,
       status: "open",
       customer: customer as CustomerData | null,
-      order: order as OrderData | null,
+      order: (order as OrderData | null) || null,
       classification: null,
       suggested_action: null,
       summary: "",
@@ -216,4 +217,46 @@ export const buildResolvedChatPayload = (
     ],
   } as EmailDocument;
   /* eslint-enable indent */
+};
+
+export const updateExistingEmailConversation = async (
+  prev_email: EmailDocument,
+  message: string,
+  cleaned: CleanedEmail,
+  merchant: MerchantDocument,
+) => {
+  const internal_date = Number(cleaned.internalDate) / 1000;
+  const payload = {
+    ...prev_email,
+    status: "open",
+    classification: null,
+    suggested_action: null,
+    summary: "",
+    error_info: "",
+    conversation: [
+      ...prev_email.conversation,
+      {
+        time: internal_date,
+        is_note: false,
+        message: message,
+        sender: "customer",
+        action: null,
+        id: cleaned.id,
+        history_id: cleaned.historyId,
+        internal_date: String(internal_date),
+        from: cleaned.from,
+        subject: cleaned.subject,
+        attachments: cleaned.attachments || [],
+      },
+    ],
+    created_at: prev_email.created_at,
+  };
+
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    merchant.id,
+    "emails",
+    payload.id,
+    payload,
+  );
 };

@@ -7,7 +7,7 @@ export const buildCustomerPrompt = (chat: ChatDocument | EmailDocument) => {
   if (!chat || !chat.customer) {
     return `
           ## Customer Data
-          - Not available
+          - Customer Not Found
       `;
   }
 
@@ -16,7 +16,7 @@ export const buildCustomerPrompt = (chat: ChatDocument | EmailDocument) => {
     chat.customer;
 
   return `
-          ## Customer Data
+          ## Customer Data:
           - **Name**: ${first_name || "Customer"} ${last_name || ""}
           - **Email**: ${email}
           - **Total Spent**: $${Number(total_spent).toFixed(2)}
@@ -29,8 +29,8 @@ export const buildCustomerPrompt = (chat: ChatDocument | EmailDocument) => {
 export const buildOrderPrompt = (chat: ChatDocument | EmailDocument) => {
   if (!chat || !chat.order) {
     return `
-            ## Order Information
-            - Not available
+            ## Order Data:
+            - Order Not Found
         `;
   }
 

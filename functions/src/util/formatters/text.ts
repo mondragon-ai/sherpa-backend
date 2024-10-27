@@ -25,7 +25,7 @@ export function extractEmailFromString(inputString: string) {
   if (matches && matches.length > 0) {
     return matches[0];
   } else {
-    return null;
+    return "";
   }
 }
 
@@ -47,6 +47,10 @@ export function capitalizeWords(name: string) {
 
 export const encodeEmailForFirestoreId = (email: string): string => {
   return encodeURIComponent(email.toLowerCase()).replace(".", "-");
+};
+
+export const decodeFromBase64 = (s: string) => {
+  return Buffer.from(s || "", "base64").toString("utf-8");
 };
 
 // const messageToPromptString = (message: EmailMessage): string => {

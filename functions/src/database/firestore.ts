@@ -4,7 +4,7 @@ import {Status} from "../lib/types/shared";
 import * as functions from "firebase-functions";
 import {FirestoreResponse} from "../lib/types/databse";
 
-type RootType = "shopify_merchant" | "domain_map";
+type RootType = "shopify_merchant" | "domain_map" | "email_map";
 type SubCollectionType =
   | "chats"
   | "emails"

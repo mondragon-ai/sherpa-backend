@@ -8,9 +8,9 @@ import {
 } from "../controller/gmail";
 
 export const gmailRoutes = (app: express.Router) => {
-  app.get("/:domain/auth", handleAuthGmail);
-  app.get("/auth/callback", handleCallback);
-  app.post("/:domain/email/send", handleSendEmail);
-  app.get("/:domain/email/receive", handleReceiveEmails);
-  app.post("/:domain/subscribe", handleSubscription);
+  app.get("/gmail/:domain/auth", handleAuthGmail);
+  app.get("/gmail/auth/callback", handleCallback);
+  app.post("/gmail/:domain/email/send", handleSendEmail);
+  app.get("/gmail/:domain/email/receive", handleReceiveEmails);
+  app.post("/gmail/:domain/subscribe", handleSubscription);
 };

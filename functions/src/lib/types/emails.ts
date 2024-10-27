@@ -54,3 +54,8 @@ export type EmailMessage = {
   message: string;
   image: any[];
 };
+
+export type EmailMap = {
+  domain: string;
+  id: string;
+};

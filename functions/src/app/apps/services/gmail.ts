@@ -1,16 +1,20 @@
-import {google} from "googleapis";
-import {GmailTokenData} from "../../../lib/types/gmail/auth";
 import {
+  createRootDocument,
   fetchRootDocument,
   updateRootDocument,
 } from "../../../database/firestore";
-import {DomainMap, MerchantDocument} from "../../../lib/types/merchant";
-import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
-import {createResponse} from "../../../util/errors";
-import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
+import {
+  EmailFetchResponseData,
+  GmailWatchResponse,
+} from "../../../lib/types/gmail/email";
+import {gmail_v1, google} from "googleapis";
 import {Status} from "../../../lib/types/shared";
-import {EmailFetchResponseData} from "../../../lib/types/gmail/email";
+import {createResponse} from "../../../util/errors";
+import {GmailTokenData} from "../../../lib/types/gmail/auth";
 import {cleanEmailFromGmail} from "../../../lib/payloads/gmail/emails";
+import {DomainMap, MerchantDocument} from "../../../lib/types/merchant";
+import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
+import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -37,12 +41,7 @@ export const initiateAuth = async (domain: string) => {
 export const gmailCallback = async (domain: string, code: string) => {
   try {
     const {tokens} = await oAuth2Client.getToken(code as string);
-    const saved = await saveToken(tokens as GmailTokenData, domain);
-    return {
-      status: saved ? 200 : 400,
-      message: saved ? "success" : "error saving",
-      data: saved ? tokens : null,
-    };
+    return await saveToken(tokens as GmailTokenData, domain);
   } catch (error) {
     console.error(error);
     return createResponse(500, "error generating tokens", null);
@@ -52,7 +51,11 @@ export const gmailCallback = async (domain: string, code: string) => {
 export const saveToken = async (
   token: GmailTokenData,
   domain: string,
-): Promise<boolean> => {
+): Promise<{
+  status: Status;
+  message: string;
+  data: null;
+}> => {
   let id = domain;
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   let merchant = data as MerchantDocument;
@@ -64,7 +67,7 @@ export const saveToken = async (
       "shopify_merchant",
       domain_map.myshopify_domain,
     );
-    if (!doc) return false;
+    if (!doc) return createResponse(400, "Merchant Not Found", null);
     merchant = doc as MerchantDocument;
     id = domain_map.myshopify_domain;
   }
@@ -83,7 +86,28 @@ export const saveToken = async (
   ];
   await updateRootDocument("shopify_merchant", id, merchant);
 
-  return true;
+  const request = {
+    userId: "me",
+    requestBody: {
+      topicName: "projects/sherpa-dc1fe/topics/gmail-messages",
+      labelIds: ["INBOX"],
+      labelFilterBehavior: "INCLUDE",
+    },
+  };
+
+  const access_token = await getValidGmailAccessToken(merchant);
+  if (!access_token) return createResponse(401, "No Token", null);
+
+  const oAuth2Client = new google.auth.OAuth2();
+  oAuth2Client.setCredentials({access_token: access_token});
+  const gmail = google.gmail({version: "v1", auth: oAuth2Client});
+
+  const response = (await gmail.users.watch(request)) as GmailWatchResponse;
+  if (response.status > 300) {
+    return createResponse(response.status as Status, response.statusText, null);
+  }
+
+  return await mapEmailToDB(gmail, merchant);
 };
 
 export const sendEmail = async (
@@ -194,7 +218,30 @@ export const subscribeToGmail = async (domain: string) => {
   oAuth2Client.setCredentials({access_token: access_token});
   const gmail = google.gmail({version: "v1", auth: oAuth2Client});
 
-  const response = await gmail.users.watch(request);
+  const response = (await gmail.users.watch(request)) as GmailWatchResponse;
+  if (response.status > 300) {
+    return createResponse(response.status as Status, response.statusText, null);
+  }
 
-  return createResponse(200, "Success", response);
+  return await mapEmailToDB(gmail, merchant);
+};
+
+const mapEmailToDB = async (
+  gmail: gmail_v1.Gmail,
+  merchant: MerchantDocument,
+) => {
+  const profile = await gmail.users.getProfile({userId: "me"});
+  const sender = profile.data.emailAddress;
+  if (!sender) {
+    return createResponse(profile.status as Status, profile.statusText, null);
+  }
+
+  const payload = {
+    id: sender,
+    domain: merchant.id,
+  };
+
+  await createRootDocument("email_map", sender, payload);
+
+  return createResponse(201, "Subscribed", {sender});
 };

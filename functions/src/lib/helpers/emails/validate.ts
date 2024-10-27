@@ -21,11 +21,8 @@ export const getValidGmailAccessToken = async (
     return null;
   }
 
-  console.log({gmail_app});
-
   const isTokenValid = gmail_app.time > Date.now();
   if (isTokenValid) {
-    console.log("Access token is still valid.");
     return gmail_app.token;
   }
 

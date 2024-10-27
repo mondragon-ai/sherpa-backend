@@ -90,6 +90,18 @@ export const startChat = async (
   if (issue !== "general" && !email) {
     return createResponse(400, "Email required", null);
   }
+  // Fetch Merchant
+  const {data: doc} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    email,
+  );
+  const existing_chat = doc as ChatDocument;
+
+  if (existing_chat.status == "open") {
+    return createResponse(201, "Still Open", null);
+  }
 
   // Fetch Merchant
   const {data} = await fetchRootDocument("shopify_merchant", domain);

@@ -1,34 +1,41 @@
+import {
+  decodeFromBase64,
+  extractEmailFromString,
+} from "../../../util/formatters/text";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 import {EmailDocument} from "../../types/emails";
-import {EmailFetchResponseData} from "../../types/gmail/email";
+import {CleanedEmail, EmailFetchResponseData} from "../../types/gmail/email";
 import {MerchantDocument} from "../../types/merchant";
 
 export const cleanEmailFromGmail = (
   list: EmailFetchResponseData[],
   merchant: MerchantDocument,
 ) => {
-  const emails = [] as any[];
+  const emails = [] as CleanedEmail[];
 
   for (const email of list) {
     const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
     const body = [];
     for (const part of email.payload.parts) {
       if (part.mimeType === "text/plain") {
-        body.push(part.body.data);
+        body.push(decodeFromBase64(part.body.data || ""));
       }
     }
+    const from =
+      email.payload.headers.find((header) => header.name === "From")?.value ||
+      "";
+    const subject =
+      email.payload.headers.find((header) => header.name === "Subject")
+        ?.value || "";
+
     emails.push({
       id: email.id,
       threadId: email.threadId,
       historyId: email.historyId,
       snippet: email.snippet,
       internalDate: email.internalDate, // Miliseconds
-      from:
-        email.payload.headers.find((header) => header.name === "From")?.value ||
-        "",
-      subject:
-        email.payload.headers.find((header) => header.name === "Subject")
-          ?.value || "",
+      from: extractEmailFromString(from),
+      subject: subject,
       content: body,
       created_at: time,
     });

@@ -60,7 +60,7 @@ export const deleteFromAlgolia = async (
     functions.logger.debug(" => Data ready to delete from algolia");
     await instance_algolia.deleteObject(objectID);
   } catch (e) {
-    let text =
+    const text =
       " 🚨 [ERROR]: Likely a problem uploading / syncing primary db with angolia. Check logs";
     functions.logger.error(text);
   }

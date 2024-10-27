@@ -14,6 +14,7 @@ export const createChatPayload = (
   order: CleanedCustomerOrder | null,
   request: ChatStartRequest,
 ): {chat: ChatDocument; message: string} => {
+  /* eslint-disable indent */
   const first_name = customer
     ? ` ${capitalizeWords(
         customer.first_name.toLocaleLowerCase().trim(),
@@ -22,7 +23,7 @@ export const createChatPayload = (
   const issue =
     request.issue == "general" ? `${request.issue} store` : request.issue;
   const message = `Hello${first_name}, welcome to our store's customer support! How can I assist you with your ${issue} question today?`;
-
+  /* eslint-enable indent */
   let chat = initializeChatPyaload(merchant, customer, order, request, message);
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   if (prev_chat) {
@@ -153,6 +154,8 @@ export const buildResolvedChatPayload = (
   error = "",
 ) => {
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+
+  /* eslint-disable indent */
   return {
     ...chat,
     suggested_email: actions.suggested_email,
@@ -179,4 +182,5 @@ export const buildResolvedChatPayload = (
       },
     ],
   } as ChatDocument;
+  /* eslint-enable indent */
 };

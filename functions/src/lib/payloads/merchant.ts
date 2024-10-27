@@ -26,6 +26,7 @@ export const merchantPayload = (
 
   const currentTime = getCurrentUnixTimeStampFromTimezone(store.timezone);
 
+  /* eslint-disable operator-linebreak */
   return {
     capped_usage: 5000,
     state: currentTime,
@@ -59,7 +60,12 @@ export const merchantPayload = (
     configurations: {
       cancelation: {
         overview:
-          "Once an order is fulfilled, it cannot be canceled, you must wait to receive the items before we can begin the cancelation processs. Once you've received the order and wish to return it, contact our customer support to start the refund process. We'll provide a return label, and after we receive the items and inspect them, your refund will be processed in 3-7 business days to your original payment method. We aim to make this process as hassle-free as possible for you.",
+          "Once an order is fulfilled, it cannot be canceled, you must wait to receive " +
+          "the items before we can begin the cancelation processs. Once you've received " +
+          " the order and wish to return it, contact our customer support to start the " +
+          " refund process. We'll provide a return label, and after we receive the items " +
+          "and inspect them, your refund will be processed in 3-7 business days to your " +
+          "original payment method. We aim to make this process as hassle-free as possible for you.",
         faqs: [],
       },
       products: {
@@ -68,12 +74,15 @@ export const merchantPayload = (
       },
       subscriptions: {
         overview:
-          "We have 2 types of subscriptions:1. Only customers with 'Active Subscriber' or 'VIP_MEMBER' tags are $30.00 club members.2. Otherwise, if customers's tag is something different, assume the customer is a $9.00 member.",
+          "We have 2 types of subscriptions:1. Only customers with 'Active Subscriber' " +
+          " or 'VIP_MEMBER' tags are $30.00 club members.2. Otherwise, if customers's " +
+          "tag is something different, assume the customer is a $9.00 member.",
         faqs: [],
       },
       discounts: {
         overview:
-          "We have no special discounts. However, if asked, military members get THANKYOU for 20% off-- ONLY give if asked and they are military.",
+          "We have no special discounts. However, if asked, military members get THANKYOU" +
+          " for 20% off-- ONLY give if asked and they are military.",
         faqs: [],
       },
       giveaway: {
@@ -93,7 +102,8 @@ export const merchantPayload = (
       exception:
         "Perishable goods, custom products, sale items and gift cards.",
       shipping:
-        "Shipping Policy: We offer free standard shipping on orders over $75, and it usually takes 5-7 business days for the package to arrive.",
+        "Shipping Policy: We offer free standard shipping on orders over $75, and it " +
+        "usually takes 5-7 business days for the package to arrive.",
       store: "The store is for the influencers.",
       contact_email: store.email || "",
       return: 30,
@@ -113,4 +123,6 @@ export const merchantPayload = (
       links: [],
     },
   } as MerchantDocument;
+
+  /* eslint-enable operator-linebreak */
 };

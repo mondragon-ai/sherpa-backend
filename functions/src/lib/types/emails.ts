@@ -9,13 +9,22 @@ import {
 } from "./shared";
 
 export type EmailDocument = {
-  rating: RatingTypes;
-  classification: ClassificationTypes;
+  specific_issue: string;
+  edited: boolean;
+  suggested_email: string;
+  email_sent: boolean;
+  manual: boolean;
+  manually_triggerd: boolean;
+  initial_message: string;
+  convo_trained: boolean;
+  action_trained: boolean;
+
+  // chat
+  rating: RatingTypes | null;
+  classification: ClassificationTypes | null;
   issue: IssueTypes;
   suggested_action_done: boolean;
-  source: "gmail" | "outlook";
-  history_id: string;
-  thread: EmailMessage[];
+  summary: string;
   error_info: string;
   timezone: string;
   domain: string;
@@ -23,15 +32,15 @@ export type EmailDocument = {
   conversation: Conversation[];
   time: number;
   status: "open" | "resolved" | "action_required";
-  suggested_action: SuggestedActions;
+  suggested_action: SuggestedActions | null;
   customer: null | CustomerData;
   email: null | string;
   updated_at: number;
   created_at: number;
-  summary: string;
   order: null | OrderData;
-  //
-  email_sent: boolean;
+  source: "gmail" | "outlook";
+  history_id: string;
+  thread: EmailMessage[];
 };
 
 export type EmailMessage = {

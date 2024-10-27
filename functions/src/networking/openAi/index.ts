@@ -27,7 +27,7 @@ export const openAIRequest = async (
 
   const headers = {
     "Content-Type": "application/json",
-    Authorization: "Bearer " + token,
+    ["Authorization"]: "Bearer " + token,
   };
 
   const options: RequestInit = {

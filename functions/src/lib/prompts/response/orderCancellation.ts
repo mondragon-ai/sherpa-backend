@@ -9,6 +9,8 @@ export const buildOrderCancelPayload = (
   classification: ClassificationTypes,
 ) => {
   const {configurations} = merchant;
+
+  /* eslint-disable indent */
   return `
     ${basePrompt(merchant, chat, classification)}
 
@@ -26,4 +28,5 @@ export const buildOrderCancelPayload = (
         : ""
     }
   `;
+  /* eslint-enable indent */
 };

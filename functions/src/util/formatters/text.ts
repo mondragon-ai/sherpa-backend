@@ -12,6 +12,11 @@ export const convertToSingleLine = (text: string): string => {
   return t.replace(/"/g, "'");
 };
 
+/**
+ *
+ * @param inputString
+ * @returns
+ */
 export function extractEmailFromString(inputString: string) {
   const emailRegex = /[\w.-]+@[\w.-]+\.[\w.-]+/;
 
@@ -24,6 +29,11 @@ export function extractEmailFromString(inputString: string) {
   }
 }
 
+/**
+ *
+ * @param name
+ * @returns
+ */
 export function capitalizeWords(name: string) {
   const words = name.replace("_", " ").split(" ");
 

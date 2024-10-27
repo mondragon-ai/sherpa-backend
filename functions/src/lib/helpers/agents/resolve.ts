@@ -22,5 +22,5 @@ export const generateCustomerSummary = (chat: ChatDocument) => {
   const customer = buildCustomerPrompt(chat);
   const order = buildOrderPrompt(chat);
 
-  return customer + `\n` + order;
+  return customer + "\n" + order;
 };

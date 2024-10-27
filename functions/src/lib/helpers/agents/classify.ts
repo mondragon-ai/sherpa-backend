@@ -377,10 +377,12 @@ const raw_keywords: CategoryKeywords = {
 const lowercaseKeywords = (keywords: CategoryKeywords): CategoryKeywords => {
   const result: CategoryKeywords = {} as CategoryKeywords;
   for (const c in keywords) {
-    const category = c as ClassificationTypes;
-    result[category] = keywords[category].map((keyword) =>
-      keyword.toLowerCase(),
-    );
+    if (c) {
+      const category = c as ClassificationTypes;
+      result[category] = keywords[category].map((keyword) =>
+        keyword.toLowerCase(),
+      );
+    }
   }
   return result;
 };
@@ -409,7 +411,7 @@ export const category_weights: CategoryWeights = {
 export const classifyMessageAho = async (
   message: string,
 ): Promise<ClassificationTypes | null> => {
-  let matches = ac.search(message.toLowerCase());
+  const matches = ac.search(message.toLowerCase());
   if (matches.length === 0) return null;
 
   const category_counts: Partial<Record<ClassificationTypes, number>> = {};

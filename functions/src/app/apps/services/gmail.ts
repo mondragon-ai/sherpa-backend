@@ -9,6 +9,8 @@ import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time
 import {createResponse} from "../../../util/errors";
 import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
 import {Status} from "../../../lib/types/shared";
+import {EmailFetchResponseData} from "../../../lib/types/gmail/email";
+import {cleanEmailFromGmail} from "../../../lib/payloads/gmail/emails";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -38,7 +40,7 @@ export const gmailCallback = async (domain: string, code: string) => {
     const saved = await saveToken(tokens as GmailTokenData, domain);
     return {
       status: saved ? 200 : 400,
-      message: saved ? "error saving" : "success",
+      message: saved ? "success" : "error saving",
       data: saved ? tokens : null,
     };
   } catch (error) {
@@ -57,7 +59,7 @@ export const saveToken = async (
 
   if (!merchant) {
     const {data: map} = await fetchRootDocument("domain_map", domain);
-    let domain_map = map as DomainMap;
+    const domain_map = map as DomainMap;
     const {data: doc} = await fetchRootDocument(
       "shopify_merchant",
       domain_map.myshopify_domain,
@@ -95,7 +97,7 @@ export const sendEmail = async (
   }
 
   const {data} = await fetchRootDocument("shopify_merchant", domain);
-  let merchant = data as MerchantDocument;
+  const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "Merchant Not Found", null);
 
   const token = await getValidGmailAccessToken(merchant);
@@ -131,23 +133,29 @@ export const sendEmail = async (
   });
 };
 
-export const fetchEmails = async (domain: string) => {
+export const fetchEmails = async (domain: string, seconds: string) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
 
   const {data} = await fetchRootDocument("shopify_merchant", domain);
-  let merchant = data as MerchantDocument;
+  const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "Merchant Not Found", null);
 
-  const accessToken = await getValidGmailAccessToken(merchant);
+  const access_token = await getValidGmailAccessToken(merchant);
+  if (!access_token) return createResponse(401, "No Token", null);
+  console.log({access_token});
 
   const oAuth2Client = new google.auth.OAuth2();
-  oAuth2Client.setCredentials({access_token: accessToken});
+  oAuth2Client.setCredentials({access_token: access_token});
   const gmail = google.gmail({version: "v1", auth: oAuth2Client});
 
-  const res = await gmail.users.messages.list({userId: "me", maxResults: 10});
+  const res = await gmail.users.messages.list({
+    userId: "me",
+    maxResults: 100,
+    q: `after:${seconds}`,
+  });
   const messages = res.data.messages || [];
 
-  const emails = await Promise.all(
+  const emails = (await Promise.all(
     messages.map(async (msg) => {
       const message = await gmail.users.messages.get({
         userId: "me",
@@ -155,7 +163,38 @@ export const fetchEmails = async (domain: string) => {
       });
       return message.data;
     }),
-  );
+  )) as EmailFetchResponseData[];
 
-  return createResponse(200, "Fetched email", {emails});
+  const cleaned_emails = cleanEmailFromGmail(emails, merchant);
+  console.log(cleaned_emails);
+
+  return createResponse(200, "Fetched email", {emails: cleaned_emails});
+};
+
+export const subscribeToGmail = async (domain: string) => {
+  if (!domain) return createResponse(400, "Missing Domain", null);
+
+  const {data} = await fetchRootDocument("shopify_merchant", domain);
+  const merchant = data as MerchantDocument;
+  if (!merchant) return createResponse(422, "Merchant Not Found", null);
+
+  const request = {
+    userId: "me",
+    requestBody: {
+      topicName: "projects/sherpa-dc1fe/topics/gmail-messages",
+      labelIds: ["INBOX"],
+      labelFilterBehavior: "INCLUDE",
+    },
+  };
+
+  const access_token = await getValidGmailAccessToken(merchant);
+  if (!access_token) return createResponse(401, "No Token", null);
+
+  const oAuth2Client = new google.auth.OAuth2();
+  oAuth2Client.setCredentials({access_token: access_token});
+  const gmail = google.gmail({version: "v1", auth: oAuth2Client});
+
+  const response = await gmail.users.watch(request);
+
+  return createResponse(200, "Success", response);
 };

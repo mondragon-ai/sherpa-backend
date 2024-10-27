@@ -10,6 +10,7 @@ export const buildCustomerPrompt = (chat: ChatDocument) => {
       `;
   }
 
+  /* eslint-disable indent */
   const {first_name, last_name, email, total_spent, total_orders, address} =
     chat.customer;
 
@@ -21,6 +22,7 @@ export const buildCustomerPrompt = (chat: ChatDocument) => {
           - **Total Orders**: ${total_orders}
           - **Shipping Address**: ${address}
       `;
+  /* eslint-enable indent */
 };
 
 export const buildOrderPrompt = (chat: ChatDocument) => {
@@ -41,6 +43,7 @@ export const buildOrderPrompt = (chat: ChatDocument) => {
     tracking_url,
   } = chat.order;
 
+  /* eslint-disable indent */
   return `
             
           ## Order Information
@@ -60,6 +63,7 @@ export const buildOrderPrompt = (chat: ChatDocument) => {
               .join("\n") || "N/A"
           }
         `;
+  /* eslint-enable indent */
 };
 
 const setTone = (configurations: ConfigurationsType) => {
@@ -88,6 +92,7 @@ export const basePrompt = (
       .map((link) => `- [${link.name}](${link.url})`)
       .join("\n") || "N/A";
 
+  /* eslint-disable indent */
   const payload = `
           ### Context: This is a **customer service chatbot** designed for a Shopify store. The chatbot's role is to respond to customer inquiries, which are categorized by specific issues such as **order status, refunds, cancellations, shipping, exchanges, subscriptions**, and more.
           
@@ -149,5 +154,6 @@ export const basePrompt = (
   
           Respond promptly and confirm all actions taken. When ready, generate the response in markdown and submit it.
       `;
+  /* eslint-enable indent */
   return payload;
 };

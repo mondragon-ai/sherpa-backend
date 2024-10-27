@@ -5,6 +5,7 @@ import {
   initiateAuth,
   sendEmail,
   fetchEmails,
+  subscribeToGmail,
 } from "../services/gmail";
 
 /**
@@ -73,9 +74,33 @@ export const handleReceiveEmails = async (
   res: express.Response,
 ) => {
   const {domain} = req.params;
-  functions.logger.info(` 📧 [/CALLBACK]: Gmail oAuth Callback for ${domain}`);
+  const {time} = req.query;
+  const seconds = typeof time === "string" ? time : "";
+  functions.logger.info(` 📧 [/FETCH]: Fetch emails from gmail for ${domain}`);
 
-  const {data, status, message} = await fetchEmails(domain);
+  const {data, status, message} = await fetchEmails(domain, seconds);
 
   res.status(status).json({data, message});
+};
+
+/**
+ * Subscribe received emails to Pub/Sub (Gmail)
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleSubscription = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain} = req.params;
+  functions.logger.info(
+    ` 📧 [/SUBSCRIBE]: Subscribe received emails for ${domain}`,
+  );
+
+  const {status, message, data} = await subscribeToGmail(domain);
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
 };

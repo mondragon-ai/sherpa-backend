@@ -85,8 +85,6 @@ export type FAQTypeNames =
   | "discounts"
   | "giveaway";
 
-export type ShopifyPolicies = {};
-
 export type DomainMap = {
   custom_domain: string;
   id: string;

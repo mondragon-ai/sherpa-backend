@@ -1,87 +1,112 @@
 import {MerchantDocument} from "../types/merchant";
 import {generateRandomID} from "../../util/generators";
-import {CustomerData, OrderData, SuggestedActions} from "../types/shared";
-import {capitalizeWords} from "../../util/formatters/text";
 import {CleanedCustomerOrder} from "../types/shopify/orders";
-import {ChatDocument, ChatStartRequest} from "../types/chats";
+import {EmailDocument} from "../types/emails";
 import {CleanedCustomerPayload} from "../types/shopify/customers";
+import {CustomerData, OrderData, SuggestedActions} from "../types/shared";
 import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
+import {CleanedEmail} from "../types/gmail/email";
 
-export const createChatPayload = (
+export const createEmailPayload = (
   merchant: MerchantDocument,
-  prev_chat: ChatDocument,
+  prev_email: EmailDocument,
   customer: CleanedCustomerPayload | null,
   order: CleanedCustomerOrder | null,
-  request: ChatStartRequest,
-): {chat: ChatDocument; message: string} => {
-  /* eslint-disable indent */
-  const first_name = customer
-    ? ` ${capitalizeWords(
-        customer.first_name.toLocaleLowerCase().trim(),
-      ).trim()}`
-    : "";
-  const issue =
-    request.issue == "general" ? `${request.issue} store` : request.issue;
-  const message = `Hello${first_name}, welcome to our store's customer support! How can I assist you with your ${issue} question today?`;
+  cleaned_email: CleanedEmail,
+  message: string,
+): {email: EmailDocument; message: string} => {
   /* eslint-enable indent */
-  let chat = initializeChatPyaload(merchant, customer, order, request, message);
+  let email = initializeEmailPyaload(
+    merchant,
+    customer,
+    order,
+    cleaned_email,
+    message,
+  );
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
-  if (prev_chat) {
-    chat = {
-      ...chat,
+  if (prev_email) {
+    const internal_date = Number(cleaned_email.internalDate) / 1000;
+    email = {
+      ...prev_email,
+      status: "open",
+      customer: customer as CustomerData | null,
+      order: order as OrderData | null,
+      classification: null,
+      suggested_action: null,
+      summary: "",
+      error_info: "",
       conversation: [
-        ...prev_chat.conversation,
+        ...prev_email.conversation,
         {
           time: time,
           is_note: false,
           message: "",
           sender: "agent",
           action: "opened",
+          id: "",
+          history_id: "",
+          internal_date: "",
+          from: "",
+          subject: "",
+          attachments: [],
         },
         {
-          time: time,
+          time: internal_date,
           is_note: false,
           message: message,
-          sender: "agent",
+          sender: "customer",
           action: null,
+          id: cleaned_email.id,
+          history_id: cleaned_email.historyId,
+          internal_date: String(internal_date),
+          from: cleaned_email.from,
+          subject: cleaned_email.subject,
+          attachments: cleaned_email.attachments || [],
         },
       ],
-      created_at: prev_chat.created_at,
+      created_at: prev_email.created_at,
     };
   }
 
-  return {chat, message};
+  return {email, message};
 };
 
-export const initializeChatPyaload = (
+export const initializeEmailPyaload = (
   merchant: MerchantDocument,
   customer: CleanedCustomerPayload | null,
   order: CleanedCustomerOrder | null,
-  payload: ChatStartRequest,
+  cleaned_email: CleanedEmail,
   message: string,
-): ChatDocument => {
+): EmailDocument => {
   const ID = generateRandomID("chat_");
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+  const internal_date = Number(cleaned_email.internalDate) / 1000;
 
   return {
+    email: cleaned_email.from,
+    customer: customer as CustomerData | null,
+    order: order as OrderData | null,
+    source: "gmail",
+    rating: null,
+    classification: null,
+    status: "open",
+    suggested_action: null,
     edited: false,
     suggested_email: "",
-    specific_issue: payload.specific_issue,
+    specific_issue: "",
     email_sent: false,
     manual: false,
     manually_triggerd: false,
     initial_message: "",
     convo_trained: false,
     action_trained: false,
-    rating: null,
-    classification: null,
-    issue: payload.issue,
+    issue: null,
     suggested_action_done: false,
     summary: "",
     error_info: "",
     timezone: merchant.timezone,
     domain: merchant.id,
-    id: payload.email || ID,
+    id: cleaned_email.from || ID,
     conversation: [
       {
         time: time,
@@ -89,28 +114,36 @@ export const initializeChatPyaload = (
         message: "",
         sender: "agent",
         action: "opened",
+        id: "",
+        history_id: "",
+        internal_date: "",
+        from: "",
+        subject: "",
+        attachments: [],
       },
       {
-        time: time,
+        time: internal_date,
         is_note: false,
         message: message,
-        sender: "agent",
+        sender: "customer",
         action: null,
+        id: cleaned_email.id,
+        history_id: cleaned_email.historyId,
+        internal_date: String(internal_date),
+        from: cleaned_email.from,
+        subject: cleaned_email.subject,
+        attachments: cleaned_email.attachments || [],
       },
     ],
     time: time,
-    status: "open",
-    suggested_action: null,
-    customer: customer as CustomerData | null,
-    order: order as OrderData | null,
-    email: payload.email,
     updated_at: time,
     created_at: time,
+    history_id: "",
   };
 };
 
-export const respondToChatPayload = (
-  chat: ChatDocument,
+export const respondToEmailPayload = (
+  email: EmailDocument,
   timzone: string,
   repsonse: string,
   message: string,
@@ -118,31 +151,30 @@ export const respondToChatPayload = (
 ) => {
   const time = getCurrentUnixTimeStampFromTimezone(timzone);
   return {
-    ...chat,
+    ...email,
     conversation: [
-      ...(chat.conversation || []),
-      {
-        time: time - Math.round(60 * 1.5),
-        is_note: false,
-        message: message,
-        sender: "customer",
-        action: null,
-      },
+      ...(email.conversation || []),
       {
         time: time,
         is_note: false,
         message: repsonse,
         sender: "agent",
         action: null,
+        id: "",
+        history_id: "",
+        internal_date: "",
+        from: "",
+        subject: "",
+        attachments: [],
       },
     ],
     classification: classification,
     updated_at: time,
-  } as ChatDocument;
+  } as EmailDocument;
 };
 
 export const buildResolvedChatPayload = (
-  chat: ChatDocument,
+  chat: EmailDocument,
   merchant: MerchantDocument,
   suggested: SuggestedActions,
   actions: {
@@ -181,6 +213,6 @@ export const buildResolvedChatPayload = (
         action: "closed",
       },
     ],
-  } as ChatDocument;
+  } as EmailDocument;
   /* eslint-enable indent */
 };

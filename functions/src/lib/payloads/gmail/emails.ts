@@ -2,10 +2,9 @@ import {
   decodeFromBase64,
   extractEmailFromString,
 } from "../../../util/formatters/text";
-import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
-import {EmailDocument} from "../../types/emails";
-import {CleanedEmail, EmailFetchResponseData} from "../../types/gmail/email";
 import {MerchantDocument} from "../../types/merchant";
+import {CleanedEmail, EmailFetchResponseData} from "../../types/gmail/email";
+import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 export const cleanEmailFromGmail = (
   list: EmailFetchResponseData[],
@@ -60,42 +59,4 @@ export const cleanEmailFromGmail = (
     });
   }
   return emails;
-};
-
-export const buildEmailPayload = (
-  merchant: MerchantDocument,
-): EmailDocument => {
-  const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
-  return {
-    specific_issue: "",
-    edited: false,
-    suggested_email: "",
-    email_sent: false,
-    manual: false,
-    manually_triggerd: false,
-    initial_message: "",
-    convo_trained: false,
-    action_trained: false,
-    rating: null,
-    classification: null,
-    issue: "general",
-    suggested_action_done: false,
-    summary: "",
-    error_info: "",
-    timezone: "",
-    domain: "",
-    id: "",
-    conversation: [],
-    time: time,
-    status: "open",
-    suggested_action: null,
-    customer: null,
-    email: null,
-    updated_at: time,
-    created_at: time,
-    order: null,
-    source: "gmail",
-    history_id: "",
-    thread: [],
-  };
 };

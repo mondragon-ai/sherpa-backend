@@ -12,15 +12,15 @@ export type Orders = {
 };
 
 export type OrderEdge = {
-  node: OrderNode;
+  node: ShopifyOrder;
 };
 
-export type OrderNode = {
-  id: string;
-  name: string;
-  displayFulfillmentStatus: string;
-  originalTotalPriceSet: PriceSet;
-};
+// export type OrderNode = {
+//   id: string;
+//   name: string;
+//   displayFulfillmentStatus: string;
+//   originalTotalPriceSet: PriceSet;
+// };
 
 export type PriceSet = {
   presentmentMoney: Money;
@@ -112,6 +112,7 @@ export type CleanedCustomerOrder = {
   created_at: number;
   current_total_price: string;
   email: string;
+  id?: string;
 };
 
 export type CleanedLineItems = {

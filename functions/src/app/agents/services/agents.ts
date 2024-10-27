@@ -90,7 +90,7 @@ export const startChat = async (
   if (issue !== "general" && !email) {
     return createResponse(400, "Email required", null);
   }
-  // Fetch Merchant
+  // Fetch Chat
   const {data: doc} = await fetchSubcollectionDocument(
     "shopify_merchant",
     domain,

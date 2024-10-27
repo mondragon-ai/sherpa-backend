@@ -1,6 +1,7 @@
 import {
   createRootDocument,
   fetchRootDocument,
+  fetchSubcollectionDocument,
   updateRootDocument,
 } from "../../../database/firestore";
 import {
@@ -8,14 +9,24 @@ import {
   GmailWatchResponse,
 } from "../../../lib/types/gmail/email";
 import {gmail_v1, google} from "googleapis";
-import {Status} from "../../../lib/types/shared";
 import {createResponse} from "../../../util/errors";
+import {EmailDocument} from "../../../lib/types/emails";
+import {getEmailFromHistory} from "../../../pubsub/gmail";
+import {ClassificationTypes, Status} from "../../../lib/types/shared";
 import {GmailTokenData} from "../../../lib/types/gmail/auth";
 import {cleanEmailFromGmail} from "../../../lib/payloads/gmail/emails";
+import {updateMerchantUsage} from "../../../networking/shopify/billing";
 import {DomainMap, MerchantDocument} from "../../../lib/types/merchant";
 import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
-import {getEmailFromHistory} from "../../../pubsub/gmail";
+import {
+  createEmailPayload,
+  respondToEmailPayload,
+} from "../../../lib/payloads/emails";
+import {classifyMessage} from "../../../lib/helpers/agents/classify";
+import {fetchCustomerDataFromEmail} from "../../../lib/helpers/emails/emails";
+import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
+import {respondToChatGPT} from "../../../networking/openAi/respond";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -250,10 +261,12 @@ const mapEmailToDB = async (
 export const testSubPub = async (domain: string, email: string, id: number) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
 
+  // Fetch Merchant
   const {data: m} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = m as MerchantDocument;
   if (!merchant) return createResponse(422, "No Merchant", null);
 
+  // Validate Token
   const access_token = await getValidGmailAccessToken(merchant);
   if (!access_token) return createResponse(401, "Invalid", null);
 
@@ -262,8 +275,96 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
     historyId: id,
   };
 
+  // Fetch Email from History
   const cleaned = await getEmailFromHistory(data, access_token, merchant);
   if (!cleaned) return createResponse(400, "Can't Clean", null);
 
+  // Update Merchant Usage
+  const response = await updateMerchantUsage(domain, merchant);
+  if (response.capped || !response.charged) {
+    return createResponse(429, "Could not charge merchant", null);
+  }
+
+  // Fetch (if exists) Email thread
+  const {data: doc} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "emails",
+    email,
+  );
+
+  const existing_email = doc as EmailDocument;
+  if (existing_email.status == "open") {
+    return createResponse(201, "Still Open", null);
+  }
+
+  const msg = `**Subject**: ${
+    cleaned[0].subject
+  } **Message**: ${cleaned[0].content.join(" ")} `;
+
+  // Classify message
+  const classification = await classifyMessage(existing_email, msg);
+
+  // Extract Order Number & Customer Data
+  const {order, customer} = await fetchCustomerDataFromEmail(
+    merchant,
+    msg,
+    email,
+  );
+
+  if (customer?.email && order && order[0].email !== "") {
+    if (order[0].email !== email) {
+      return createResponse(409, "Email Must Match", {chat: null});
+    }
+  }
+
+  // Create payload
+  const {email: email_payload} = createEmailPayload(
+    merchant,
+    existing_email,
+    customer,
+    order && order[0],
+    cleaned[0],
+    msg,
+  );
+  console.log({create: email_payload});
+
+  // Respond with chatgpt
+  const payload = respondToEmailGPT(
+    merchant,
+    email_payload,
+    classification,
+    msg,
+  );
+  console.log({response: payload});
+  if (!payload) return createResponse(400, "Couldn't Respond", null);
+
+  // TODO: Update/Save
+
   return createResponse(200, "Success", null);
+};
+
+export const respondToEmailGPT = async (
+  merchant: MerchantDocument,
+  email: EmailDocument,
+  classification: ClassificationTypes,
+  message: string,
+): Promise<EmailDocument | null> => {
+  // Build chat payload
+  const blocks = buildResponsePayload(merchant, email, classification, message);
+
+  // Respond to chat
+  const response = await respondToChatGPT(message, blocks);
+  if (!response) return null;
+
+  // update chat
+  const payload = respondToEmailPayload(
+    email,
+    merchant.timezone,
+    response,
+    message,
+    classification,
+  );
+
+  return payload;
 };

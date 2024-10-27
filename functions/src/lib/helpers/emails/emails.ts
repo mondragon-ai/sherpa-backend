@@ -1,17 +1,26 @@
+import {
+  fetchShopifyOrder,
+  fetchShopifyOrderByName,
+} from "../../../networking/shopify/orders";
+import {ChatDocument} from "../../types/chats";
+import {decryptMsg} from "../../../util/encryption";
+import {MerchantDocument} from "../../types/merchant";
+import {CleanedCustomerOrder} from "../../types/shopify/orders";
+import {buildResolveEmailPayload} from "../../prompts/emails/resolve";
+import {cleanCustomerPayload} from "../../payloads/shopify/customers";
 import {buildDiscountEmailPayload} from "../../prompts/emails/discount";
+import {ClassificationTypes, SuggestedActions} from "../../types/shared";
+import {extractOrderNumber} from "../../../networking/openAi/extraction";
+import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
+import {buildOrderStatusEmailPayload} from "../../prompts/emails/orderStatus";
+import {buildChangeProductEmailPayload} from "../../prompts/emails/changeProduct";
+import {buildOrderTrackingEmailPayload} from "../../prompts/emails/orderTracking";
 import {buildOrderCancelEmailPayload} from "../../prompts/emails/orderCancellation";
+import {buildAddressChangeOrderEmailPayload} from "../../prompts/emails/changeAddressOrder";
+import {buildCancelSubscriptionEmailPayload} from "../../prompts/emails/cancelSubscription";
 import {buildAddressChangeCustomerEmailPayload} from "../../prompts/emails/changeAddressCustomer";
 import {buildOrderCancelPendingEmailPayload} from "../../prompts/emails/orderCancellationPending";
 import {buildOrderCancelUnavailableEmailPayload} from "../../prompts/emails/orderCancellationUnavailable";
-import {ChatDocument} from "../../types/chats";
-import {MerchantDocument} from "../../types/merchant";
-import {ClassificationTypes, SuggestedActions} from "../../types/shared";
-import {buildAddressChangeOrderEmailPayload} from "../../prompts/emails/changeAddressOrder";
-import {buildChangeProductEmailPayload} from "../../prompts/emails/changeProduct";
-import {buildCancelSubscriptionEmailPayload} from "../../prompts/emails/cancelSubscription";
-import {buildOrderStatusEmailPayload} from "../../prompts/emails/orderStatus";
-import {buildResolveEmailPayload} from "../../prompts/emails/resolve";
-import {buildOrderTrackingEmailPayload} from "../../prompts/emails/orderTracking";
 
 export const generateSuggestedEmail = (
   chat: ChatDocument,
@@ -95,4 +104,36 @@ export const sendEmail = async (
   // TODO: Send Email
 
   return true;
+};
+
+export const fetchCustomerDataFromEmail = async (
+  merchant: MerchantDocument,
+  message: string,
+  email: string,
+) => {
+  const {id: domain, access_token} = merchant;
+
+  const order_number = await extractOrderNumber(message);
+
+  const shpat = await decryptMsg(access_token);
+  const customer = await fetchShopifyCustomer(domain, shpat, email);
+  if (!customer) return {customer: null, order: null};
+
+  let orders: CleanedCustomerOrder[] | null = null;
+  if (order_number) {
+    orders = await fetchShopifyOrderByName(domain, shpat, order_number);
+  }
+
+  const last_order = customer.last_order_id;
+  if (last_order && !orders) {
+    const res = await fetchShopifyOrder(
+      domain,
+      shpat,
+      `gid://shopify/Order/${last_order}`,
+    );
+    if (res) orders = [res];
+  }
+
+  const cleaned_customer = cleanCustomerPayload(customer);
+  return {customer: cleaned_customer, order: orders};
 };

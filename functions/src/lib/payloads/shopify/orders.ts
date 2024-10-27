@@ -1,18 +1,36 @@
 import {
   CleanedCustomerOrder,
-  CleanedOrderList,
   OrderEdge,
   ShopifyOrder,
 } from "../../types/shopify/orders";
 
 export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
-  const cleaned: CleanedOrderList[] = [];
+  const cleaned: CleanedCustomerOrder[] = [];
   for (const n of nodes) {
+    const tracking =
+      n.node.fulfillments[0] && n.node.fulfillments[0].trackingInfo[0]
+        ? n.node.fulfillments[0].trackingInfo[0].url
+        : "";
+
+    const line_items = (n.node.lineItems.edges || []).map((li) => ({
+      title: li.node.title || "",
+      variant_id: li.node.variant.id || "",
+      options: li.node.variantTitle || "",
+      quantity: li.node.quantity || 0,
+    }));
+
+    const time_stamp = new Date(n.node.createdAt).getSeconds();
     cleaned.push({
-      name: n.node.name,
+      tracking_url: tracking,
+      order_number: n.node.name || "",
+      order_id: n.node.id || "",
+      payment_status: n.node.displayFinancialStatus || "",
+      fulfillment_status: n.node.displayFulfillmentStatus || "",
+      line_items: line_items,
+      created_at: time_stamp,
+      current_total_price: n.node.totalPriceSet.presentmentMoney.amount || "",
+      email: n.node.email || "",
       id: n.node.id,
-      fulfillment_status: n.node.displayFulfillmentStatus,
-      price: n.node.originalTotalPriceSet.presentmentMoney.amount,
     });
   }
   return cleaned;

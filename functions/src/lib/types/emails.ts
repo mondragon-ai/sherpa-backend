@@ -1,6 +1,5 @@
 import {
   SuggestedActions,
-  Conversation,
   CustomerData,
   IssueTypes,
   RatingTypes,
@@ -22,14 +21,14 @@ export type EmailDocument = {
   // chat
   rating: RatingTypes | null;
   classification: ClassificationTypes | null;
-  issue: IssueTypes;
+  issue: IssueTypes | null;
   suggested_action_done: boolean;
   summary: string;
   error_info: string;
   timezone: string;
   domain: string;
   id: string;
-  conversation: Conversation[];
+  conversation: EmailConversation[];
   time: number;
   status: "open" | "resolved" | "action_required";
   suggested_action: SuggestedActions | null;
@@ -40,7 +39,20 @@ export type EmailDocument = {
   order: null | OrderData;
   source: "gmail" | "outlook";
   history_id: string;
-  thread: EmailMessage[];
+};
+
+export type EmailConversation = {
+  time: number;
+  is_note: boolean;
+  action: null | "closed" | "opened";
+  sender: "agent" | "customer";
+  id: string;
+  history_id: string;
+  internal_date: string;
+  from: string;
+  subject: string;
+  message: string;
+  attachments: any[];
 };
 
 export type EmailMessage = {

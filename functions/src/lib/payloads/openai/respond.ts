@@ -12,10 +12,11 @@ import {buildAdressPayload} from "../../prompts/response/address";
 import {buildGiveawayPayload} from "../../prompts/response/giveaway";
 import {buildSubscriptiontPayload} from "../../prompts/response/subscription";
 import {buildProductPayload} from "../../prompts/response/product";
+import {EmailDocument} from "../../types/emails";
 
 export const buildResponsePayload = (
   merchant: MerchantDocument,
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   classification: ClassificationTypes,
   message: string,
 ) => {
@@ -91,7 +92,7 @@ type BlockType = {
 const openaiResponsePayload = (
   prompt: string,
   message: string,
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
 ) => {
   const blocks = [
     {

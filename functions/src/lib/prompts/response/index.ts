@@ -1,8 +1,9 @@
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 import {ConfigurationsType, MerchantDocument} from "../../types/merchant";
 import {ClassificationTypes} from "../../types/shared";
 
-export const buildCustomerPrompt = (chat: ChatDocument) => {
+export const buildCustomerPrompt = (chat: ChatDocument | EmailDocument) => {
   if (!chat || !chat.customer) {
     return `
           ## Customer Data
@@ -25,7 +26,7 @@ export const buildCustomerPrompt = (chat: ChatDocument) => {
   /* eslint-enable indent */
 };
 
-export const buildOrderPrompt = (chat: ChatDocument) => {
+export const buildOrderPrompt = (chat: ChatDocument | EmailDocument) => {
   if (!chat || !chat.order) {
     return `
             ## Order Information
@@ -81,7 +82,7 @@ const setTone = (configurations: ConfigurationsType) => {
 
 export const basePrompt = (
   merchant: MerchantDocument,
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   classification: ClassificationTypes,
 ) => {
   const {configurations} = merchant;

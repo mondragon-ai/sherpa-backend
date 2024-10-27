@@ -59,7 +59,7 @@ export const fetchShopifyOrder = async (
 ) => {
   const query = `
     query fetchCustomerOrder {
-        order(id: "gid://shopify/Order/6218691576117") {
+        order(id: "gid://shopify/Order/${order_id}") {
             id
             email
             totalPriceSet {
@@ -105,4 +105,67 @@ export const fetchShopifyOrder = async (
   const cleaned_order = cleanCustomerOrderPayload(order.order);
 
   return cleaned_order;
+};
+
+export const fetchShopifyOrderByName = async (
+  domain: string,
+  shpat: string,
+  order_number: string,
+) => {
+  const query = `
+    query SearchCustomerOrder($customerId: String!) {
+      orders(reverse: true, first: 250, query: $customerId) {
+        edges {
+          node {
+            id
+            email
+            refunds(first: 100) {
+                id
+            }
+            name
+            createdAt
+            displayFinancialStatus
+            displayFulfillmentStatus
+            originalTotalPriceSet {
+              presentmentMoney {
+                amount
+              }
+            }
+            fulfillments(first: 100) {
+                trackingInfo {
+                    url
+                }
+            } 
+            lineItems(first: 100) {
+                edges {
+                    node {
+                        variant {
+                            id
+                        }
+                        variantTitle
+                        title
+                        quantity
+                    }
+                }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    customerId: `name:${order_number}`,
+  };
+
+  const shop = domain.split(".")[0];
+  const {data} = await shopifyGraphQlRequest(shop, shpat, {query, variables});
+  const products = data as ShopifyOrdersResponse["data"];
+
+  if (!products.orders) return null;
+  if (!products.orders.edges) return null;
+
+  const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
+
+  return cleaned_orders;
 };

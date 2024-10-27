@@ -2,6 +2,7 @@ import * as AhoCorasick from "ahocorasick";
 import {ChatDocument} from "../../types/chats";
 import {ClassificationTypes, IssueTypes} from "../../types/shared";
 import {classifyMessageGPT} from "../../../networking/openAi/classifciation";
+import {EmailDocument} from "../../types/emails";
 
 type CategoryKeywords = {
   [key in ClassificationTypes]: string[];
@@ -441,14 +442,14 @@ export const classifyMessageAho = async (
 };
 
 export const classifyMessage = async (
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   message: string,
 ): Promise<ClassificationTypes> => {
   const aho = await classifyMessageAho(message);
   if (aho) return aho;
 
   const gpt = await classifyMessageGPT(message);
-  if (!gpt) return classifyByIssue(chat.issue);
+  if (!gpt) return classifyByIssue(chat.issue || "general");
 
   return gpt as ClassificationTypes;
 };

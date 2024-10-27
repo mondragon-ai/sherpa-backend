@@ -1,11 +1,12 @@
 import {basePrompt, buildCustomerPrompt, buildOrderPrompt} from ".";
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 import {MerchantDocument} from "../../types/merchant";
 import {ClassificationTypes} from "../../types/shared";
 
 export const buildOrderModifyPayload = (
   merchant: MerchantDocument,
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   classification: ClassificationTypes,
 ) => {
   return `

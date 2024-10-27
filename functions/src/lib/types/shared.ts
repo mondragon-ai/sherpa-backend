@@ -60,6 +60,7 @@ export enum ClassificationTypes {
   OrderModification = "ORDER_MODIFICATION",
   OrderRefund = "ORDER_REFUND",
   Product = "PRODUCT",
+  None = "",
 }
 
 export type RatingTypes = "positive" | "neutral" | "negative";

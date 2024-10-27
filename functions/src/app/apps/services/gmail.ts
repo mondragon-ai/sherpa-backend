@@ -3,6 +3,7 @@ import {
   fetchRootDocument,
   fetchSubcollectionDocument,
   updateRootDocument,
+  updateSubcollectionDocument,
 } from "../../../database/firestore";
 import {
   EmailFetchResponseData,
@@ -290,11 +291,11 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
     "shopify_merchant",
     domain,
     "emails",
-    email,
+    cleaned[0].from,
   );
 
   const existing_email = doc as EmailDocument;
-  if (existing_email.status == "open") {
+  if (existing_email && existing_email.status == "open") {
     return createResponse(201, "Still Open", null);
   }
 
@@ -304,12 +305,13 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
 
   // Classify message
   const classification = await classifyMessage(existing_email, msg);
+  console.log({classification});
 
   // Extract Order Number & Customer Data
   const {order, customer} = await fetchCustomerDataFromEmail(
     merchant,
     msg,
-    email,
+    cleaned[0].from,
   );
 
   if (customer?.email && order && order[0].email !== "") {
@@ -327,21 +329,26 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
     cleaned[0],
     msg,
   );
-  console.log({create: email_payload});
 
   // Respond with chatgpt
-  const payload = respondToEmailGPT(
+  const payload = await respondToEmailGPT(
     merchant,
     email_payload,
     classification,
     msg,
   );
-  console.log({response: payload});
   if (!payload) return createResponse(400, "Couldn't Respond", null);
 
-  // TODO: Update/Save
+  // Update/Save
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "emails",
+    cleaned[0].from,
+    payload,
+  );
 
-  return createResponse(200, "Success", null);
+  return createResponse(200, "Success", payload);
 };
 
 export const respondToEmailGPT = async (

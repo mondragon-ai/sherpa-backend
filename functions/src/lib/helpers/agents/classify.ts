@@ -373,6 +373,7 @@ const raw_keywords: CategoryKeywords = {
     "shirt measurements",
     "hoodies measurments",
   ],
+  [ClassificationTypes.None]: [],
 };
 
 const lowercaseKeywords = (keywords: CategoryKeywords): CategoryKeywords => {
@@ -407,6 +408,7 @@ export const category_weights: CategoryWeights = {
   [ClassificationTypes.OrderModification]: 1,
   [ClassificationTypes.OrderRefund]: 1,
   [ClassificationTypes.Product]: 1.2,
+  [ClassificationTypes.None]: 0.1,
 };
 
 export const classifyMessageAho = async (
@@ -448,13 +450,14 @@ export const classifyMessage = async (
   const aho = await classifyMessageAho(message);
   if (aho) return aho;
 
+  const issue = chat && chat.issue ? chat.issue : "";
   const gpt = await classifyMessageGPT(message);
-  if (!gpt) return classifyByIssue(chat.issue || "general");
+  if (!gpt) return classifyByIssue(issue);
 
   return gpt as ClassificationTypes;
 };
 
-const classifyByIssue = (issue: IssueTypes): ClassificationTypes => {
+const classifyByIssue = (issue: IssueTypes | ""): ClassificationTypes => {
   switch (issue) {
     case "exchange":
       return ClassificationTypes.OrderModification;
@@ -470,6 +473,6 @@ const classifyByIssue = (issue: IssueTypes): ClassificationTypes => {
       return ClassificationTypes.Subscription;
 
     default:
-      return ClassificationTypes.General;
+      return ClassificationTypes.None;
   }
 };

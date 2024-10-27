@@ -23,6 +23,7 @@ export const createEmailPayload = (
     cleaned_email,
     message,
   );
+  console.log({prev_email});
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   if (prev_email) {
     const internal_date = Number(cleaned_email.internalDate) / 1000;

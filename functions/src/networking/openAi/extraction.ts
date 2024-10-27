@@ -4,22 +4,16 @@ import {EXTRACT_ORDER_NUMBER_PROMPT} from "../../lib/prompts/extraction";
 export const extractOrderNumber = async (s: string) => {
   const token = process.env.CLASSIFICATION_API || "";
 
-  const blocks = {
-    model: "gpt-4-turbo",
-    messages: [
-      {
-        role: "system",
-        content: EXTRACT_ORDER_NUMBER_PROMPT,
-      },
-      {
-        role: "user",
-        content: s,
-      },
-    ],
-    temperature: 0,
-    top_p: 1,
-    max_completion_tokens: 5,
-  };
+  const blocks = [
+    {
+      role: "system",
+      content: EXTRACT_ORDER_NUMBER_PROMPT,
+    },
+    {
+      role: "user",
+      content: s,
+    },
+  ];
 
   const payload = {
     model: "gpt-4-turbo",
@@ -30,6 +24,7 @@ export const extractOrderNumber = async (s: string) => {
   };
 
   const {data} = await openAIRequest("/chat/completions", token, payload);
+  if (!data) return null;
   const response = data as ChatCompletionResponse;
   const order_number = response.choices[0].message.content;
   if (!order_number) return null;

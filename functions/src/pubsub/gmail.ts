@@ -66,12 +66,11 @@ export const getEmailFromHistory = async (
           });
 
           if (full_message.data) {
-            functions.logger.info({msg: full_message.data});
             cleaned_email = cleanEmailFromGmail(
               [full_message.data as EmailFetchResponseData],
               merchant,
             );
-            console.log("New email content:", cleaned_email);
+            // console.log("New email content:", cleaned_email);
           }
         }
       }

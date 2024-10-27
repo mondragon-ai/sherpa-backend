@@ -38,6 +38,7 @@ type Header = {
 type Body = {
   size: number;
   data?: string;
+  attachmentId?: string;
 };
 
 type Part = {
@@ -46,6 +47,7 @@ type Part = {
   filename: string;
   headers: Header[];
   body: Body;
+  parts?: Part[];
 };
 
 export type GmailWatchResponse = {
@@ -120,5 +122,6 @@ export type CleanedEmail = {
   from: string;
   subject: string;
   content: string[];
+  attachments: string[];
   created_at: number;
 };

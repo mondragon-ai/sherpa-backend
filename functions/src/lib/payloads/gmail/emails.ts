@@ -16,9 +16,27 @@ export const cleanEmailFromGmail = (
   for (const email of list) {
     const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
     const body = [];
+    const attatchments = [];
     for (const part of email.payload.parts) {
-      if (part.mimeType === "text/plain") {
+      if (part.mimeType == "text/plain") {
         body.push(decodeFromBase64(part.body.data || ""));
+      }
+      if (part.mimeType.includes("image") || part.mimeType.includes("pdf")) {
+        attatchments.push(part.body.attachmentId || "");
+      }
+    }
+
+    if (body.length == 0) {
+      for (const part of email.payload.parts) {
+        console.log({Parent_Part: part.mimeType});
+        if (part.mimeType == "multipart/alternative" && part.parts) {
+          for (const child of part.parts) {
+            console.log({Child_Part: child.mimeType});
+            if (child.mimeType == "text/plain") {
+              body.push(decodeFromBase64(child.body.data || ""));
+            }
+          }
+        }
       }
     }
     const from =
@@ -37,6 +55,7 @@ export const cleanEmailFromGmail = (
       from: extractEmailFromString(from),
       subject: subject,
       content: body,
+      attachments: attatchments,
       created_at: time,
     });
   }

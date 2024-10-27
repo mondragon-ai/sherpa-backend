@@ -15,6 +15,7 @@ import {cleanEmailFromGmail} from "../../../lib/payloads/gmail/emails";
 import {DomainMap, MerchantDocument} from "../../../lib/types/merchant";
 import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
+import {getEmailFromHistory} from "../../../pubsub/gmail";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -244,4 +245,25 @@ const mapEmailToDB = async (
   await createRootDocument("email_map", sender, payload);
 
   return createResponse(201, "Subscribed", {sender});
+};
+
+export const testSubPub = async (domain: string, email: string, id: number) => {
+  if (!domain) return createResponse(400, "Missing Domain", null);
+
+  const {data: m} = await fetchRootDocument("shopify_merchant", domain);
+  const merchant = m as MerchantDocument;
+  if (!merchant) return createResponse(422, "No Merchant", null);
+
+  const access_token = await getValidGmailAccessToken(merchant);
+  if (!access_token) return createResponse(401, "Invalid", null);
+
+  const data = {
+    emailAddress: email,
+    historyId: id,
+  };
+
+  const cleaned = await getEmailFromHistory(data, access_token, merchant);
+  if (!cleaned) return createResponse(400, "Can't Clean", null);
+
+  return createResponse(200, "Success", null);
 };

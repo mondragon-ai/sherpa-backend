@@ -6,6 +6,7 @@ import {
   sendEmail,
   fetchEmails,
   subscribeToGmail,
+  testSubPub,
 } from "../services/gmail";
 
 /**
@@ -98,6 +99,32 @@ export const handleSubscription = async (
   );
 
   const {status, message, data} = await subscribeToGmail(domain);
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Test Pub/Sub (Gmail)
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleTestPubSub = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, email} = req.params;
+  const {id} = req.query;
+  const history_id = typeof id == "string" ? id : "";
+  functions.logger.info(` 📧 [/TEST]: Test Pub/Sub ${domain}`);
+
+  const {status, message, data} = await testSubPub(
+    domain,
+    email,
+    Number(history_id),
+  );
 
   res.status(status).json({
     message: message,

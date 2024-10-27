@@ -5,6 +5,7 @@ import {
   handleSendEmail,
   handleReceiveEmails,
   handleSubscription,
+  handleTestPubSub,
 } from "../controller/gmail";
 
 export const gmailRoutes = (app: express.Router) => {
@@ -13,4 +14,5 @@ export const gmailRoutes = (app: express.Router) => {
   app.post("/gmail/:domain/email/send", handleSendEmail);
   app.get("/gmail/:domain/email/receive", handleReceiveEmails);
   app.post("/gmail/:domain/subscribe", handleSubscription);
+  app.post("/gmail/:domain/test/:email", handleTestPubSub);
 };

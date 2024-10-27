@@ -40,7 +40,7 @@ export const receiveGmailNotification = functions
     if (!cleaned) return;
   });
 
-const getEmailFromHistory = async (
+export const getEmailFromHistory = async (
   data: GmailNotifications,
   token: string,
   merchant: MerchantDocument,

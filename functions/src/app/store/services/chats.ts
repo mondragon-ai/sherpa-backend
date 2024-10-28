@@ -6,8 +6,8 @@ import {
   simpleSearch,
   updateSubcollectionDocument,
 } from "../../../database/firestore";
-import {ChatDocument} from "../../../lib/types/chats";
 import {createResponse} from "../../../util/errors";
+import {ChatDocument} from "../../../lib/types/chats";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 export const fetchChats = async (domain: string) => {
@@ -46,6 +46,19 @@ export const filterChats = async (
 ) => {
   if (!domain || !query) return createResponse(400, "Missing params", null);
 
+  if (query == "newest") {
+    const {data} = await fetchSubcollectionCollection(
+      "shopify_merchant",
+      domain,
+      "chats",
+    );
+
+    const chats = data as ChatDocument[];
+    if (!chats) return createResponse(422, "No chats found", []);
+
+    return createResponse(200, "Fetched newest chats", chats);
+  }
+
   const {data} = await simpleSearch(
     "shopify_merchant",
     domain,
@@ -53,10 +66,11 @@ export const filterChats = async (
     "status",
     query,
   );
+
   if (!data || !data.list) return createResponse(422, "No chats found", null);
   const chats = data.list as ChatDocument[];
 
-  return createResponse(200, "Fetched chats", chats);
+  return createResponse(200, `Fetched ${query} chats`, chats);
 };
 
 export const deleteChat = async (domain: string, id: string) => {

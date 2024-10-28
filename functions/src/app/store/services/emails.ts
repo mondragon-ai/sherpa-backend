@@ -46,6 +46,19 @@ export const filterEmails = async (
 ) => {
   if (!domain || !query) return createResponse(400, "Missing params", null);
 
+  if (query == "newest") {
+    const {data} = await fetchSubcollectionCollection(
+      "shopify_merchant",
+      domain,
+      "emails",
+    );
+
+    const emails = data as EmailDocument[];
+    if (!emails) return createResponse(422, "No email found", []);
+
+    return createResponse(200, "Fetched newest emails", emails);
+  }
+
   const {data} = await simpleSearch(
     "shopify_merchant",
     domain,
@@ -53,10 +66,11 @@ export const filterEmails = async (
     "status",
     query,
   );
+
   if (!data || !data.list) return createResponse(422, "No emails found", null);
   const emails = data.list as EmailDocument[];
 
-  return createResponse(200, "Fetched emails", emails);
+  return createResponse(200, `Fetched ${query} emails`, emails);
 };
 
 export const deleteEmail = async (domain: string, id: string) => {

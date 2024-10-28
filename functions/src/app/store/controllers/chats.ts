@@ -54,7 +54,7 @@ export const handleFetchNextChats = async (
 };
 
 /**
- * Fetch next chats from DB (infinity scroll pagination)
+ * Fetch filtered chats from DB (infinity scroll pagination)
  *
  * @param {express.Request} req - The request object containing the domain parameter.
  * @param {express.Response} res - The response object to return the merchant data.
@@ -67,7 +67,10 @@ export const handleFilteredChats = async (
   const {type} = req.query;
   const filter = typeof type == "string" ? type : "";
   functions.logger.info(
-    " 💬 [/FETCH NEXT]: Fetch filtered chats for " + domain + " for " + filter,
+    " 💬 [/FETCH FILTERED]: Fetch filtered chats for " +
+      domain +
+      " for " +
+      filter,
   );
 
   const {data, status, message} = await filterChats(

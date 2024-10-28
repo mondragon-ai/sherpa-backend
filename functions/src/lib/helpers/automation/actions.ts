@@ -13,30 +13,38 @@ export const performActions = async (
   let performed = false;
   switch (suggested) {
     case "apply_discount": {
+      console.log(suggested);
       performed = await applyDiscount(chat, type);
       break;
     }
     case "cancel_order": {
+      console.log(suggested);
       performed = await cancelOrder(chat, type);
       break;
     }
     case "change_address": {
+      console.log(suggested);
       performed = await changeAddress(chat, type);
       break;
     }
     case "resolve": {
+      console.log(suggested);
       break;
     }
     case "cancel_subscription": {
+      console.log(suggested);
       break;
     }
     case "change_product": {
+      console.log(suggested);
       break;
     }
     case "exchange": {
+      console.log(suggested);
       break;
     }
     case "unknown": {
+      console.log(suggested);
       break;
     }
     default: {

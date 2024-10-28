@@ -67,10 +67,7 @@ export const handleFilteredChats = async (
   const {type} = req.query;
   const filter = typeof type == "string" ? type : "";
   functions.logger.info(
-    " 💬 [/FETCH FILTERED]: Fetch filtered chats for " +
-      domain +
-      " for " +
-      filter,
+    " 💬 [/FETCH FILTERED] Fetch filtered: " + filter + " for " + domain,
   );
 
   const {data, status, message} = await filterChats(

@@ -115,3 +115,14 @@ export type OAuthResponse = {
   data: GmailTokenData;
   message: string;
 };
+
+export type AlgoliaSearchType = {
+  id: string;
+  first_name: string;
+  lasst_name: string;
+  email: string;
+  issue: string;
+  status: string;
+  suggested_action: string;
+  classification: string;
+};

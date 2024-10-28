@@ -2,14 +2,14 @@ import * as functions from "firebase-functions";
 
 // Algolia
 import algoliasearch from "algoliasearch";
-import {EmailDocument} from "../lib/types/emails";
+import {AlgoliaSearchType} from "../lib/types/shared";
 
 const algolia = algoliasearch(
   process.env.X_ALGOLGIA_APPLICATION_ID as string,
   process.env.X_ALGOLGIA_API_KEY as string,
 );
 
-type AlgoliaIndexTypes = "inventory_index" | "items_index";
+type AlgoliaIndexTypes = "sherpa_chats" | "sherpa_emails";
 
 /**
  * Update Algolia index with the provided object for a given collection.
@@ -19,11 +19,12 @@ type AlgoliaIndexTypes = "inventory_index" | "items_index";
  */
 export const updateToAlgolia = async (
   index: AlgoliaIndexTypes,
-  update_object: EmailDocument,
+  domain: string,
+  update_object: AlgoliaSearchType,
 ) => {
   if (!update_object) return;
 
-  const algolia_db = algolia.initIndex(index);
+  const algolia_db = algolia.initIndex(`${domain}_${index}`);
 
   try {
     const push_data: {objectID: string}[] = [];
@@ -50,9 +51,10 @@ export const updateToAlgolia = async (
  */
 export const deleteFromAlgolia = async (
   index: AlgoliaIndexTypes,
+  domain: string,
   objectID: string,
 ) => {
-  const instance_algolia = algolia.initIndex(index);
+  const instance_algolia = algolia.initIndex(`${domain}_${index}`);
 
   if (!instance_algolia) return;
 

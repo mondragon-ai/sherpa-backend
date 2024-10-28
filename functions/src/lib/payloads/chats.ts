@@ -1,11 +1,17 @@
 import {MerchantDocument} from "../types/merchant";
 import {generateRandomID} from "../../util/generators";
-import {CustomerData, OrderData, SuggestedActions} from "../types/shared";
+import {
+  AlgoliaSearchType,
+  CustomerData,
+  OrderData,
+  SuggestedActions,
+} from "../types/shared";
 import {capitalizeWords} from "../../util/formatters/text";
 import {CleanedCustomerOrder} from "../types/shopify/orders";
 import {ChatDocument, ChatStartRequest} from "../types/chats";
 import {CleanedCustomerPayload} from "../types/shopify/customers";
 import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
+import {EmailDocument} from "../types/emails";
 
 export const createChatPayload = (
   merchant: MerchantDocument,
@@ -142,7 +148,7 @@ export const respondToChatPayload = (
 };
 
 export const buildResolvedChatPayload = (
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   merchant: MerchantDocument,
   suggested: SuggestedActions,
   actions: {
@@ -150,12 +156,36 @@ export const buildResolvedChatPayload = (
     action: boolean;
     suggested_email: string;
   },
+  type: "email" | "chat",
   summary = "",
   error = "",
 ) => {
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
 
   /* eslint-disable indent */
+  const conversation =
+    type == "chat"
+      ? {
+          time: time,
+          is_note: false,
+          message: "",
+          sender: "agent",
+          action: "closed",
+        }
+      : {
+          time: time,
+          is_note: false,
+          message: "",
+          sender: "agent",
+          action: "closed",
+          id: "",
+          history_id: "",
+          internal_date: "",
+          from: "",
+          subject: "",
+          attachments: [],
+        };
+
   return {
     ...chat,
     suggested_email: actions.suggested_email,
@@ -171,16 +201,24 @@ export const buildResolvedChatPayload = (
         : "action_required",
     suggested_action: suggested,
     updated_at: time,
-    conversation: [
-      ...(chat.conversation || []),
-      {
-        time: time,
-        is_note: false,
-        message: "",
-        sender: "agent",
-        action: "closed",
-      },
-    ],
+    conversation: [...(chat.conversation || []), conversation],
   } as ChatDocument;
   /* eslint-enable indent */
+};
+
+export const algoliaChatCreatePayload = (
+  chat: ChatDocument | EmailDocument,
+) => {
+  const {customer, id, email, issue, status, suggested_action, classification} =
+    chat;
+  return {
+    id: id,
+    first_name: customer ? customer.first_name : "",
+    lasst_name: customer ? customer.last_name : "",
+    email: email || "",
+    issue: issue || "",
+    status: status || "",
+    suggested_action: suggested_action || "",
+    classification: classification || "",
+  } as AlgoliaSearchType;
 };

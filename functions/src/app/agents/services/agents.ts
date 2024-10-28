@@ -1,5 +1,4 @@
 import {
-  deleteSubcollectionDocument,
   fetchRootDocument,
   fetchSubcollectionDocument,
   updateSubcollectionDocument,
@@ -249,11 +248,12 @@ export const resolveChat = async (
     return createResponse(400, "Missing params", null);
   }
 
+  const sub_collection = type == "chat" ? "chats" : "emails";
   // Fetch chat data:
   const {data: chat_doc} = await fetchSubcollectionDocument(
     "shopify_merchant",
     domain,
-    "chats",
+    sub_collection,
     id,
   );
   const chat = chat_doc as ChatDocument;
@@ -263,16 +263,10 @@ export const resolveChat = async (
     return createResponse(409, "Chat Resovled", null);
   }
 
-  // Delete chat if convo == 2
-  if (chat.conversation.length < 2) {
-    await deleteSubcollectionDocument("shopify_merchant", domain, "chats", id);
-    return createResponse(204, "Chat Deleted", null);
-  }
-
   // Generate Suggested Actions
   const suggested = await generateSuggestedAction(chat, type);
 
-  // ? Summarize -> summary
+  // ? Summarize -> summary | ""
 
   // Fetch chat data:
   const {data} = await fetchRootDocument("shopify_merchant", domain);
@@ -283,19 +277,31 @@ export const resolveChat = async (
   console.log({actions});
 
   // Build Payload
-  const payload = buildResolvedChatPayload(chat, merchant, suggested, actions);
+  const payload = buildResolvedChatPayload(
+    chat,
+    merchant,
+    suggested,
+    actions,
+    type,
+  );
   console.log({payload});
 
   // Update Doc
   //   await updateSubcollectionDocument(
   //     "shopify_merchant",
   //     domain,
-  //     "chats",
+  //     sub_collection,
   //     id,
   //     payload,
   //   );
 
-  return createResponse(200, "Responded", null);
+  return createResponse(200, "Resolved", null);
+};
+
+type AutomaticAction = {
+  email: boolean;
+  action: boolean;
+  suggested_email: string;
 };
 
 export const automateAction = async (
@@ -303,12 +309,16 @@ export const automateAction = async (
   merchant: MerchantDocument,
   type: "email" | "chat",
   suggested: SuggestedActions,
-) => {
+): Promise<AutomaticAction> => {
   // Perform Actions
   const performed = await performActions(chat, type, suggested, merchant); // ! Extract action string
 
   // Build Suggested Email
   const suggested_email = generateSuggestedEmail(chat, suggested, merchant); // ! Add action string
+
+  if (!performed) {
+    return {email: false as boolean, action: performed, suggested_email};
+  }
 
   // Send Suggested Email
   const email_sent = await sendEmail(chat, type, suggested_email, merchant);

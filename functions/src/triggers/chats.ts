@@ -3,6 +3,7 @@ import {ChatDocument} from "../lib/types/chats";
 import {resolveTicket} from "../queues/resolveTicket";
 import {algoliaChatCreatePayload} from "../lib/payloads/chats";
 import {deleteFromAlgolia, updateToAlgolia} from "../database/algolia";
+import {createTicketAnalytics} from "../lib/helpers/analytics/create";
 
 export const chatsCreated = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
@@ -13,7 +14,11 @@ export const chatsCreated = functions.firestore
     if (!data) return;
 
     const chat = data as unknown as ChatDocument;
-    const {id, domain} = chat;
+    const {id, domain, status} = chat;
+
+    if (status !== "open") {
+      return;
+    }
 
     // Start Timer
     await resolveTicket(domain, id, "chat");
@@ -23,7 +28,7 @@ export const chatsCreated = functions.firestore
     await updateToAlgolia("sherpa_chats", domain, payload);
 
     // Update Analytics - New Ticket
-    // await createTicketAnalytics("chat", chat);
+    await createTicketAnalytics("chat", chat);
   });
 
 export const chatUpdated = functions.firestore
@@ -41,7 +46,8 @@ export const chatUpdated = functions.firestore
 
     console.log(`[${before_chat.status}, ${after_chat.status}]`);
 
-    // TODO: Update Analytics - New Ticket
+    // Update Analytics - New Ticket
+    // await createTicketAnalytics("chat", after_chat);
   });
 
 export const chatDeleted = functions.firestore

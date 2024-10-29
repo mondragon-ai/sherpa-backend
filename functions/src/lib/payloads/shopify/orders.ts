@@ -38,7 +38,9 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
 
 export const cleanCustomerOrderPayload = (order: ShopifyOrder) => {
   const tracking =
-    order.fulfillments[0] && order.fulfillments[0].trackingInfo[0]
+    order.fulfillments &&
+    order.fulfillments[0] &&
+    order.fulfillments[0].trackingInfo[0]
       ? order.fulfillments[0].trackingInfo[0].url
       : "";
 

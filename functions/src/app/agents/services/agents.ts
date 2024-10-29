@@ -98,8 +98,15 @@ export const startChat = async (
   );
   const existing_chat = doc as ChatDocument;
 
-  if (existing_chat.status == "open") {
+  if (existing_chat && existing_chat.status == "open") {
     return createResponse(201, "Still Open", null);
+    // await updateExistingEmailConversation(
+    //   existing_email,
+    //   msg,
+    //   cleaned[0],
+    //   merchant,
+    // );
+    // return createResponse(201, "Still Open", null);
   }
 
   // Fetch Merchant
@@ -117,7 +124,7 @@ export const startChat = async (
   const {customer, order} = await fetchCustomerData(merchant, payload);
 
   // Validate order & email
-  if (customer?.email && order?.email !== "") {
+  if (customer?.email && order && order?.email !== "") {
     if (order?.email !== email) {
       return createResponse(409, "Email Must Match", {chat: null});
     }
@@ -174,12 +181,9 @@ export const fetchCustomerData = async (
 
   const last_order = customer.last_order_id;
   if (last_order && !order) {
-    order = await fetchShopifyOrder(
-      domain,
-      shpat,
-      `gid://shopify/Order/${last_order}`,
-    );
+    order = await fetchShopifyOrder(domain, shpat, `${last_order}`);
   }
+  console.log({Fetch_Customer: order});
 
   const cleaned_customer = cleanCustomerPayload(customer);
   return {customer: cleaned_customer, order: order};
@@ -249,6 +253,7 @@ export const resolveChat = async (
   }
 
   const sub_collection = type == "chat" ? "chats" : "emails";
+
   // Fetch chat data:
   const {data: chat_doc} = await fetchSubcollectionDocument(
     "shopify_merchant",
@@ -256,9 +261,9 @@ export const resolveChat = async (
     sub_collection,
     id,
   );
+
   const chat = chat_doc as ChatDocument;
   if (!chat) return createResponse(422, "Chat not found", null);
-
   if (chat.status == "resolved") {
     return createResponse(409, "Chat Resovled", null);
   }
@@ -286,14 +291,14 @@ export const resolveChat = async (
   );
   console.log({payload});
 
-  // Update Doc
-  //   await updateSubcollectionDocument(
-  //     "shopify_merchant",
-  //     domain,
-  //     sub_collection,
-  //     id,
-  //     payload,
-  //   );
+  //   Update Doc
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    sub_collection,
+    id,
+    payload,
+  );
 
   return createResponse(200, "Resolved", null);
 };

@@ -70,9 +70,9 @@ export const receiveGmailNotification = functions
       cleaned[0].from,
     );
 
-    const msg = `**Subject**: ${
+    const msg = `**Subject**:<br> ${
       cleaned[0].subject
-    }<br><br> **Message**: ${cleaned[0].content.join(" ")} `;
+    }<br><br> **Message**:<br> ${cleaned[0].content.join(" ")} `;
     functions.logger.info({cleaned: cleaned[0]});
 
     const is_email = await validateEmailIsCustomer(msg);

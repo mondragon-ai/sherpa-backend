@@ -18,6 +18,7 @@ export type ChatDocument = {
   initial_message: string;
   convo_trained: boolean;
   action_trained: boolean;
+  sentiment: RatingTypes | null;
 
   // chat
   rating: RatingTypes | null;

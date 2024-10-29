@@ -29,6 +29,7 @@ export const performActions = async (
     }
     case "resolve": {
       console.log(suggested);
+      performed = true;
       break;
     }
     case "cancel_subscription": {

@@ -88,6 +88,7 @@ export const initializeChatPyaload = (
     timezone: merchant.timezone,
     domain: merchant.id,
     id: payload.email || ID,
+    sentiment: null,
     conversation: [
       {
         time: time,

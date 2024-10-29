@@ -18,7 +18,7 @@ export const resolveTicket = async (
   const queue = "CompleteChats";
 
   const location = "us-central1";
-  const url = `https://us-central1-sherpa-dc1fe.cloudfunctions.net/${domain}/resolve/${email}?type=${type}`;
+  const url = `https://us-central1-sherpa-dc1fe.cloudfunctions.net/agents/${domain}/resolve/${email}?type=${type}`;
 
   // Construct the fully qualified queue name.
   const parent = client.queuePath(project, location, queue);

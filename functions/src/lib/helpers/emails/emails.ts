@@ -2,8 +2,10 @@ import {
   fetchShopifyOrder,
   fetchShopifyOrderByName,
 } from "../../../networking/shopify/orders";
+import {google} from "googleapis";
 import {ChatDocument} from "../../types/chats";
 import {decryptMsg} from "../../../util/encryption";
+import {getValidGmailAccessToken} from "./validate";
 import {MerchantDocument} from "../../types/merchant";
 import {CleanedCustomerOrder} from "../../types/shopify/orders";
 import {buildResolveEmailPayload} from "../../prompts/emails/resolve";
@@ -97,13 +99,46 @@ export const sendEmail = async (
 ) => {
   if (!merchant.configurations.automate_emails) return false;
 
-  // TODO: Get gmail client
+  // Get email token from merchant
+  const mail = merchant.apps.find(
+    (a) => a.name == "gmail" || a.name == "outlook",
+  );
+  if (!mail || !mail.token) return false;
 
-  // TODO: Encode the message
+  const token = await getValidGmailAccessToken(merchant);
+  if (!token) return false;
 
-  // TODO: Send Email
+  // Fetch Client
+  const oAuth2Client = new google.auth.OAuth2();
+  oAuth2Client.setCredentials({access_token: token});
+  const gmail = google.gmail({version: "v1", auth: oAuth2Client});
 
-  return true;
+  // Encode the message
+  if (chat.email) return false;
+
+  const email = [
+    `To: ${chat.email}`,
+    "Content-Type: text/plain; charset=utf-8",
+    "MIME-Version: 1.0",
+    "Subject: Follow Up",
+    "",
+    suggested_email,
+  ].join("\n");
+
+  const encodedEmail = Buffer.from(email)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+
+  // Send Email
+  const response = await gmail.users.messages.send({
+    userId: "me",
+    requestBody: {
+      raw: encodedEmail,
+    },
+  });
+
+  return response.status < 200 ? true : false;
 };
 
 export const fetchCustomerDataFromEmail = async (
@@ -124,13 +159,11 @@ export const fetchCustomerDataFromEmail = async (
     orders = await fetchShopifyOrderByName(domain, shpat, order_number);
   }
 
-  console.log({customer: customer});
   const last_order = customer.last_order_id;
   if (last_order && !orders) {
     const res = await fetchShopifyOrder(domain, shpat, `${last_order}`);
     if (res) orders = [res];
   }
-  console.log({orders});
 
   const cleaned_customer = cleanCustomerPayload(customer);
   return {customer: cleaned_customer, order: orders};

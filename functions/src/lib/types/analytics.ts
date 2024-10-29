@@ -11,6 +11,10 @@ export type AnalyticsDocument = {
   sentiment_analysis: {positive: number; negative: number; neutral: number};
   created_at: number;
   updated_at: number;
+  category_csat: Record<
+    string,
+    {positive: number; neutral: number; negative: number}
+  >;
 };
 
 export type LineChart = {

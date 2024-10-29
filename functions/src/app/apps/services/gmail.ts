@@ -5,34 +5,34 @@ import {
   updateRootDocument,
   updateSubcollectionDocument,
 } from "../../../database/firestore";
-import * as functions from "firebase-functions";
 import {
   EmailFetchResponseData,
   GmailWatchResponse,
 } from "../../../lib/types/gmail/email";
-import {gmail_v1, google} from "googleapis";
-import {createResponse} from "../../../util/errors";
-import {EmailDocument} from "../../../lib/types/emails";
-import {getEmailFromHistory} from "../../../pubsub/gmail";
-import {ClassificationTypes, Status} from "../../../lib/types/shared";
-import {GmailTokenData} from "../../../lib/types/gmail/auth";
-import {cleanEmailFromGmail} from "../../../lib/payloads/gmail/emails";
-import {updateMerchantUsage} from "../../../networking/shopify/billing";
-import {DomainMap, MerchantDocument} from "../../../lib/types/merchant";
-import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
-import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 import {
   createEmailPayload,
   respondToEmailPayload,
   updateExistingEmailConversation,
 } from "../../../lib/payloads/emails";
-import {classifyMessage} from "../../../lib/helpers/agents/classify";
-import {fetchCustomerDataFromEmail} from "../../../lib/helpers/emails/emails";
-import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
 import {
   respondToChatGPT,
   validateEmailIsCustomer,
 } from "../../../networking/openAi/respond";
+import {gmail_v1, google} from "googleapis";
+import * as functions from "firebase-functions";
+import {createResponse} from "../../../util/errors";
+import {EmailDocument} from "../../../lib/types/emails";
+import {getEmailFromHistory} from "../../../pubsub/gmail";
+import {GmailTokenData} from "../../../lib/types/gmail/auth";
+import {classifyMessage} from "../../../lib/helpers/agents/classify";
+import {ClassificationTypes, Status} from "../../../lib/types/shared";
+import {cleanEmailFromGmail} from "../../../lib/payloads/gmail/emails";
+import {updateMerchantUsage} from "../../../networking/shopify/billing";
+import {DomainMap, MerchantDocument} from "../../../lib/types/merchant";
+import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
+import {fetchCustomerDataFromEmail} from "../../../lib/helpers/emails/emails";
+import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
+import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -128,7 +128,7 @@ export const saveToken = async (
   return await mapEmailToDB(gmail, merchant);
 };
 
-export const sendEmail = async (
+export const sendGmailEmail = async (
   domain: string,
   to: string,
   subject: string,

@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import {EmailDocument} from "../lib/types/emails";
 import {resolveTicket} from "../queues/resolveTicket";
 import {algoliaChatCreatePayload} from "../lib/payloads/chats";
+import {createTicketAnalytics} from "../lib/helpers/analytics/create";
 import {deleteFromAlgolia, updateToAlgolia} from "../database/algolia";
 
 export const emailCreated = functions.firestore
@@ -23,7 +24,7 @@ export const emailCreated = functions.firestore
     await updateToAlgolia("sherpa_emails", domain, payload);
 
     // Update Analytics - New Ticket
-    // await createTicketAnalytics("chat", chat);
+    await createTicketAnalytics("email", email);
   });
 
 export const emailUpdated = functions.firestore
@@ -41,7 +42,8 @@ export const emailUpdated = functions.firestore
 
     console.log(`[${before_emails.status}, ${after_emails.status}]`);
 
-    // TODO: Update Analytics - New Ticket
+    // Update Analytics - New Ticket
+    // await createTicketAnalytics("email", after_emails);
   });
 
 export const emailDeleted = functions.firestore

@@ -100,7 +100,7 @@ export const fetchShopifyOrder = async (
   const {data} = await shopifyGraphQlRequest(shop, shpat, {query});
   if (!data) return null;
   const order = data as ShopifOrderResponse["data"];
-  if (!order) return null;
+  if (!order || !order.order) return null;
 
   const cleaned_order = cleanCustomerOrderPayload(order.order);
 

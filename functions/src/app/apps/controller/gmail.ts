@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 import {
   gmailCallback,
   initiateAuth,
-  sendEmail,
+  sendGmailEmail,
   fetchEmails,
   subscribeToGmail,
   testSubPub,
@@ -60,7 +60,12 @@ export const handleSendEmail = async (
   const {to, subject, email} = req.body;
   functions.logger.info(` 📧 [/SEND]: Send email for ${domain} to ${to}`);
 
-  const {data, status, message} = await sendEmail(domain, to, subject, email);
+  const {data, status, message} = await sendGmailEmail(
+    domain,
+    to,
+    subject,
+    email,
+  );
 
   res.status(status).json({data, message});
 };

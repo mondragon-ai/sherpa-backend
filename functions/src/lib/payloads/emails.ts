@@ -85,6 +85,7 @@ export const initializeEmailPyaload = (
   const internal_date = Number(cleaned_email.internalDate) / 1000;
 
   return {
+    sentiment: null,
     email: cleaned_email.from,
     customer: customer as CustomerData | null,
     order: order as OrderData | null,

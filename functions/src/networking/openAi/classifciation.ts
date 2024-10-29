@@ -8,7 +8,7 @@ export const classifyMessageGPT = async (
   const token = process.env.CLASSIFICATION_API || "";
 
   const payload = {
-    model: "gpt-4-turbo",
+    model: "gpt-3.5-turbo",
     messages: [
       {
         role: "system",
@@ -42,6 +42,8 @@ export const classifyMessageGPT = async (
   ];
 
   if (!types.includes(type.toLocaleUpperCase())) return null;
+
+  console.log({FIXED: response.usage.total_tokens.toFixed});
 
   return response.choices[0].message.content as ClassificationTypes;
 };

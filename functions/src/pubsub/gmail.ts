@@ -10,6 +10,7 @@ import {
 } from "../lib/types/gmail/email";
 import {
   createEmailPayload,
+  respondToEmailPayload,
   updateExistingEmailConversation,
 } from "../lib/payloads/emails";
 import {google} from "googleapis";
@@ -17,7 +18,6 @@ import {createResponse} from "../util/errors";
 import * as functions from "firebase-functions";
 import {MerchantDocument} from "../lib/types/merchant";
 import {EmailDocument, EmailMap} from "../lib/types/emails";
-import {respondToEmailGPT} from "../app/apps/services/gmail";
 import {classifyMessage} from "../lib/helpers/agents/classify";
 import {cleanEmailFromGmail} from "../lib/payloads/gmail/emails";
 import {updateMerchantUsage} from "../networking/shopify/billing";
@@ -118,12 +118,10 @@ export const receiveGmailNotification = functions
       msg,
     );
 
-    // Respond with chatgpt
-    const payload = await respondToEmailGPT(
-      merchant,
+    const payload = respondToEmailPayload(
       email_payload,
+      merchant.timezone,
       classification,
-      msg,
     );
     if (!payload) return createResponse(400, "Couldn't Respond", null);
 

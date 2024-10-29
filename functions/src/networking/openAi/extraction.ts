@@ -16,7 +16,7 @@ export const extractOrderNumber = async (s: string) => {
   ];
 
   const payload = {
-    model: "gpt-4-turbo",
+    model: "gpt-3.5-turbo",
     messages: blocks,
     temperature: 0.7,
     top_p: 1,
@@ -29,5 +29,6 @@ export const extractOrderNumber = async (s: string) => {
   const order_number = response.choices[0].message.content;
   if (!order_number) return null;
 
+  console.log({FIXED: response.usage.total_tokens.toFixed});
   return order_number;
 };

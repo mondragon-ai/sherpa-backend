@@ -1,8 +1,9 @@
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 import {MerchantDocument} from "../../types/merchant";
 
 export const buildOrderCancelPendingEmailPayload = (
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   merchant: MerchantDocument,
 ) => {
   const first_name = chat.customer ? chat.customer.first_name : "Dear Customer";

@@ -1,6 +1,9 @@
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 
-export const buildChangeProductEmailPayload = (chat: ChatDocument) => {
+export const buildChangeProductEmailPayload = (
+  chat: ChatDocument | EmailDocument,
+) => {
   const first_name = chat.customer ? chat.customer.first_name : "Dear Customer";
   const order_number = chat.order ? chat.order.order_number : "";
 

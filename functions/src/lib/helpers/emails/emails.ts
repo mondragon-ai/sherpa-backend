@@ -23,17 +23,20 @@ import {buildCancelSubscriptionEmailPayload} from "../../prompts/emails/cancelSu
 import {buildAddressChangeCustomerEmailPayload} from "../../prompts/emails/changeAddressCustomer";
 import {buildOrderCancelPendingEmailPayload} from "../../prompts/emails/orderCancellationPending";
 import {buildOrderCancelUnavailableEmailPayload} from "../../prompts/emails/orderCancellationUnavailable";
+import {EmailDocument} from "../../types/emails";
 
 export const generateSuggestedEmail = (
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   suggested_action: SuggestedActions,
   merchant: MerchantDocument,
+  actions?: string,
 ) => {
   const {order} = chat;
 
   switch (suggested_action) {
     case "apply_discount": {
-      return buildDiscountEmailPayload(chat, "");
+      if (!actions) return "";
+      return buildDiscountEmailPayload(chat, actions);
     }
     case "cancel_order": {
       if (!order) {
@@ -52,10 +55,11 @@ export const generateSuggestedEmail = (
         return "";
       }
 
+      if (!actions) return "";
       if (order.fulfillment_status !== "hold") {
-        return buildAddressChangeCustomerEmailPayload(chat, merchant, "");
+        return buildAddressChangeCustomerEmailPayload(chat, merchant, actions);
       }
-      return buildAddressChangeOrderEmailPayload(chat, merchant, "");
+      return buildAddressChangeOrderEmailPayload(chat, actions);
     }
     case "resolve": {
       if (!order) {
@@ -68,7 +72,7 @@ export const generateSuggestedEmail = (
         ) {
           return buildOrderStatusEmailPayload(chat);
         } else {
-          return buildOrderTrackingEmailPayload(chat, "");
+          return buildOrderTrackingEmailPayload(chat);
         }
       }
       return buildResolveEmailPayload(chat);
@@ -86,13 +90,13 @@ export const generateSuggestedEmail = (
       return "";
     }
     default: {
-      return buildOrderTrackingEmailPayload(chat, "");
+      return "";
     }
   }
 };
 
 export const sendEmail = async (
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   type: "email" | "chat",
   suggested_email: string,
   merchant: MerchantDocument,

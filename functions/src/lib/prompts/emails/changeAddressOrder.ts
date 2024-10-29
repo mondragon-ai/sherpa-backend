@@ -1,9 +1,8 @@
 import {ChatDocument} from "../../types/chats";
-import {MerchantDocument} from "../../types/merchant";
+import {EmailDocument} from "../../types/emails";
 
 export const buildAddressChangeOrderEmailPayload = (
-  chat: ChatDocument,
-  merchant: MerchantDocument,
+  chat: ChatDocument | EmailDocument,
   new_address: string,
 ) => {
   const first_name = chat.customer ? chat.customer.first_name : "Dear Customer";

@@ -6,7 +6,7 @@ export const generateSuggestedActionsGPT = async (
   prompt: string,
 ): Promise<SuggestedActions | null> => {
   const payload = {
-    model: "gpt-4-turbo",
+    model: "gpt-3.5-turbo",
     messages: [
       {
         role: "system",
@@ -28,5 +28,6 @@ export const generateSuggestedActionsGPT = async (
   const suggested_action = response.choices[0].message.content;
   if (!suggested_action) return null;
 
+  console.log({FIXED: response.usage.total_tokens.toFixed});
   return suggested_action as SuggestedActions;
 };

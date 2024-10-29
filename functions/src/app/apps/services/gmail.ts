@@ -385,8 +385,6 @@ export const respondToEmailGPT = async (
   const payload = respondToEmailPayload(
     email,
     merchant.timezone,
-    response,
-    message,
     classification,
   );
 

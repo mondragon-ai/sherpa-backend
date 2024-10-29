@@ -4,33 +4,35 @@ import {
   updateSubcollectionDocument,
 } from "../../../database/firestore";
 import {
-  fetchCustomerOrderList,
-  fetchShopifyOrder,
-} from "../../../networking/shopify/orders";
-import {decryptMsg} from "../../../util/encryption";
-import {createResponse} from "../../../util/errors";
-import {MerchantDocument} from "../../../lib/types/merchant";
-import {
   buildResolvedChatPayload,
   createChatPayload,
   respondToChatPayload,
 } from "../../../lib/payloads/chats";
-import {CleanedCustomerOrder} from "../../../lib/types/shopify/orders";
-import {updateMerchantUsage} from "../../../networking/shopify/billing";
-import {ChatDocument, ChatStartRequest} from "../../../lib/types/chats";
-import {fetchShopifyProducts} from "../../../networking/shopify/products";
-import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
-import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
-import {classifyMessage} from "../../../lib/helpers/agents/classify";
-import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
-import {respondToChatGPT} from "../../../networking/openAi/respond";
-import {generateSuggestedAction} from "../../../lib/helpers/agents/resolve";
-import {performActions} from "../../../lib/helpers/automation/actions";
+import {
+  fetchCustomerOrderList,
+  fetchShopifyOrder,
+} from "../../../networking/shopify/orders";
 import {
   generateSuggestedEmail,
   sendEmail,
 } from "../../../lib/helpers/emails/emails";
 import {SuggestedActions} from "../../../lib/types/shared";
+import {decryptMsg} from "../../../util/encryption";
+import {createResponse} from "../../../util/errors";
+import {MerchantDocument} from "../../../lib/types/merchant";
+import {respondToChatGPT} from "../../../networking/openAi/respond";
+import {classifyMessage} from "../../../lib/helpers/agents/classify";
+import {performActions} from "../../../lib/helpers/automation/actions";
+import {CleanedCustomerOrder} from "../../../lib/types/shopify/orders";
+import {updateMerchantUsage} from "../../../networking/shopify/billing";
+import {ChatDocument, ChatStartRequest} from "../../../lib/types/chats";
+import {fetchShopifyProducts} from "../../../networking/shopify/products";
+import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
+import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
+import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
+import {generateSuggestedAction} from "../../../lib/helpers/agents/resolve";
+import {EmailDocument} from "../../../lib/types/emails";
+import {generateSummary} from "../../../networking/openAi/summarize";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -100,13 +102,6 @@ export const startChat = async (
 
   if (existing_chat && existing_chat.status == "open") {
     return createResponse(201, "Still Open", null);
-    // await updateExistingEmailConversation(
-    //   existing_email,
-    //   msg,
-    //   cleaned[0],
-    //   merchant,
-    // );
-    // return createResponse(201, "Still Open", null);
   }
 
   // Fetch Merchant
@@ -130,19 +125,10 @@ export const startChat = async (
     }
   }
 
-  // Find if chat exists
-  const {data: chat_doc} = await fetchSubcollectionDocument(
-    "shopify_merchant",
-    domain,
-    "chats",
-    email,
-  );
-  const chats = chat_doc as ChatDocument;
-
   // Create payload
   const {chat, message} = createChatPayload(
     merchant,
-    chats,
+    existing_chat,
     customer,
     order,
     payload,
@@ -183,7 +169,6 @@ export const fetchCustomerData = async (
   if (last_order && !order) {
     order = await fetchShopifyOrder(domain, shpat, `${last_order}`);
   }
-  console.log({Fetch_Customer: order});
 
   const cleaned_customer = cleanCustomerPayload(customer);
   return {customer: cleaned_customer, order: order};
@@ -255,43 +240,45 @@ export const resolveChat = async (
   const sub_collection = type == "chat" ? "chats" : "emails";
 
   // Fetch chat data:
-  const {data: chat_doc} = await fetchSubcollectionDocument(
+  const {data: doc} = await fetchSubcollectionDocument(
     "shopify_merchant",
     domain,
     sub_collection,
     id,
   );
 
-  const chat = chat_doc as ChatDocument;
+  const chat = doc as ChatDocument | EmailDocument;
   if (!chat) return createResponse(422, "Chat not found", null);
   if (chat.status == "resolved") {
     return createResponse(409, "Chat Resovled", null);
   }
 
-  // Generate Suggested Actions
-  const suggested = await generateSuggestedAction(chat, type);
+  // Generate Suggested Action Keyword
+  const {action, prompt} = await generateSuggestedAction(chat, type);
 
   // ? Summarize -> summary | ""
+  let summary = (await generateSummary(prompt)) || "";
 
-  // Fetch chat data:
+  // Fetch Mercahant Doc
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "Merchant not found", null);
 
-  const actions = await automateAction(chat, merchant, type, suggested);
+  const actions = await automateAction(chat, merchant, type, action);
   console.log({actions});
 
-  // Build Payload
+  // Build Resolve Chat Payload
   const payload = buildResolvedChatPayload(
     chat,
     merchant,
-    suggested,
+    action,
     actions,
     type,
+    summary,
   );
   console.log({payload});
 
-  //   Update Doc
+  // Update Doc
   await updateSubcollectionDocument(
     "shopify_merchant",
     domain,
@@ -307,26 +294,39 @@ type AutomaticAction = {
   email: boolean;
   action: boolean;
   suggested_email: string;
+  error: string;
 };
 
 export const automateAction = async (
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   merchant: MerchantDocument,
   type: "email" | "chat",
   suggested: SuggestedActions,
 ): Promise<AutomaticAction> => {
-  // Perform Actions
-  const performed = await performActions(chat, type, suggested, merchant); // ! Extract action string
+  const {performed, action, error} = await performActions(
+    chat,
+    type,
+    suggested,
+    merchant,
+  );
 
-  // Build Suggested Email
-  const suggested_email = generateSuggestedEmail(chat, suggested, merchant); // ! Add action string
+  const suggested_email = generateSuggestedEmail(
+    chat,
+    suggested,
+    merchant,
+    action,
+  );
 
   if (!performed) {
-    return {email: false as boolean, action: performed, suggested_email};
+    return {
+      email: false,
+      action: performed,
+      suggested_email,
+      error: "",
+    };
   }
 
-  // Send Suggested Email
   const email_sent = await sendEmail(chat, type, suggested_email, merchant);
 
-  return {email: email_sent, action: performed, suggested_email};
+  return {email: email_sent, action: performed, suggested_email, error};
 };

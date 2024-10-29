@@ -148,29 +148,11 @@ export const initializeEmailPyaload = (
 export const respondToEmailPayload = (
   email: EmailDocument,
   timzone: string,
-  repsonse: string,
-  message: string,
   classification: string,
 ) => {
   const time = getCurrentUnixTimeStampFromTimezone(timzone);
   return {
     ...email,
-    conversation: [
-      ...(email.conversation || []),
-      {
-        time: time,
-        is_note: false,
-        message: repsonse,
-        sender: "agent",
-        action: null,
-        id: "",
-        history_id: "",
-        internal_date: "",
-        from: "",
-        subject: "",
-        attachments: [],
-      },
-    ],
     classification: classification,
     updated_at: time,
   } as EmailDocument;

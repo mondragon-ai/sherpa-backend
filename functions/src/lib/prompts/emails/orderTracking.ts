@@ -1,10 +1,11 @@
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 
 export const buildOrderTrackingEmailPayload = (
-  chat: ChatDocument,
-  tracking: string,
+  chat: ChatDocument | EmailDocument,
 ) => {
   const first_name = chat.customer ? chat.customer.first_name : "Dear Customer";
+  const tracking = chat.order ? chat.order.tracking_url : "";
 
   return `
     Hi ${first_name}},

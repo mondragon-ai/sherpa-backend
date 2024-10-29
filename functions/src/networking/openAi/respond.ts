@@ -24,6 +24,7 @@ export const respondToChatGPT = async (
   const agent = response.choices[0].message.content;
   if (!agent) return null;
 
+  console.log({FIXED: response.usage.total_tokens.toFixed});
   return agent;
 };
 
@@ -42,7 +43,7 @@ export const validateEmailIsCustomer = async (message: string) => {
   ];
 
   const payload = {
-    model: "gpt-4-turbo",
+    model: "gpt-3.5-turbo",
     messages: blocks,
     temperature: 0.7,
     top_p: 1,
@@ -54,5 +55,6 @@ export const validateEmailIsCustomer = async (message: string) => {
   const is_valid = response.choices[0].message.content;
   if (!is_valid) return null;
 
+  console.log({FIXED: response.usage.total_tokens.toFixed});
   return is_valid;
 };

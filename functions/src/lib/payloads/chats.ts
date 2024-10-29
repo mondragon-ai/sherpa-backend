@@ -148,18 +148,20 @@ export const respondToChatPayload = (
   } as ChatDocument;
 };
 
+type AutomaticAction = {
+  email: boolean;
+  action: boolean;
+  suggested_email: string;
+  error: string;
+};
+
 export const buildResolvedChatPayload = (
   chat: ChatDocument | EmailDocument,
   merchant: MerchantDocument,
   suggested: SuggestedActions,
-  actions: {
-    email: boolean;
-    action: boolean;
-    suggested_email: string;
-  },
+  actions: AutomaticAction,
   type: "email" | "chat",
   summary = "",
-  error = "",
 ) => {
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
 
@@ -193,7 +195,7 @@ export const buildResolvedChatPayload = (
     email_sent: actions.email,
     suggested_action_done: actions.action,
     summary: summary,
-    error_info: error,
+    error_info: actions.error || "",
     status:
       suggested == "resolve"
         ? "resolved"
@@ -222,4 +224,32 @@ export const algoliaChatCreatePayload = (
     suggested_action: suggested_action || "",
     classification: classification || "",
   } as AlgoliaSearchType;
+};
+
+export const updateExistingChatConversation = async (
+  prev_chat: ChatDocument,
+  message: string,
+  merchant: MerchantDocument,
+) => {
+  const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+  const payload = {
+    ...prev_chat,
+    status: "open",
+    classification: null,
+    suggested_action: null,
+    summary: "",
+    error_info: "",
+    conversation: [
+      ...prev_chat.conversation,
+      {
+        time: time,
+        is_note: false,
+        message: message,
+        sender: "customer",
+        action: null,
+      },
+    ],
+    created_at: prev_chat.created_at,
+  };
+  return payload;
 };

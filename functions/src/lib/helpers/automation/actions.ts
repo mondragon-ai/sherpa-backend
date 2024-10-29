@@ -1,35 +1,43 @@
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 import {MerchantDocument} from "../../types/merchant";
 import {SuggestedActions} from "../../types/shared";
 
 export const performActions = async (
-  chat: ChatDocument,
+  chat: ChatDocument | EmailDocument,
   type: "email" | "chat",
   suggested: SuggestedActions,
   merchant: MerchantDocument,
 ) => {
-  if (!merchant.configurations.automate_actions) return false;
+  if (!merchant.configurations.automate_actions)
+    return {performed: false, action: "", error: ""};
 
-  let performed = false;
+  let res = {performed: false, action: "", error: ""};
   switch (suggested) {
     case "apply_discount": {
       console.log(suggested);
-      performed = await applyDiscount(chat, type);
+      const response = await applyDiscount(chat, type);
+      res.performed = response;
+      res.error = response ? "" : "applying discount";
       break;
     }
     case "cancel_order": {
       console.log(suggested);
-      performed = await cancelOrder(chat, type);
+      const response = await cancelOrder(chat, type);
+      res.performed = response;
+      res.error = response ? "" : "Canceling Order";
       break;
     }
     case "change_address": {
       console.log(suggested);
-      performed = await changeAddress(chat, type);
+      const response = await changeAddress(chat, type);
+      res.performed = response;
+      res.error = response ? "" : "Changing Address";
       break;
     }
     case "resolve": {
       console.log(suggested);
-      performed = true;
+      res.performed = true;
       break;
     }
     case "cancel_subscription": {
@@ -53,17 +61,26 @@ export const performActions = async (
     }
   }
 
-  return performed;
+  return res;
 };
 
-const applyDiscount = async (chat: ChatDocument, type: "email" | "chat") => {
+const applyDiscount = async (
+  chat: ChatDocument | EmailDocument,
+  type: "email" | "chat",
+) => {
   return true;
 };
 
-const cancelOrder = async (chat: ChatDocument, type: "email" | "chat") => {
+const cancelOrder = async (
+  chat: ChatDocument | EmailDocument,
+  type: "email" | "chat",
+) => {
   return true;
 };
 
-const changeAddress = async (chat: ChatDocument, type: "email" | "chat") => {
+const changeAddress = async (
+  chat: ChatDocument | EmailDocument,
+  type: "email" | "chat",
+) => {
   return true;
 };

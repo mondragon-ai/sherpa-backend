@@ -101,7 +101,18 @@ const openaiResponsePayload = (
     },
   ] as BlockType[];
 
-  for (const msg of chat.conversation || []) {
+  const sortedConversation = chat.conversation.sort((a, b) => b.time - a.time);
+  const list = [];
+  console.log({sortedConversation});
+
+  for (const c of sortedConversation) {
+    if (c.action === "opened") {
+      break;
+    }
+    list.push(c);
+  }
+
+  for (const msg of list) {
     if (msg.sender == "agent" && !msg.action && !msg.is_note) {
       blocks.push({
         role: "assistant",
@@ -115,6 +126,22 @@ const openaiResponsePayload = (
       });
     }
   }
+  chat.conversation.sort((a, b) => a.time - b.time);
+
+  //   for (const msg of chat.conversation || []) {
+  //     if (msg.sender == "agent" && !msg.action && !msg.is_note) {
+  //       blocks.push({
+  //         role: "assistant",
+  //         content: msg.message,
+  //       });
+  //     }
+  //     if (msg.sender == "customer") {
+  //       blocks.push({
+  //         role: "user",
+  //         content: msg.message,
+  //       });
+  //     }
+  //   }
 
   if (message) {
     blocks.push({

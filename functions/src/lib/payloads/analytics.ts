@@ -29,6 +29,57 @@ export const initCreateTicketAnalytics = (
   return analytics;
 };
 
+export const initResolveTicketAnalytics = (
+  time: number,
+  type: "chat" | "email",
+  chat: ChatDocument | EmailDocument,
+) => {
+  const new_ticket = [{date: `${chat.updated_at}`, value: 1}] as LineChart[];
+
+  /* eslint-disable indent */
+  const analytics: AnalyticsDocument = {
+    id: time,
+    total_chats: type === "chat" ? new_ticket : [],
+    total_emails: type === "email" ? new_ticket : [],
+    total_volume: new_ticket,
+    resolution_ratio: chat.suggested_action_done
+      ? {sherpa: 1, human: 0}
+      : {sherpa: 0, human: 1},
+    csat: chat.rating
+      ? {
+          positive: chat.rating === "positive" ? 1 : 0,
+          negative: chat.rating === "negative" ? 1 : 0,
+          neutral: chat.rating === "neutral" ? 1 : 0,
+        }
+      : {positive: 0, negative: 0, neutral: 0},
+    sentiment_analysis: chat.rating
+      ? {
+          positive: chat.rating === "positive" ? 1 : 0,
+          negative: chat.rating === "negative" ? 1 : 0,
+          neutral: chat.rating === "neutral" ? 1 : 0,
+        }
+      : {positive: 0, negative: 0, neutral: 0},
+    category_csat:
+      chat.rating && chat.classification
+        ? {
+            [chat.classification]: {
+              positive: chat.rating === "positive" ? 1 : 0,
+              negative: chat.rating === "negative" ? 1 : 0,
+              neutral: chat.rating === "neutral" ? 1 : 0,
+            },
+          }
+        : {},
+    top_errors: chat.issue ? {[chat.issue]: 1} : {none: 1},
+    top_issues: chat.issue ? {[chat.issue]: 1} : {none: 1},
+    top_tickets: chat.classification ? {[chat.classification]: 1} : {none: 1},
+    created_at: time,
+    updated_at: time,
+  };
+  /* eslint-enable indent */
+
+  return analytics;
+};
+
 export const appendToTopIssues = (
   issue: IssueTypes,
   analaytics: AnalyticsDocument,

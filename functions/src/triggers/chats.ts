@@ -4,6 +4,7 @@ import {resolveTicket} from "../queues/resolveTicket";
 import {algoliaChatCreatePayload} from "../lib/payloads/chats";
 import {deleteFromAlgolia, updateToAlgolia} from "../database/algolia";
 import {createTicketAnalytics} from "../lib/helpers/analytics/create";
+import {resolveTicketAnalytics} from "../lib/helpers/analytics/resolved";
 
 export const chatsCreated = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
@@ -47,7 +48,14 @@ export const chatUpdated = functions.firestore
     console.log(`[${before_chat.status}, ${after_chat.status}]`);
 
     // Update Analytics - New Ticket
-    // await createTicketAnalytics("chat", after_chat);
+    if (before_chat.status !== "open" && after_chat.status == "open") {
+      await createTicketAnalytics("chat", after_chat);
+    }
+
+    // Update Analytics - Resolved Ticket
+    if (before_chat.status == "open" && after_chat.status !== "open") {
+      await resolveTicketAnalytics("chat", after_chat);
+    }
   });
 
 export const chatDeleted = functions.firestore

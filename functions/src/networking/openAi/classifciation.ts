@@ -43,7 +43,7 @@ export const classifyMessageGPT = async (
 
   if (!types.includes(type.toLocaleUpperCase())) return null;
 
-  console.log({FIXED: response.usage.total_tokens.toFixed});
+  console.log({CLASSIFY_TOKENS: response.usage.total_tokens.toFixed(1)});
 
   return response.choices[0].message.content as ClassificationTypes;
 };

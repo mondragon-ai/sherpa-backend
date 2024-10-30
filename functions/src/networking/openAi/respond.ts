@@ -24,7 +24,7 @@ export const respondToChatGPT = async (
   const agent = response.choices[0].message.content;
   if (!agent) return null;
 
-  console.log({FIXED: response.usage.total_tokens.toFixed});
+  console.log({RESPOND_GPT: response.usage.total_tokens.toFixed(1)});
   return agent;
 };
 
@@ -55,6 +55,6 @@ export const validateEmailIsCustomer = async (message: string) => {
   const is_valid = response.choices[0].message.content;
   if (!is_valid) return null;
 
-  console.log({FIXED: response.usage.total_tokens.toFixed});
+  console.log({RESPOND_TOKENS: response.usage.total_tokens.toFixed(1)});
   return is_valid;
 };

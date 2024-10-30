@@ -9,30 +9,31 @@ export const performActions = async (
   suggested: SuggestedActions,
   merchant: MerchantDocument,
 ) => {
-  if (!merchant.configurations.automate_actions)
+  if (!merchant.configurations.automate_actions) {
     return {performed: false, action: "", error: ""};
+  }
 
-  let res = {performed: false, action: "", error: ""};
+  const res = {performed: false, action: "", error: ""};
   switch (suggested) {
     case "apply_discount": {
       console.log(suggested);
       const response = await applyDiscount(chat, type);
       res.performed = response;
-      res.error = response ? "" : "applying discount";
+      res.error = response ? "" : suggested;
       break;
     }
     case "cancel_order": {
       console.log(suggested);
       const response = await cancelOrder(chat, type);
       res.performed = response;
-      res.error = response ? "" : "Canceling Order";
+      res.error = response ? "" : suggested;
       break;
     }
     case "change_address": {
       console.log(suggested);
       const response = await changeAddress(chat, type);
       res.performed = response;
-      res.error = response ? "" : "Changing Address";
+      res.error = response ? "" : suggested;
       break;
     }
     case "resolve": {

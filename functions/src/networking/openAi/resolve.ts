@@ -28,6 +28,6 @@ export const generateSuggestedActionsGPT = async (
   const suggested_action = response.choices[0].message.content;
   if (!suggested_action) return null;
 
-  console.log({FIXED: response.usage.total_tokens.toFixed});
+  console.log({ACTIONS_TOKENS: response.usage.total_tokens.toFixed(1)});
   return suggested_action as SuggestedActions;
 };

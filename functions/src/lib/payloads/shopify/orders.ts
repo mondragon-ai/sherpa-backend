@@ -19,6 +19,13 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
       quantity: li.node.quantity || 0,
     }));
 
+    console.log({
+      totalMoney: n.node.totalPriceSet.presentmentMoney.amount,
+    });
+    console.log({
+      originalTotalPriceSet: (n.node as any).originalTotalPriceSet
+        .presentmentMoney.amount,
+    });
     const time_stamp = new Date(n.node.createdAt).getSeconds();
     cleaned.push({
       tracking_url: tracking,
@@ -28,7 +35,10 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
       fulfillment_status: n.node.displayFulfillmentStatus || "",
       line_items: line_items,
       created_at: time_stamp,
-      current_total_price: n.node.totalPriceSet.presentmentMoney.amount || "",
+      current_total_price:
+        (n.node as any).originalTotalPriceSet.presentmentMoney.amount ||
+        n.node.totalPriceSet.presentmentMoney.amount ||
+        "0.00",
       email: n.node.email || "",
       id: n.node.id,
     });
@@ -51,7 +61,8 @@ export const cleanCustomerOrderPayload = (order: ShopifyOrder) => {
     quantity: li.node.quantity || "",
   }));
 
-  const time_stamp = new Date(order.createdAt).getSeconds();
+  const date = new Date(order.createdAt);
+  const time_stamp = Math.floor(date.getTime() / 1000);
 
   return {
     tracking_url: tracking,

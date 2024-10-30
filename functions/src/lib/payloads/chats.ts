@@ -32,13 +32,14 @@ export const createChatPayload = (
   /* eslint-enable indent */
   let chat = initializeChatPyaload(merchant, customer, order, request, message);
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+
   if (prev_chat) {
     chat = {
       ...chat,
       conversation: [
         ...prev_chat.conversation,
         {
-          time: time,
+          time: Math.round(Number(time) - 60),
           is_note: false,
           message: "",
           sender: "agent",
@@ -76,7 +77,6 @@ export const initializeChatPyaload = (
     email_sent: false,
     manual: false,
     manually_triggerd: false,
-    initial_message: "",
     convo_trained: false,
     action_trained: false,
     rating: null,
@@ -91,7 +91,7 @@ export const initializeChatPyaload = (
     sentiment: null,
     conversation: [
       {
-        time: time,
+        time: Math.round(Number(time) - 60),
         is_note: false,
         message: "",
         sender: "agent",
@@ -162,6 +162,7 @@ export const buildResolvedChatPayload = (
   actions: AutomaticAction,
   type: "email" | "chat",
   summary = "",
+  sentiment: string,
 ) => {
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
 

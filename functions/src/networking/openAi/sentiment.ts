@@ -1,7 +1,7 @@
 import {openAIRequest} from ".";
-import {SUMMARIZE_PROMPT} from "../../lib/prompts/summarize";
+import {SENTIMENT_PROMPT} from "../../lib/prompts/sentiment";
 
-export const generateSummary = async (
+export const generateSentimentGPT = async (
   history: string,
 ): Promise<string | null> => {
   const token = process.env.CLASSIFICATION_API || "";
@@ -12,7 +12,7 @@ export const generateSummary = async (
     messages: [
       {
         role: "system",
-        content: SUMMARIZE_PROMPT,
+        content: SENTIMENT_PROMPT,
       },
       {
         role: "user",
@@ -30,7 +30,7 @@ export const generateSummary = async (
   const summary = response.choices[0].message.content;
   if (!summary) return null;
 
-  console.log({SUMMARY_TOKENS: response.usage.total_tokens.toFixed(1)});
+  console.log({SENTIMENT_TOKENS: response.usage.total_tokens.toFixed(1)});
 
   return summary;
 };

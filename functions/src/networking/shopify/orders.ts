@@ -47,6 +47,8 @@ export const fetchCustomerOrderList = async (
 
   if (!products.orders.edges) return null;
 
+  console.log({order_list: products.orders.edges});
+
   const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
 
   return cleaned_orders;
@@ -101,6 +103,8 @@ export const fetchShopifyOrder = async (
   if (!data) return null;
   const order = data as ShopifOrderResponse["data"];
   if (!order || !order.order) return null;
+
+  console.log({order});
 
   const cleaned_order = cleanCustomerOrderPayload(order.order);
 
@@ -165,6 +169,7 @@ export const fetchShopifyOrderByName = async (
   if (!products.orders) return null;
   if (!products.orders.edges) return null;
 
+  console.log({orders: products.orders.edges});
   const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
 
   return cleaned_orders;

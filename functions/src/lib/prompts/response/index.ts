@@ -39,7 +39,7 @@ export const buildOrderPrompt = (chat: ChatDocument | EmailDocument) => {
     fulfillment_status,
     payment_status,
     created_at,
-    total_price,
+    current_total_price,
     line_items,
     tracking_url,
   } = chat.order;
@@ -51,8 +51,8 @@ export const buildOrderPrompt = (chat: ChatDocument | EmailDocument) => {
           - **Order Number**: ${order_number}
           - **Order Status**: ${fulfillment_status}
           - **Payment Status**: ${payment_status}
-          - **Order Date**: ${new Date(created_at).toLocaleDateString()}
-          - **Total Price**: $${total_price}
+          - **Order Date**: ${new Date(created_at * 1000).toLocaleDateString()}
+          - **Total Price**: $${current_total_price}
           - **Tracking URL**: $${tracking_url}
           - **Items**:
           ${

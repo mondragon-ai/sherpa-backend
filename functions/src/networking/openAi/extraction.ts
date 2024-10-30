@@ -29,6 +29,8 @@ export const extractOrderNumber = async (s: string) => {
   const order_number = response.choices[0].message.content;
   if (!order_number) return null;
 
-  console.log({FIXED: response.usage.total_tokens.toFixed});
+  console.log({
+    NUMBER_EXTRACTION_TOKENS: response.usage.total_tokens.toFixed(1),
+  });
   return order_number;
 };

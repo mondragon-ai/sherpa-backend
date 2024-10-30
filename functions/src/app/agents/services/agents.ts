@@ -33,6 +33,8 @@ import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
 import {generateSuggestedAction} from "../../../lib/helpers/agents/resolve";
 import {EmailDocument} from "../../../lib/types/emails";
 import {generateSummary} from "../../../networking/openAi/summarize";
+import {generateChatMessages} from "../../../lib/payloads/openai/conversation";
+import {generateSentimentGPT} from "../../../networking/openAi/sentiment";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -170,6 +172,8 @@ export const fetchCustomerData = async (
     order = await fetchShopifyOrder(domain, shpat, `${last_order}`);
   }
 
+  console.log({cleaned_order: order});
+
   const cleaned_customer = cleanCustomerPayload(customer);
   return {customer: cleaned_customer, order: order};
 };
@@ -198,11 +202,17 @@ export const respondToChat = async (
   const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "Merchant not found", null);
 
+  const convo = generateChatMessages(chat.conversation);
+  const history = convo + `\n- Customer: ${message}.\n`;
+  console.log({history});
+
   // Classify message
-  const classification = await classifyMessage(chat, message);
+  const classification = await classifyMessage(chat, history);
+  console.log({classification});
 
   // Build chat payload
   const blocks = buildResponsePayload(merchant, chat, classification, message);
+  console.log({blocks});
 
   // Respond to chat
   const response = await respondToChatGPT(blocks);
@@ -216,6 +226,7 @@ export const respondToChat = async (
     message,
     classification,
   );
+  console.log(payload);
 
   await updateSubcollectionDocument(
     "shopify_merchant",
@@ -256,8 +267,11 @@ export const resolveChat = async (
   // Generate Suggested Action Keyword
   const {action, prompt} = await generateSuggestedAction(chat, type);
 
-  // ? Summarize -> summary | ""
-  let summary = (await generateSummary(prompt)) || "";
+  // Summarize
+  const summary = (await generateSummary(prompt)) || "";
+
+  // Create sentiment analysis
+  const sentiment = (await generateSentimentGPT(prompt)) || "neutral";
 
   // Fetch Mercahant Doc
   const {data} = await fetchRootDocument("shopify_merchant", domain);
@@ -275,6 +289,7 @@ export const resolveChat = async (
     actions,
     type,
     summary,
+    sentiment,
   );
   console.log({payload});
 

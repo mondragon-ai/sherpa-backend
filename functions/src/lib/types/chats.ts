@@ -15,7 +15,6 @@ export type ChatDocument = {
   email_sent: boolean;
   manual: boolean;
   manually_triggerd: boolean;
-  initial_message: string;
   convo_trained: boolean;
   action_trained: boolean;
   sentiment: RatingTypes | null;

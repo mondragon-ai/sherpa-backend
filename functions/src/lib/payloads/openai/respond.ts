@@ -1,18 +1,18 @@
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 import {basePrompt} from "../../prompts/response";
 import {MerchantDocument} from "../../types/merchant";
 import {ClassificationTypes} from "../../types/shared";
 import {buildRefundPayload} from "../../prompts/response/refund";
-import {buildStatusUpdate} from "../../prompts/response/statusUpdate";
-import {buildOrderCancelPayload} from "../../prompts/response/orderCancellation";
-import {buildOrderModifyPayload} from "../../prompts/response/orderModifcation";
-import {buildDiscountPayload} from "../../prompts/response/discount";
-import {buildGeneralPayload} from "../../prompts/response/general";
 import {buildAdressPayload} from "../../prompts/response/address";
-import {buildGiveawayPayload} from "../../prompts/response/giveaway";
-import {buildSubscriptiontPayload} from "../../prompts/response/subscription";
+import {buildGeneralPayload} from "../../prompts/response/general";
 import {buildProductPayload} from "../../prompts/response/product";
-import {EmailDocument} from "../../types/emails";
+import {buildGiveawayPayload} from "../../prompts/response/giveaway";
+import {buildDiscountPayload} from "../../prompts/response/discount";
+import {buildStatusUpdate} from "../../prompts/response/statusUpdate";
+import {buildSubscriptiontPayload} from "../../prompts/response/subscription";
+import {buildOrderModifyPayload} from "../../prompts/response/orderModifcation";
+import {buildOrderCancelPayload} from "../../prompts/response/orderCancellation";
 
 export const buildResponsePayload = (
   merchant: MerchantDocument,
@@ -101,9 +101,10 @@ const openaiResponsePayload = (
     },
   ] as BlockType[];
 
-  const sortedConversation = chat.conversation.sort((a, b) => b.time - a.time);
+  const sortedConversation = chat.conversation
+    .slice()
+    .sort((a, b) => b.time - a.time);
   const list = [];
-  console.log({sortedConversation});
 
   for (const c of sortedConversation) {
     if (c.action === "opened") {
@@ -112,21 +113,19 @@ const openaiResponsePayload = (
     list.push(c);
   }
 
-  for (const msg of list) {
-    if (msg.sender == "agent" && !msg.action && !msg.is_note) {
+  for (const c of list.sort((a, b) => a.time - b.time)) {
+    if (c.sender === "agent" && !c.is_note) {
       blocks.push({
         role: "assistant",
-        content: msg.message,
+        content: c.message,
       });
-    }
-    if (msg.sender == "customer") {
+    } else if (c.sender === "customer") {
       blocks.push({
         role: "user",
-        content: msg.message,
+        content: c.message,
       });
     }
   }
-  chat.conversation.sort((a, b) => a.time - b.time);
 
   //   for (const msg of chat.conversation || []) {
   //     if (msg.sender == "agent" && !msg.action && !msg.is_note) {

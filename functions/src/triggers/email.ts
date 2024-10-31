@@ -40,12 +40,14 @@ export const emailUpdated = functions.firestore
     const after = snap.after.exists ? snap.after.data() : null;
     if (!after) return;
     const after_emails = after as unknown as EmailDocument;
+    const {id, domain} = after_emails;
 
     console.log(`[${before_emails.status}, ${after_emails.status}]`);
 
     // Update Analytics - New Ticket
     if (before_emails.status !== "open" && after_emails.status == "open") {
       await createTicketAnalytics("email", after_emails);
+      await resolveTicket(domain, id, "email");
     }
 
     // Update Analytics - Resolved Ticket

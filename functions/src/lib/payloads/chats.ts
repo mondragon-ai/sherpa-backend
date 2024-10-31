@@ -1,17 +1,17 @@
-import {MerchantDocument} from "../types/merchant";
-import {generateRandomID} from "../../util/generators";
 import {
   AlgoliaSearchType,
   CustomerData,
   OrderData,
   SuggestedActions,
 } from "../types/shared";
+import {EmailDocument} from "../types/emails";
+import {MerchantDocument} from "../types/merchant";
+import {generateRandomID} from "../../util/generators";
 import {capitalizeWords} from "../../util/formatters/text";
 import {CleanedCustomerOrder} from "../types/shopify/orders";
 import {ChatDocument, ChatStartRequest} from "../types/chats";
 import {CleanedCustomerPayload} from "../types/shopify/customers";
 import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
-import {EmailDocument} from "../types/emails";
 
 export const createChatPayload = (
   merchant: MerchantDocument,
@@ -39,7 +39,7 @@ export const createChatPayload = (
       conversation: [
         ...prev_chat.conversation,
         {
-          time: Math.round(Number(time) - 60),
+          time: Math.round(Number(time) - 5),
           is_note: false,
           message: "",
           sender: "agent",
@@ -91,7 +91,7 @@ export const initializeChatPyaload = (
     sentiment: null,
     conversation: [
       {
-        time: Math.round(Number(time) - 60),
+        time: Math.round(Number(time) - 5),
         is_note: false,
         message: "",
         sender: "agent",
@@ -129,7 +129,7 @@ export const respondToChatPayload = (
     conversation: [
       ...(chat.conversation || []),
       {
-        time: time - Math.round(60 * 1.5),
+        time: Math.round(Number(time) - 5),
         is_note: false,
         message: message,
         sender: "customer",
@@ -170,7 +170,7 @@ export const buildResolvedChatPayload = (
   const conversation =
     type == "chat"
       ? {
-          time: time,
+          time: Math.round(Number(time) - 5),
           is_note: false,
           message: "",
           sender: "agent",
@@ -196,6 +196,7 @@ export const buildResolvedChatPayload = (
     email_sent: actions.email,
     suggested_action_done: actions.action,
     summary: summary,
+    sentiment: sentiment.toLocaleLowerCase(),
     error_info: actions.error || "",
     status:
       suggested == "resolve"

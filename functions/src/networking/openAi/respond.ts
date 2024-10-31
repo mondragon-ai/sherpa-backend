@@ -47,7 +47,7 @@ export const validateEmailIsCustomer = async (message: string) => {
     messages: blocks,
     temperature: 0.7,
     top_p: 1,
-    max_completion_tokens: 400,
+    max_completion_tokens: 10,
   };
 
   const {data} = await openAIRequest("/chat/completions", token, payload);
@@ -55,6 +55,6 @@ export const validateEmailIsCustomer = async (message: string) => {
   const is_valid = response.choices[0].message.content;
   if (!is_valid) return null;
 
-  console.log({RESPOND_TOKENS: response.usage.total_tokens.toFixed(1)});
+  console.log({VALIDATE_EMAIL_TOKENS: response.usage.total_tokens.toFixed(1)});
   return is_valid;
 };

@@ -10,7 +10,6 @@ import {
 } from "../lib/types/gmail/email";
 import {
   createEmailPayload,
-  respondToEmailPayload,
   updateExistingEmailConversation,
 } from "../lib/payloads/emails";
 import {google} from "googleapis";
@@ -24,6 +23,7 @@ import {updateMerchantUsage} from "../networking/shopify/billing";
 import {validateEmailIsCustomer} from "../networking/openAi/respond";
 import {getValidGmailAccessToken} from "../lib/helpers/emails/validate";
 import {fetchCustomerDataFromEmail} from "../lib/helpers/emails/emails";
+import {getCurrentUnixTimeStampFromTimezone} from "../util/formatters/time";
 
 const settings: functions.RuntimeOptions = {
   timeoutSeconds: 120,
@@ -56,6 +56,16 @@ export const receiveGmailNotification = functions
     const cleaned = await getEmailFromHistory(data, access_token, merchant);
     if (!cleaned) return createResponse(400, "Can't Clean", null);
 
+    const msg = `**Subject**:<br> ${
+      cleaned[0].subject
+    }<br><br> **Message**:<br> ${cleaned[0].content.join(" ")} `;
+    functions.logger.info({cleaned: cleaned[0]});
+
+    const is_email = await validateEmailIsCustomer(msg);
+    if (!is_email || is_email.includes("invalid")) {
+      return createResponse(409, "Invalid Email", {is_email});
+    }
+
     // Update Merchant Usage
     const response = await updateMerchantUsage(domain, merchant);
     if (response.capped || !response.charged) {
@@ -70,16 +80,6 @@ export const receiveGmailNotification = functions
       cleaned[0].from,
     );
 
-    const msg = `**Subject**:<br> ${
-      cleaned[0].subject
-    }<br><br> **Message**:<br> ${cleaned[0].content.join(" ")} `;
-    functions.logger.info({cleaned: cleaned[0]});
-
-    const is_email = await validateEmailIsCustomer(msg);
-    if (!is_email || is_email.includes("invalid")) {
-      return createResponse(409, "Invalid Email", {is_email});
-    }
-
     const existing_email = doc as EmailDocument;
     if (existing_email && existing_email.status == "open") {
       await updateExistingEmailConversation(
@@ -93,7 +93,6 @@ export const receiveGmailNotification = functions
 
     // Classify message
     const classification = await classifyMessage(existing_email, msg);
-    console.log({classification});
 
     // Extract Order Number & Customer Data
     const {order, customer} = await fetchCustomerDataFromEmail(
@@ -109,7 +108,7 @@ export const receiveGmailNotification = functions
     }
 
     // Create payload
-    const {email: email_payload} = createEmailPayload(
+    const {email: payload} = createEmailPayload(
       merchant,
       existing_email,
       customer,
@@ -117,15 +116,12 @@ export const receiveGmailNotification = functions
       cleaned[0],
       msg,
     );
-
-    const payload = respondToEmailPayload(
-      email_payload,
-      merchant.timezone,
-      classification,
-    );
     if (!payload) return createResponse(400, "Couldn't Respond", null);
 
     // Update/Save
+    const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+    payload.classification = classification;
+    payload.updated_at = time;
     const save = await updateSubcollectionDocument(
       "shopify_merchant",
       domain,
@@ -145,10 +141,12 @@ export const getEmailFromHistory = async (
   const oAuth2Client = new google.auth.OAuth2();
   oAuth2Client.setCredentials({access_token: token});
   const gmail = google.gmail({version: "v1", auth: oAuth2Client});
-  const hitory_id = data.historyId;
+  // const hitory_id = data.historyId;
+  const profileResponse = await gmail.users.getProfile({userId: "me"});
+  const hitory_id = profileResponse.data.historyId;
 
   try {
-    const history = await gmail.users.history.list({
+    let history = await gmail.users.history.list({
       userId: "me",
       startHistoryId: String(hitory_id),
     });
@@ -156,7 +154,12 @@ export const getEmailFromHistory = async (
     if (!history.data.history) {
       console.error(history.data);
       console.warn("No history found for the provided historyId.");
-      return null;
+
+      history = await gmail.users.history.list({
+        userId: "me",
+        startHistoryId: String(data.historyId),
+      });
+      if (!history.data.history) return null;
     }
 
     const cleanedEmails: CleanedEmail[] = [];

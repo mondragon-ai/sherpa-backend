@@ -7,7 +7,6 @@ import {SuggestedActions} from "../../types/shared";
 
 export const generateSuggestedAction = async (
   chat: ChatDocument | EmailDocument,
-  type: "email" | "chat",
 ): Promise<{action: SuggestedActions; prompt: string}> => {
   const conversation = generateChatMessages(chat.conversation);
   const customer_summary = generateCustomerSummary(chat);

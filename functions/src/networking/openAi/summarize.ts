@@ -6,7 +6,6 @@ export const generateSummary = async (
 ): Promise<string | null> => {
   const token = process.env.CLASSIFICATION_API || "";
 
-  console.log({history});
   const payload = {
     model: "gpt-3.5-turbo",
     messages: [

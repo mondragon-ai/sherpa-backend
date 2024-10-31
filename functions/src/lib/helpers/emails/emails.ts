@@ -4,6 +4,7 @@ import {
 } from "../../../networking/shopify/orders";
 import {google} from "googleapis";
 import {ChatDocument} from "../../types/chats";
+import {EmailDocument} from "../../types/emails";
 import {decryptMsg} from "../../../util/encryption";
 import {getValidGmailAccessToken} from "./validate";
 import {MerchantDocument} from "../../types/merchant";
@@ -23,7 +24,6 @@ import {buildCancelSubscriptionEmailPayload} from "../../prompts/emails/cancelSu
 import {buildAddressChangeCustomerEmailPayload} from "../../prompts/emails/changeAddressCustomer";
 import {buildOrderCancelPendingEmailPayload} from "../../prompts/emails/orderCancellationPending";
 import {buildOrderCancelUnavailableEmailPayload} from "../../prompts/emails/orderCancellationUnavailable";
-import {EmailDocument} from "../../types/emails";
 
 export const generateSuggestedEmail = (
   chat: ChatDocument | EmailDocument,
@@ -63,7 +63,7 @@ export const generateSuggestedEmail = (
     }
     case "resolve": {
       if (!order) {
-        return "";
+        return buildResolveEmailPayload(chat);
       }
       if (chat.classification == ClassificationTypes.OrderStatus) {
         if (
@@ -90,18 +90,19 @@ export const generateSuggestedEmail = (
       return "";
     }
     default: {
-      return "";
+      return buildResolveEmailPayload(chat);
     }
   }
 };
 
 export const sendEmail = async (
   chat: ChatDocument | EmailDocument,
-  type: "email" | "chat",
   suggested_email: string,
   merchant: MerchantDocument,
 ) => {
-  if (!merchant.configurations.automate_emails) return false;
+  if (!merchant.configurations.automate_emails || !suggested_email) {
+    return false;
+  }
 
   // Get email token from merchant
   const mail = merchant.apps.find(

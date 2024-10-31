@@ -145,19 +145,6 @@ export const initializeEmailPyaload = (
   };
 };
 
-export const respondToEmailPayload = (
-  email: EmailDocument,
-  timzone: string,
-  classification: string,
-) => {
-  const time = getCurrentUnixTimeStampFromTimezone(timzone);
-  return {
-    ...email,
-    classification: classification,
-    updated_at: time,
-  } as EmailDocument;
-};
-
 export const buildResolvedChatPayload = (
   chat: EmailDocument,
   merchant: MerchantDocument,

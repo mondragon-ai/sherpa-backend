@@ -471,7 +471,6 @@ const classifyByIssue = (issue: IssueTypes | ""): ClassificationTypes => {
       return ClassificationTypes.OrderAddress;
     case "subscription":
       return ClassificationTypes.Subscription;
-
     default:
       return ClassificationTypes.None;
   }

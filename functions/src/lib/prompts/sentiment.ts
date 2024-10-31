@@ -5,7 +5,9 @@ export const SENTIMENT_PROMPT = `
     - **Analyze Tone and Language:** Identify expressions of satisfaction or dissatisfaction within the conversation.
     - **Consider Resolution Quality:** Note whether the customer's issues were fully resolved, partially resolved, or unresolved.
     - **Use Customer Details and Order Summary:** Incorporate the context of the order summary and customer profile to gauge satisfaction accurately.
+    - **Insuficient Information:** If there is not enough information available to evaluate the sentiment rate as the chat as "neutral".
 
     **Output Requirements:**
-    - Return a single-word sentiment: "positive," "neutral," or "negative."
+    - ONLY Return a single-word sentiment: "positive," "neutral," or "negative."
+    - MUST Return a single-word sentiment: "positive," "neutral," or "negative."
 `;

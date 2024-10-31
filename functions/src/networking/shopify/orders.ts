@@ -4,6 +4,7 @@ import {
   cleanCustomerOrdersPayload,
 } from "../../lib/payloads/shopify/orders";
 import {
+  CleanedCustomerOrder,
   ShopifOrderResponse,
   ShopifyOrdersResponse,
 } from "../../lib/types/shopify/orders";
@@ -12,7 +13,7 @@ export const fetchCustomerOrderList = async (
   domain: string,
   shpat: string,
   customer_id: number,
-): Promise<any[] | null> => {
+): Promise<CleanedCustomerOrder[] | null> => {
   const shop = domain.split(".")[0];
 
   const query = `
@@ -103,8 +104,6 @@ export const fetchShopifyOrder = async (
   if (!data) return null;
   const order = data as ShopifOrderResponse["data"];
   if (!order || !order.order) return null;
-
-  console.log({order});
 
   const cleaned_order = cleanCustomerOrderPayload(order.order);
 

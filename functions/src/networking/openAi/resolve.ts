@@ -19,7 +19,7 @@ export const generateSuggestedActionsGPT = async (
     ],
     temperature: 0.7,
     top_p: 1,
-    max_completion_tokens: 400,
+    max_completion_tokens: 10,
   };
 
   const token = process.env.SUGGESTED_ACTION_API || "";

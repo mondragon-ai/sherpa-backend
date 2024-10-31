@@ -1,10 +1,11 @@
 import * as functions from "firebase-functions";
 import {ChatDocument} from "../lib/types/chats";
-import {resolveTicket} from "../queues/resolveTicket";
+
 import {algoliaChatCreatePayload} from "../lib/payloads/chats";
 import {deleteFromAlgolia, updateToAlgolia} from "../database/algolia";
 import {createTicketAnalytics} from "../lib/helpers/analytics/create";
 import {resolveTicketAnalytics} from "../lib/helpers/analytics/resolved";
+import {resolveTicket} from "../queues/resolveTicket";
 
 export const chatsCreated = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
@@ -44,12 +45,14 @@ export const chatUpdated = functions.firestore
     const after = snap.after.exists ? snap.after.data() : null;
     if (!after) return;
     const after_chat = after as unknown as ChatDocument;
+    const {id, domain} = after_chat;
 
     console.log(`[${before_chat.status}, ${after_chat.status}]`);
 
     // Update Analytics - New Ticket
     if (before_chat.status !== "open" && after_chat.status == "open") {
       await createTicketAnalytics("chat", after_chat);
+      await resolveTicket(domain, id, "chat");
     }
 
     // Update Analytics - Resolved Ticket

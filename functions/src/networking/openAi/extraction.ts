@@ -20,7 +20,7 @@ export const extractOrderNumber = async (s: string) => {
     messages: blocks,
     temperature: 0.7,
     top_p: 1,
-    max_completion_tokens: 400,
+    max_completion_tokens: 10,
   };
 
   const {data} = await openAIRequest("/chat/completions", token, payload);

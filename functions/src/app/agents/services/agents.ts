@@ -35,6 +35,8 @@ import {EmailDocument} from "../../../lib/types/emails";
 import {generateSummary} from "../../../networking/openAi/summarize";
 import {generateChatMessages} from "../../../lib/payloads/openai/conversation";
 import {generateSentimentGPT} from "../../../networking/openAi/sentiment";
+import * as functions from "firebase-functions";
+import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -172,8 +174,6 @@ export const fetchCustomerData = async (
     order = await fetchShopifyOrder(domain, shpat, `${last_order}`);
   }
 
-  console.log({cleaned_order: order});
-
   const cleaned_customer = cleanCustomerPayload(customer);
   return {customer: cleaned_customer, order: order};
 };
@@ -194,6 +194,7 @@ export const respondToChat = async (
     "chats",
     id,
   );
+
   const chat = chat_doc as ChatDocument;
   if (!chat) return createResponse(422, "Chat not found", null);
 
@@ -204,15 +205,13 @@ export const respondToChat = async (
 
   const convo = generateChatMessages(chat.conversation);
   const history = convo + `\n- Customer: ${message}.\n`;
-  console.log({history});
 
   // Classify message
   const classification = await classifyMessage(chat, history);
-  console.log({classification});
 
   // Build chat payload
   const blocks = buildResponsePayload(merchant, chat, classification, message);
-  console.log({blocks});
+  functions.logger.info({blocks});
 
   // Respond to chat
   const response = await respondToChatGPT(blocks);
@@ -226,7 +225,7 @@ export const respondToChat = async (
     message,
     classification,
   );
-  console.log(payload);
+  functions.logger.info({conversation: payload.conversation});
 
   await updateSubcollectionDocument(
     "shopify_merchant",
@@ -265,7 +264,8 @@ export const resolveChat = async (
   }
 
   // Generate Suggested Action Keyword
-  const {action, prompt} = await generateSuggestedAction(chat, type);
+  const {action, prompt} = await generateSuggestedAction(chat);
+  functions.logger.info({action, prompt});
 
   // Summarize
   const summary = (await generateSummary(prompt)) || "";
@@ -279,7 +279,6 @@ export const resolveChat = async (
   if (!merchant) return createResponse(422, "Merchant not found", null);
 
   const actions = await automateAction(chat, merchant, type, action);
-  console.log({actions});
 
   // Build Resolve Chat Payload
   const payload = buildResolvedChatPayload(
@@ -291,7 +290,7 @@ export const resolveChat = async (
     summary,
     sentiment,
   );
-  console.log({payload});
+  functions.logger.info({resolved_saved: payload});
 
   // Update Doc
   await updateSubcollectionDocument(
@@ -302,7 +301,7 @@ export const resolveChat = async (
     payload,
   );
 
-  return createResponse(200, "Resolved", null);
+  return createResponse(200, "Resolved", {chat: payload});
 };
 
 type AutomaticAction = {
@@ -331,6 +330,25 @@ export const automateAction = async (
     merchant,
     action,
   );
+  if (type == "email") {
+    const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+    chat.conversation = [
+      ...chat.conversation,
+      {
+        time: time,
+        is_note: false,
+        message: suggested_email,
+        sender: "agent",
+        action: null,
+        id: `${time}`,
+        history_id: "",
+        internal_date: String(time),
+        from: "",
+        subject: "",
+        attachments: [],
+      },
+    ];
+  }
 
   if (!performed) {
     return {
@@ -341,7 +359,7 @@ export const automateAction = async (
     };
   }
 
-  const email_sent = await sendEmail(chat, type, suggested_email, merchant);
+  const email_sent = await sendEmail(chat, suggested_email, merchant);
 
   return {email: email_sent, action: performed, suggested_email, error};
 };

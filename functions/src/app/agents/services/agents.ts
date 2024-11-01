@@ -1,13 +1,13 @@
 import {
-  fetchRootDocument,
-  fetchSubcollectionDocument,
-  updateSubcollectionDocument,
-} from "../../../database/firestore";
-import {
   buildResolvedChatPayload,
   createChatPayload,
   respondToChatPayload,
 } from "../../../lib/payloads/chats";
+import {
+  fetchRootDocument,
+  fetchSubcollectionDocument,
+  updateSubcollectionDocument,
+} from "../../../database/firestore";
 import {
   fetchCustomerOrderList,
   fetchShopifyOrder,
@@ -16,26 +16,29 @@ import {
   generateSuggestedEmail,
   sendEmail,
 } from "../../../lib/helpers/emails/emails";
-import {SuggestedActions} from "../../../lib/types/shared";
+import {
+  fetchChatMessages,
+  generateChatMessages,
+} from "../../../lib/payloads/openai/conversation";
+import * as functions from "firebase-functions";
 import {decryptMsg} from "../../../util/encryption";
 import {createResponse} from "../../../util/errors";
+import {EmailDocument} from "../../../lib/types/emails";
+import {SuggestedActions} from "../../../lib/types/shared";
 import {MerchantDocument} from "../../../lib/types/merchant";
 import {respondToChatGPT} from "../../../networking/openAi/respond";
 import {classifyMessage} from "../../../lib/helpers/agents/classify";
+import {generateSummary} from "../../../networking/openAi/summarize";
 import {performActions} from "../../../lib/helpers/automation/actions";
 import {CleanedCustomerOrder} from "../../../lib/types/shopify/orders";
 import {updateMerchantUsage} from "../../../networking/shopify/billing";
 import {ChatDocument, ChatStartRequest} from "../../../lib/types/chats";
+import {generateSentimentGPT} from "../../../networking/openAi/sentiment";
 import {fetchShopifyProducts} from "../../../networking/shopify/products";
 import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
 import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
-import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
 import {generateSuggestedAction} from "../../../lib/helpers/agents/resolve";
-import {EmailDocument} from "../../../lib/types/emails";
-import {generateSummary} from "../../../networking/openAi/summarize";
-import {generateChatMessages} from "../../../lib/payloads/openai/conversation";
-import {generateSentimentGPT} from "../../../networking/openAi/sentiment";
-import * as functions from "firebase-functions";
+import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 export const searchCustomer = async (domain: string, email: string) => {
@@ -105,7 +108,8 @@ export const startChat = async (
   const existing_chat = doc as ChatDocument;
 
   if (existing_chat && existing_chat.status == "open") {
-    return createResponse(201, "Still Open", null);
+    const convo = fetchChatMessages(existing_chat.conversation);
+    return createResponse(201, "Still Open", convo);
   }
 
   // Fetch Merchant
@@ -362,4 +366,24 @@ export const automateAction = async (
   const email_sent = await sendEmail(chat, suggested_email, merchant);
 
   return {email: email_sent, action: performed, suggested_email, error};
+};
+
+export const fetchThread = async (domain: string, email: string) => {
+  if (!domain || !email) return createResponse(400, "Missing params", null);
+
+  // Fetch Chat
+  const {data} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    email,
+  );
+  const chat = data as ChatDocument;
+
+  if (chat && chat.status == "open") {
+    const convo = fetchChatMessages(chat.conversation);
+    return createResponse(200, "Still Open", convo);
+  }
+
+  return createResponse(422, "Not Active", null);
 };

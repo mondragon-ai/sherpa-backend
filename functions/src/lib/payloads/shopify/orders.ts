@@ -7,6 +7,7 @@ import {
 export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
   const cleaned: CleanedCustomerOrder[] = [];
   for (const n of nodes) {
+    console.log({node: n.node});
     const tracking =
       n.node.fulfillments[0] && n.node.fulfillments[0].trackingInfo[0]
         ? n.node.fulfillments[0].trackingInfo[0].url
@@ -14,18 +15,11 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
 
     const line_items = (n.node.lineItems.edges || []).map((li) => ({
       title: li.node.title || "",
-      variant_id: li.node.variant.id || "",
+      variant_id: li.node.variant ? li.node.variant.id : "",
       options: li.node.variantTitle || "",
       quantity: li.node.quantity || 0,
     }));
 
-    console.log({
-      totalMoney: n.node.totalPriceSet.presentmentMoney.amount,
-    });
-    console.log({
-      originalTotalPriceSet: (n.node as any).originalTotalPriceSet
-        .presentmentMoney.amount,
-    });
     const time_stamp = new Date(n.node.createdAt).getSeconds();
     cleaned.push({
       tracking_url: tracking,

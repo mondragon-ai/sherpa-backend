@@ -22,12 +22,35 @@ export const fetchCustomerOrderList = async (
         edges {
           node {
             id
+            email
+            refunds(first: 100) {
+                id
+            }
             name
+            createdAt
+            displayFinancialStatus
             displayFulfillmentStatus
             originalTotalPriceSet {
               presentmentMoney {
                 amount
               }
+            }
+            fulfillments(first: 100) {
+                trackingInfo {
+                    url
+                }
+            } 
+            lineItems(first: 100) {
+                edges {
+                    node {
+                        variant {
+                            id
+                        }
+                        variantTitle
+                        title
+                        quantity
+                    }
+                }
             }
           }
         }

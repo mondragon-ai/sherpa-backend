@@ -8,6 +8,7 @@ import {
   rateChat,
   submitNote,
 } from "../services/chats";
+import {fetchThread} from "../../agents/services/agents";
 
 /**
  * Fetch chats from DB
@@ -148,5 +149,28 @@ export const handleAddNote = async (
   res.status(status).json({
     message: message,
     data: null,
+  });
+};
+
+/**
+ * Fetch Active Chat Thread
+ *
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleFetchActiveThread = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, email} = req.params;
+  functions.logger.info(
+    ` 💬 [/CONVO]: Fetch active chat thread ${email} for ${domain}`,
+  );
+
+  const {status, message, data} = await fetchThread(domain, email);
+
+  res.status(status).json({
+    message: message,
+    data: data,
   });
 };

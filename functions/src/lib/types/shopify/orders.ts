@@ -121,3 +121,60 @@ export type CleanedLineItems = {
   title: string;
   quantity: number;
 };
+
+export type OrderCancelResponse = {
+  orderCancel: {
+    job: null | string;
+    orderCancelUserErrors: {
+      message: string;
+    }[];
+    userErrors: {
+      field: string[];
+      message: string;
+    }[];
+  };
+};
+
+export type OrderEditBeginResponse = {
+  orderEditBegin: {
+    calculatedOrder: {
+      id: string; // e.g., 'gid://shopify/CalculatedOrder/5678'
+    };
+  };
+};
+
+export type NewShippingAddress = {
+  address1: string;
+  address2?: string;
+  city: string;
+  company?: string;
+  country: string;
+  countryCode: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  province: string;
+  provinceCode: string;
+  zip: string;
+};
+
+export type OrderUpdateResponse = {
+  orderUpdate: {
+    order: {
+      id: string; // e.g., 'gid://shopify/Order/6302594072885'
+      shippingAddress: {
+        address1: string;
+        address2: string | null;
+        city: string;
+        company: string | null;
+        countryCode: string;
+        firstName: string;
+        lastName: string;
+        phone: string | null;
+        provinceCode: string;
+        zip: string;
+      };
+    };
+    userErrors: {message: string; field?: string[]}[];
+  };
+};

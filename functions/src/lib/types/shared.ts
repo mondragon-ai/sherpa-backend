@@ -96,6 +96,7 @@ export type Conversation = {
 
 export type OrderData = {
   id: string;
+  order_id: string;
   current_total_price: string;
   fulfillment_status: "hold" | "shipped" | "delivered" | "pending" | "transit";
   payment_status: "hold" | "paid";

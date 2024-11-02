@@ -334,6 +334,7 @@ export const automateAction = async (
     merchant,
     action,
   );
+
   if (type == "email") {
     const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
     chat.conversation = [
@@ -386,4 +387,35 @@ export const fetchThread = async (domain: string, email: string) => {
   }
 
   return createResponse(422, "Not Active", null);
+};
+
+export const testActions = async (domain: string, email: string) => {
+  if (!domain || !email) {
+    return createResponse(400, "Missing params", null);
+  }
+
+  // Fetch chat data:
+  const {data} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    email,
+  );
+  if (!data) return createResponse(400, "Missing params", null);
+  const chat = data as ChatDocument;
+
+  // Fetch chat data:
+  const {data: doc} = await fetchRootDocument("shopify_merchant", domain);
+  if (!doc) return createResponse(400, "Merchant not douns", null);
+  const merchant = doc as MerchantDocument;
+
+  const response = await performActions(
+    chat,
+    "chat",
+    "change_address",
+    merchant,
+  );
+  console.log(response);
+
+  return createResponse(200, "Success", response);
 };

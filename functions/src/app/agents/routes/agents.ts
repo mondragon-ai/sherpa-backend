@@ -6,6 +6,7 @@ import {
   handleInitiateChat,
   handleResponse,
   handleCloseChat,
+  handleTestActions,
 } from "../controller/agents";
 
 export const agentsRoutes = (app: express.Router) => {
@@ -15,4 +16,5 @@ export const agentsRoutes = (app: express.Router) => {
   app.post("/:domain/initiate/:email", handleInitiateChat);
   app.post("/:domain/respond/:email", handleResponse);
   app.post("/:domain/resolve/:email", handleCloseChat);
+  app.post("/:domain/test/:email", handleTestActions);
 };

@@ -52,3 +52,12 @@ export type DiscountCodeCreateResponse = {
     };
   };
 };
+
+export type DiscountRedeemCodeBulkAddResponse = {
+  discountRedeemCodeBulkAdd: {
+    bulkCreation: {
+      id: string;
+    };
+    userErrors: {message: string; field?: string[]}[];
+  };
+};

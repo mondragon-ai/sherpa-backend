@@ -15,7 +15,7 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
 
     const line_items = (n.node.lineItems.edges || []).map((li) => ({
       title: li.node.title || "",
-      variant_id: li.node.variant ? li.node.variant.id : "",
+      variant_id: li.node.variant && li.node ? li.node.variant.id : "",
       options: li.node.variantTitle || "",
       quantity: li.node.quantity || 0,
     }));
@@ -50,7 +50,7 @@ export const cleanCustomerOrderPayload = (order: ShopifyOrder) => {
 
   const line_items = (order.lineItems.edges || []).map((li) => ({
     title: li.node.title || "",
-    variant_id: li.node.variant.id || "",
+    variant_id: li.node && li.node.variant ? li.node.variant.id : "",
     options: li.node.variantTitle || "",
     quantity: li.node.quantity || "",
   }));

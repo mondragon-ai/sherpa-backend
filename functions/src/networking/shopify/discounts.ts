@@ -1,6 +1,10 @@
 import {shopifyGraphQlRequest} from ".";
 import {MerchantDocument} from "../../lib/types/merchant";
-import {DiscountCodeCreateResponse} from "../../lib/types/shopify/discounts";
+import {
+  DiscountCodeCreateResponse,
+  DiscountRedeemCodeBulkAddResponse,
+} from "../../lib/types/shopify/discounts";
+import {decryptMsg} from "../../util/encryption";
 
 type DiscountRequest = {price: number; token: string};
 export const createDiscountRule = async (
@@ -93,4 +97,45 @@ export const deleteDiscount = async (
     value: "",
     value_type: "percentage",
   } as MerchantDocument["configurations"]["price_rules"];
+};
+
+export const applyDiscount = async (merchant: MerchantDocument) => {
+  const discount_id = merchant.configurations.price_rules?.id
+    ? merchant.configurations.price_rules.id
+    : "";
+
+  const coupon = Array.from(Array(10), () => Math.random().toString(36)[2])
+    .join("")
+    .toUpperCase();
+
+  const query = `mutation discountRedeemCodeBulkAdd($discountId: ID!, $codes: [DiscountRedeemCodeInput!]!) {
+		discountRedeemCodeBulkAdd(discountId: $discountId, codes: $codes) {
+			bulkCreation {
+				id
+			}
+			userErrors {
+				code
+				field
+				message
+			}
+		}
+	}`;
+
+  const variables = {
+    discountId: discount_id,
+    codes: [{code: coupon}],
+  };
+
+  if (!discount_id)
+    return {performed: false, action: "", error: "apply_discount"};
+
+  const shop = merchant.id.split(".")[0];
+  const shpat = await decryptMsg(merchant.access_token);
+  const response = await shopifyGraphQlRequest(shop, shpat, {query, variables});
+  const data = response.data as DiscountRedeemCodeBulkAddResponse;
+
+  if (!data.discountRedeemCodeBulkAdd.bulkCreation)
+    return {performed: false, action: "", error: "apply_discount"};
+
+  return {performed: true, action: coupon, error: ""};
 };

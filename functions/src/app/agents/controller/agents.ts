@@ -7,6 +7,7 @@ import {
   startChat,
   respondToChat,
   resolveChat,
+  testActions,
 } from "../services/agents";
 import {ChatStartRequest} from "../../../lib/types/chats";
 
@@ -143,6 +144,26 @@ export const handleCloseChat = async (
     email,
     kind as "email" | "chat",
   );
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Test actions for chat
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleTestActions = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, email} = req.params;
+  functions.logger.info(` 🤖 [/TEST]: Test actions ${domain} and ${email}`);
+
+  const {status, message, data} = await testActions(domain, email);
 
   res.status(status).json({
     message: message,

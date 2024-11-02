@@ -3,11 +3,19 @@ import {
   cleanCustomerOrderPayload,
   cleanCustomerOrdersPayload,
 } from "../../lib/payloads/shopify/orders";
+import {ChatDocument} from "../../lib/types/chats";
+import {EmailDocument} from "../../lib/types/emails";
+import {MerchantDocument} from "../../lib/types/merchant";
 import {
   CleanedCustomerOrder,
+  NewShippingAddress,
+  OrderCancelResponse,
+  OrderEditBeginResponse,
+  OrderUpdateResponse,
   ShopifOrderResponse,
   ShopifyOrdersResponse,
 } from "../../lib/types/shopify/orders";
+import {decryptMsg} from "../../util/encryption";
 
 export const fetchCustomerOrderList = async (
   domain: string,
@@ -195,4 +203,131 @@ export const fetchShopifyOrderByName = async (
   const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
 
   return cleaned_orders;
+};
+
+export const cancelOrder = async (
+  chat: ChatDocument | EmailDocument,
+  merchant: MerchantDocument,
+) => {
+  const order = chat.order;
+  if (!order) return {performed: false, action: "", error: "cancel_order"};
+
+  const query = `mutation orderCancel($orderId: ID!, $reason: OrderCancelReason!, $refund: Boolean!, $restock: Boolean!) {
+    orderCancel(orderId: $orderId, reason: $reason, refund: $refund, restock: $restock) {
+      job {
+        done
+      }
+      orderCancelUserErrors {
+        message
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }`;
+
+  const variables = {
+    notifyCustomer: true,
+    orderId: order.order_id,
+    reason: "CUSTOMER",
+    refund: true,
+    restock: true,
+    staffNote: "Sherpa Canceled",
+  };
+
+  const shop = merchant.id.split(".")[0];
+  const shpat = await decryptMsg(merchant.access_token);
+  const response = await shopifyGraphQlRequest(shop, shpat, {query, variables});
+  const data = response.data as OrderCancelResponse;
+
+  if (!data.orderCancel.job) {
+    console.error(data.orderCancel.orderCancelUserErrors[0]);
+    return {performed: false, action: "", error: "cancel_order"};
+  }
+
+  return {performed: true, action: "", error: ""};
+};
+
+export const startOrderEdit = async (
+  chat: ChatDocument | EmailDocument,
+  merchant: MerchantDocument,
+) => {
+  const order = chat.order;
+  if (!order) return null;
+
+  const query = `mutation beginEdit{
+    orderEditBegin(id: "${order.order_id}"){
+        calculatedOrder{
+          id
+        }
+      }
+    }`;
+
+  const shop = merchant.id.split(".")[0];
+  const shpat = await decryptMsg(merchant.access_token);
+  const response = await shopifyGraphQlRequest(shop, shpat, {query});
+  const data = response.data as OrderEditBeginResponse;
+
+  console.error(data);
+
+  if (!data.orderEditBegin.calculatedOrder) {
+    console.error(data.orderEditBegin);
+    return null;
+  }
+
+  return data.orderEditBegin.calculatedOrder.id;
+};
+
+export const updateShippingAddress = async (
+  chat: ChatDocument | EmailDocument,
+  merchant: MerchantDocument,
+  newShippingAddress: NewShippingAddress,
+) => {
+  const order = chat.order;
+  if (!order) return {performed: false, action: "", error: "change_address"};
+
+  const query = `mutation updateOrderShippingAddress($input: OrderInput!) {
+    orderUpdate(input: $input) {
+      order {
+        id
+        shippingAddress {
+          address1
+          address2
+          city
+          company
+          countryCode
+          firstName
+          lastName
+          phone
+          provinceCode
+          zip
+        }
+      }
+      userErrors {
+        message
+        field
+      }
+    }
+  }`;
+
+  const variables = {
+    input: {
+      id: order.order_id,
+      shippingAddress: newShippingAddress,
+    },
+  };
+
+  const shop = merchant.id.split(".")[0];
+  const shpat = await decryptMsg(merchant.access_token);
+  const response = await shopifyGraphQlRequest(shop, shpat, {query, variables});
+  const data = response.data as OrderUpdateResponse;
+
+  console.log({data: data.orderUpdate.order.id});
+
+  if (!data.orderUpdate.order.id) {
+    return {performed: false, action: "", error: "change_address"};
+  }
+
+  return {performed: true, action: data.orderUpdate.order.id, error: ""};
 };

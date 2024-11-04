@@ -18,6 +18,7 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
       variant_id: li.node.variant && li.node ? li.node.variant.id : "",
       options: li.node.variantTitle || "",
       quantity: li.node.quantity || 0,
+      product_id: li.node && li.node.product ? li.node.product.id : "",
     }));
 
     const time_stamp = new Date(n.node.createdAt).getSeconds();
@@ -53,6 +54,7 @@ export const cleanCustomerOrderPayload = (order: ShopifyOrder) => {
     variant_id: li.node && li.node.variant ? li.node.variant.id : "",
     options: li.node.variantTitle || "",
     quantity: li.node.quantity || "",
+    product_id: li.node && li.node.product ? li.node.product.id : "",
   }));
 
   const date = new Date(order.createdAt);

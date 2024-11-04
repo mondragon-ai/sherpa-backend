@@ -96,6 +96,9 @@ export type LineItemNode = {
   variantTitle: string;
   title: string;
   quantity: number;
+  product: {
+    id: string;
+  };
 };
 
 export type Variant = {
@@ -120,6 +123,7 @@ export type CleanedLineItems = {
   options: string;
   title: string;
   quantity: number;
+  product_id: string;
 };
 
 export type OrderCancelResponse = {

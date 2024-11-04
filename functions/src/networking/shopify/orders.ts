@@ -32,7 +32,7 @@ export const fetchCustomerOrderList = async (
             id
             email
             refunds(first: 100) {
-                id
+              id
             }
             name
             createdAt
@@ -44,21 +44,24 @@ export const fetchCustomerOrderList = async (
               }
             }
             fulfillments(first: 100) {
-                trackingInfo {
-                    url
-                }
+              trackingInfo {
+                url
+              }
             } 
             lineItems(first: 100) {
-                edges {
-                    node {
-                        variant {
-                            id
-                        }
-                        variantTitle
-                        title
-                        quantity
-                    }
+              edges {
+                node {
+                  variant {
+                    id
+                  }
+                  variantTitle
+                  title
+                  quantity
+                  product{
+                    id
+                  }
                 }
+              }
             }
           }
         }
@@ -93,40 +96,43 @@ export const fetchShopifyOrder = async (
 ) => {
   const query = `
     query fetchCustomerOrder {
-        order(id: "gid://shopify/Order/${order_id}") {
-            id
-            email
-            totalPriceSet {
-                presentmentMoney {
-                    amount
-                }
-            }
-            refunds(first: 100) {
-                id
-            }
-            name
-            createdAt
-            displayFinancialStatus
-            displayFulfillmentStatus
-            returnStatus
-            fulfillments(first: 100) {
-                trackingInfo {
-                    url
-                }
-            } 
-            lineItems(first: 100) {
-                edges {
-                    node {
-                        variant {
-                            id
-                        }
-                        variantTitle
-                        title
-                        quantity
-                    }
-                }
-            }
+      order(id: "gid://shopify/Order/${order_id}") {
+        id
+        email
+        totalPriceSet {
+          presentmentMoney {
+            amount
+          }
         }
+        refunds(first: 100) {
+          id
+        }
+        name
+        createdAt
+        displayFinancialStatus
+        displayFulfillmentStatus
+        returnStatus
+        fulfillments(first: 100) {
+          trackingInfo {
+            url
+          }
+        } 
+        lineItems(first: 100) {
+          edges {
+            node {
+              variant {
+                id
+              }
+              variantTitle
+              title
+              quantity
+              product {
+                id
+              }
+            }
+          }
+        }
+      }
     }
   `;
 
@@ -154,7 +160,7 @@ export const fetchShopifyOrderByName = async (
             id
             email
             refunds(first: 100) {
-                id
+              id
             }
             name
             createdAt
@@ -166,21 +172,24 @@ export const fetchShopifyOrderByName = async (
               }
             }
             fulfillments(first: 100) {
-                trackingInfo {
-                    url
-                }
+              trackingInfo {
+                url
+              }
             } 
             lineItems(first: 100) {
-                edges {
-                    node {
-                        variant {
-                            id
-                        }
-                        variantTitle
-                        title
-                        quantity
-                    }
+              edges {
+                node {
+                  variant {
+                      id
+                  }
+                  variantTitle
+                  title
+                  quantity
+                  product {
+                    id
+                  }
                 }
+              }
             }
           }
         }

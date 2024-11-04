@@ -9,9 +9,11 @@ import {
 } from "../../../networking/shopify/orders";
 import {ChatDocument} from "../../types/chats";
 import {EmailDocument} from "../../types/emails";
-import {SuggestedActions} from "../../types/shared";
+import {LineItem, SuggestedActions} from "../../types/shared";
 import {MerchantDocument} from "../../types/merchant";
 import {NewShippingAddress} from "../../types/shopify/orders";
+import {checkForChangedLineItems} from "./orders";
+import {fetchRequestedProducts} from "../shopify/products";
 
 export const performActions = async (
   chat: ChatDocument | EmailDocument,
@@ -90,17 +92,37 @@ const changeProduct = async (
   const gpt_response = await extractProductsFromThread(chat);
   console.log(gpt_response);
 
-  return {performed: true, action: gpt_response || "", error: "change_product"};
-  // if (!gpt_response || gpt_response == "null") {
-  //   return {performed: false, action: "", error: "change_product"};
-  // }
+  if (!gpt_response || gpt_response == "null") {
+    return {performed: false, action: "", error: "change_product"};
+  }
 
-  // try {
-  //   const shipping = (await JSON.parse(gpt_response)) as NewShippingAddress;
+  try {
+    const line_items = (await JSON.parse(gpt_response)) as LineItem[];
 
-  //   return updateShippingAddress(chat, merchant, shipping);
-  // } catch (error) {
-  //   console.error("CANT PARSE SHIPPING: ", error);
-  //   return {performed: false, action: "", error: "change_product"};
-  // }
+    // Check against order line items -> only changed/new LineItem[] | null
+    const valid_line_items = checkForChangedLineItems(line_items, chat);
+    if (!valid_line_items) {
+      return {performed: false, action: "", error: "change_product"};
+    }
+
+    console.log({valid_line_items});
+
+    // TODO: Search shopify -> return array {variantId: string, quantity: number}[] | null
+    const cleaned_line_items = await fetchRequestedProducts(
+      valid_line_items,
+      merchant,
+    );
+    console.log({cleaned_line_items});
+
+    // TODO: Modify order -> {performed: true, action: "", error: ""};
+
+    return {
+      performed: false,
+      action: JSON.stringify(line_items),
+      error: "change_product",
+    };
+  } catch (error) {
+    console.error("CANT PARSE SHIPPING: ", error);
+    return {performed: false, action: "", error: "change_product"};
+  }
 };

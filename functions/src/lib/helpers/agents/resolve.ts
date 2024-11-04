@@ -7,9 +7,10 @@ import {SuggestedActions} from "../../types/shared";
 
 export const generateSuggestedAction = async (
   chat: ChatDocument | EmailDocument,
+  is_action = false,
 ): Promise<{action: SuggestedActions; prompt: string}> => {
   const conversation = generateChatMessages(chat.conversation);
-  const customer_summary = generateCustomerSummary(chat);
+  const customer_summary = generateCustomerSummary(chat, is_action);
 
   const prompt = conversation + "\n" + customer_summary;
   const action = await generateSuggestedActionsGPT(prompt);
@@ -18,9 +19,12 @@ export const generateSuggestedAction = async (
   return {action, prompt};
 };
 
-export const generateCustomerSummary = (chat: ChatDocument | EmailDocument) => {
+export const generateCustomerSummary = (
+  chat: ChatDocument | EmailDocument,
+  is_action = false,
+) => {
   const customer = buildCustomerPrompt(chat);
-  const order = buildOrderPrompt(chat);
+  const order = buildOrderPrompt(chat, is_action);
 
   return customer + "\n" + order;
 };

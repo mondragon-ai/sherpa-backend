@@ -412,7 +412,7 @@ export const testActions = async (domain: string, email: string) => {
   const response = await performActions(
     chat,
     "chat",
-    "change_address",
+    "change_product",
     merchant,
   );
   console.log(response);

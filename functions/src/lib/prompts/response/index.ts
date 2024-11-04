@@ -26,7 +26,10 @@ export const buildCustomerPrompt = (chat: ChatDocument | EmailDocument) => {
   /* eslint-enable indent */
 };
 
-export const buildOrderPrompt = (chat: ChatDocument | EmailDocument) => {
+export const buildOrderPrompt = (
+  chat: ChatDocument | EmailDocument,
+  is_action = false,
+) => {
   if (!chat || !chat.order) {
     return `
             ## Order Data:
@@ -57,10 +60,13 @@ export const buildOrderPrompt = (chat: ChatDocument | EmailDocument) => {
           - **Items**:
           ${
             line_items
-              .map(
-                (item) =>
-                  `  -- ${item.quantity} x ${item.title} (${item.options})`,
-              )
+              .map((item) => {
+                const ids = is_action
+                  ? `[var id: (${item.variant_id})  prod id: (${item.product_id})]`
+                  : null;
+
+                return `  -- ${item.quantity} x ${item.title} (${item.options}) ${ids}`;
+              })
               .join("\n") || "N/A"
           }
         `;

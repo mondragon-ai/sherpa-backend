@@ -110,6 +110,8 @@ export type LineItem = {
   quantity: number;
   options: string;
   title: string;
+  product_id: string;
+  variant_id: string;
 };
 
 export type OAuthResponse = {

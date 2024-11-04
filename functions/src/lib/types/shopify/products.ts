@@ -66,3 +66,35 @@ export type CleanedNodeProduct = {
   status: string;
   stock_level: number;
 };
+
+export type CleanedSingleVariant = {
+  title: string;
+  variant_id: string;
+};
+
+export type ProductVariantsResponse = {
+  data: {
+    product: {
+      title: string;
+      variants: {
+        edges: {
+          node: {
+            title: string;
+            id: string; // e.g., 'gid://shopify/ProductVariant/50007230906677'
+          };
+        }[];
+      };
+    };
+  };
+  extensions: {
+    cost: {
+      requestedQueryCost: number;
+      actualQueryCost: number;
+      throttleStatus: {
+        maximumAvailable: number;
+        currentlyAvailable: number;
+        restoreRate: number;
+      };
+    };
+  };
+};

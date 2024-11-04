@@ -7,9 +7,11 @@ import {
   handleFilteredChats,
   handleRateChat,
   handleAddNote,
+  handleFetchChat,
 } from "../controllers/chats";
 
 export const chatRoutes = (app: express.Router) => {
+  app.get("/:domain/chat/:id", handleFetchChat);
   app.get("/:domain/chats", handleFetchAllChats);
   app.get("/:domain/chats/thread/:email", handleFetchActiveThread);
   app.get("/:domain/chats/time", handleFetchNextChats);

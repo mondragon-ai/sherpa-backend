@@ -61,6 +61,7 @@ export const performActions = async (
       break;
     }
     case "exchange": {
+      res = await changeProduct(chat, merchant);
       break;
     }
     case "unknown": {

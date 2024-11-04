@@ -24,6 +24,21 @@ export const fetchChats = async (domain: string) => {
   return createResponse(200, "Fetched chats", chats);
 };
 
+export const fetchChat = async (domain: string, id: string) => {
+  if (!domain || !id) return createResponse(400, "Missing params", null);
+
+  const {data} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "chats",
+    id,
+  );
+  const chat = data as ChatDocument;
+  if (!chat) return createResponse(422, "No chat found", []);
+
+  return createResponse(200, "Fetched chat", chat);
+};
+
 export const fetchNextChats = async (domain: string, time: string) => {
   if (!domain || !time) return createResponse(400, "Missing params", null);
 

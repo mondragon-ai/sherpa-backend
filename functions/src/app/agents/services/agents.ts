@@ -215,7 +215,6 @@ export const respondToChat = async (
 
   // Build chat payload
   const blocks = buildResponsePayload(merchant, chat, classification, message);
-  functions.logger.info({blocks});
 
   // Respond to chat
   const response = await respondToChatGPT(blocks);
@@ -229,7 +228,6 @@ export const respondToChat = async (
     message,
     classification,
   );
-  functions.logger.info({conversation: payload.conversation});
 
   await updateSubcollectionDocument(
     "shopify_merchant",

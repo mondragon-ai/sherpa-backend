@@ -1,22 +1,28 @@
 import {
-  extractAddressFromThread,
-  extractProductsFromThread,
-} from "../../../networking/openAi/extraction";
-import {applyDiscount} from "../../../networking/shopify/discounts";
-import {
   addVariantToOrder,
   cancelOrder,
   startOrderEdit,
   updateShippingAddress,
 } from "../../../networking/shopify/orders";
+import {
+  extractAddressFromThread,
+  extractProductsFromThread,
+} from "../../../networking/openAi/extraction";
+import {
+  cancelRechargeSubscription,
+  getRechargeSubscription,
+} from "../../../networking/recharge/subscriptions";
 import {ChatDocument} from "../../types/chats";
 import {EmailDocument} from "../../types/emails";
-import {LineItem, SuggestedActions} from "../../types/shared";
-import {MerchantDocument} from "../../types/merchant";
-import {NewShippingAddress} from "../../types/shopify/orders";
 import {checkForChangedLineItems} from "./orders";
+import {MerchantDocument} from "../../types/merchant";
 import {fetchRequestedProducts} from "../shopify/products";
+import {LineItem, SuggestedActions} from "../../types/shared";
+import {NewShippingAddress} from "../../types/shopify/orders";
 import {cleanGPTResponse} from "../../../util/formatters/text";
+import {RechargeCustomers} from "../../types/recharge/customers";
+import {applyDiscount} from "../../../networking/shopify/discounts";
+import {findRechargeCustomer} from "../../../networking/recharge/customers";
 
 export const performActions = async (
   chat: ChatDocument | EmailDocument,
@@ -24,10 +30,9 @@ export const performActions = async (
   suggested: SuggestedActions,
   merchant: MerchantDocument,
 ) => {
-  // if (!merchant.configurations.automate_actions) {
-  //   return {performed: false, action: "", error: ""};
-  // }
-  console.log({performActions: suggested});
+  if (!merchant.configurations.automate_actions) {
+    return {performed: false, action: "", error: ""};
+  }
 
   let res = {performed: false, action: "", error: ""};
   switch (suggested) {
@@ -52,6 +57,7 @@ export const performActions = async (
       break;
     }
     case "cancel_subscription": {
+      res = await handleSubscription(merchant, chat);
       break;
     }
     case "exchange": {
@@ -148,4 +154,38 @@ const changeProduct = async (
     console.error("CANT PARSE EXTRACED PRODUCTS: ", {error, gpt_response});
     return {performed: false, action: "", error: "change_product"};
   }
+};
+
+const handleSubscription = async (
+  merchant: MerchantDocument,
+  chat: ChatDocument | EmailDocument,
+) => {
+  const customer = await findRechargeCustomer(merchant, chat);
+  if (!customer) {
+    console.error("Finding Recharge Customer");
+    return {performed: false, action: "", error: "cancel_subscription"};
+  }
+
+  const recharge_customer = customer as RechargeCustomers;
+  const recharge_id = recharge_customer.customers[0].id;
+  if (!recharge_id) {
+    console.error("Finding Recharge Customer ID");
+    return {performed: false, action: "", error: "cancel_subscription"};
+  }
+
+  const sub = await getRechargeSubscription(merchant, recharge_id);
+  if (!sub) {
+    console.error("Finding Recharge Subscription ID");
+    return {performed: false, action: "", error: "cancel_subscription"};
+  }
+
+  // TODO: Add gpt to determine is if its a freeze vs cancel
+  // await freezeRechargeSubscription(merchant, sub.sub_id, sub.date);
+  const action = await cancelRechargeSubscription(merchant, sub.sub_id);
+
+  return {
+    performed: action,
+    action: "",
+    error: action ? "" : "cancel_subscription",
+  };
 };

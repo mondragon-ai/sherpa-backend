@@ -65,3 +65,9 @@ export const getCurrentUnixTimeStampFromTimezone = (
     throw error;
   }
 };
+
+export const addThirtyDays = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + 30);
+  return date.toISOString().replace("Z", "");
+};

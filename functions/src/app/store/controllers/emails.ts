@@ -7,6 +7,7 @@ import {
   filterEmails,
   rateChat,
   submitNote,
+  fetchEmail,
 } from "../services/emails";
 
 /**
@@ -23,6 +24,27 @@ export const handleFetchAllEmails = async (
   functions.logger.info(" 📧 [/FETCH]: " + domain + " ");
 
   const {data, status, message} = await fetchEmails(domain);
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Fetch single Email from DB
+ *
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to return the merchant data.
+ */
+export const handleFetchEmail = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain, id} = req.params;
+  functions.logger.info(` 💬 [/FETCH]: ${domain} ${id} `);
+
+  const {data, status, message} = await fetchEmail(domain, id);
 
   res.status(status).json({
     message: message,

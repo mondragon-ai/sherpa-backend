@@ -72,7 +72,7 @@ export const addThirtyDays = (dateStr: string): string => {
   return date.toISOString().replace("Z", "");
 };
 
-export function getHoursDifference(timeString: number): string {
+export const getHoursDifference = (timeString: number): string => {
   const inputTime = new Date(timeString * 1000);
   if (isNaN(inputTime.getTime())) {
     throw new Error("Invalid date format");
@@ -102,4 +102,4 @@ export function getHoursDifference(timeString: number): string {
   }
 
   return `${diffHours.toFixed(0)}h`;
-}
+};

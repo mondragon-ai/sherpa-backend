@@ -12,6 +12,7 @@ export const buildRefundPayload = (
 ) => {
   const {configurations} = merchant;
 
+  /* eslint-disable indent */
   const date = chat.order && chat.order.created_at ? chat.order.created_at : 0;
   return `
     ${basePrompt(merchant, chat, classification)}

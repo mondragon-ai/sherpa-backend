@@ -108,34 +108,37 @@ export const applyDiscount = async (merchant: MerchantDocument) => {
     .join("")
     .toUpperCase();
 
-  const query = `mutation discountRedeemCodeBulkAdd($discountId: ID!, $codes: [DiscountRedeemCodeInput!]!) {
-		discountRedeemCodeBulkAdd(discountId: $discountId, codes: $codes) {
-			bulkCreation {
-				id
-			}
-			userErrors {
-				code
-				field
-				message
-			}
-		}
-	}`;
+  const query = `
+    mutation discountRedeemCodeBulkAdd($discountId: ID!, $codes: [DiscountRedeemCodeInput!]!) {
+      discountRedeemCodeBulkAdd(discountId: $discountId, codes: $codes) {
+        bulkCreation {
+          id
+        }
+        userErrors {
+          code
+          field
+          message
+        }
+      }
+    }`;
 
   const variables = {
     discountId: discount_id,
     codes: [{code: coupon}],
   };
 
-  if (!discount_id)
+  if (!discount_id) {
     return {performed: false, action: "", error: "apply_discount"};
+  }
 
   const shop = merchant.id.split(".")[0];
   const shpat = await decryptMsg(merchant.access_token);
   const response = await shopifyGraphQlRequest(shop, shpat, {query, variables});
   const data = response.data as DiscountRedeemCodeBulkAddResponse;
 
-  if (!data.discountRedeemCodeBulkAdd.bulkCreation)
+  if (!data.discountRedeemCodeBulkAdd.bulkCreation) {
     return {performed: false, action: "", error: "apply_discount"};
+  }
 
   return {performed: true, action: coupon, error: ""};
 };

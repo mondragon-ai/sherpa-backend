@@ -141,3 +141,18 @@ export const submitNote = async (domain: string, id: string, note: string) => {
 
   return createResponse(200, "Add Email Note", null);
 };
+
+export const fetchEmail = async (domain: string, id: string) => {
+  if (!domain || !id) return createResponse(400, "Missing params", null);
+
+  const {data} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    "emails",
+    id,
+  );
+  const email = data as EmailDocument;
+  if (!email) return createResponse(422, "No email found", []);
+
+  return createResponse(200, "Fetched email", email);
+};

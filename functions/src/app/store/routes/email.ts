@@ -6,9 +6,11 @@ import {
   handleFilteredEmails,
   handleAddNote,
   handleRateEmail,
+  handleFetchEmail,
 } from "../controllers/emails";
 
 export const emailtRoutes = (app: express.Router) => {
+  app.get("/:domain/email/:id", handleFetchEmail);
   app.get("/:domain/emails", handleFetchAllEmails);
   app.get("/:domain/emails/time", handleFetchNextEmails);
   app.get("/:domain/emails/search", handleFilteredEmails);

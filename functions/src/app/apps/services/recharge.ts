@@ -10,7 +10,7 @@ export const saveToken = async (domain: string, token: string) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
 
   const {data} = await fetchRootDocument("shopify_merchant", domain);
-  let merchant = data as MerchantDocument;
+  const merchant = data as MerchantDocument;
 
   merchant.updated_at = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   merchant.apps = [
@@ -33,7 +33,7 @@ export const removeToken = async (domain: string, token: string) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
 
   const {data} = await fetchRootDocument("shopify_merchant", domain);
-  let merchant = data as MerchantDocument;
+  const merchant = data as MerchantDocument;
 
   merchant.updated_at = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   merchant.apps = [

@@ -134,7 +134,7 @@ export const findCorrectVariantFromProduct = async (
 ) => {
   const token = process.env.CLASSIFICATION_API || "";
 
-  let prompt = `**Shopify Product Variant List** \n`;
+  let prompt = "**Shopify Product Variant List** \n";
 
   for (const v of product) {
     prompt += ` - ${v.title} (Variant ID: ${v.variant_id}) \n`;

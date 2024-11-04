@@ -16,6 +16,7 @@ export const checkForChangedLineItems = (
 ) => {
   if (!chat.order) return null;
 
+  /* eslint-disable operator-linebreak */
   const existing_line_items = chat.order.line_items;
   const modified_line_items: LineItem[] = [];
 
@@ -54,6 +55,7 @@ export const checkForChangedLineItems = (
       modified_line_items.push(gptItem);
     }
   }
+  /* eslint-enable operator-linebreak */
 
   return modified_line_items;
 };

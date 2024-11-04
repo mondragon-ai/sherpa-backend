@@ -4,7 +4,9 @@ import {
 } from "../../../networking/openAi/extraction";
 import {applyDiscount} from "../../../networking/shopify/discounts";
 import {
+  addVariantToOrder,
   cancelOrder,
+  startOrderEdit,
   updateShippingAddress,
 } from "../../../networking/shopify/orders";
 import {ChatDocument} from "../../types/chats";
@@ -14,6 +16,7 @@ import {MerchantDocument} from "../../types/merchant";
 import {NewShippingAddress} from "../../types/shopify/orders";
 import {checkForChangedLineItems} from "./orders";
 import {fetchRequestedProducts} from "../shopify/products";
+import {cleanGPTResponse} from "../../../util/formatters/text";
 
 export const performActions = async (
   chat: ChatDocument | EmailDocument,
@@ -76,7 +79,9 @@ const changeAddress = async (
   }
 
   try {
-    const shipping = (await JSON.parse(gpt_response)) as NewShippingAddress;
+    const shipping = (await JSON.parse(
+      cleanGPTResponse(gpt_response),
+    )) as NewShippingAddress;
 
     return updateShippingAddress(chat, merchant, shipping);
   } catch (error) {
@@ -90,39 +95,57 @@ const changeProduct = async (
   merchant: MerchantDocument,
 ) => {
   const gpt_response = await extractProductsFromThread(chat);
-  console.log(gpt_response);
 
   if (!gpt_response || gpt_response == "null") {
     return {performed: false, action: "", error: "change_product"};
   }
 
   try {
-    const line_items = (await JSON.parse(gpt_response)) as LineItem[];
+    const line_items = (await JSON.parse(
+      cleanGPTResponse(gpt_response),
+    )) as LineItem[];
 
     // Check against order line items -> only changed/new LineItem[] | null
     const valid_line_items = checkForChangedLineItems(line_items, chat);
     if (!valid_line_items) {
+      console.error("Cant Check for changed line Items");
       return {performed: false, action: "", error: "change_product"};
     }
 
-    console.log({valid_line_items});
+    // Remove line item
+    const order_edit = await startOrderEdit(chat, merchant);
+    if (!order_edit?.id) {
+      console.error("Cant Start Order Edit");
+      return {performed: false, action: "", error: "change_product"};
+    }
 
-    // TODO: Search shopify -> return array {variantId: string, quantity: number}[] | null
-    const cleaned_line_items = await fetchRequestedProducts(
+    // Search shopify -> return array {variantId: string, quantity: number}[] | null
+    const variants = await fetchRequestedProducts(
       valid_line_items,
       merchant,
+      order_edit,
     );
-    console.log({cleaned_line_items});
+    if (!variants || !variants.length) {
+      console.error("Cant Fetch Requested Products from shopify");
+      return {performed: false, action: "", error: "change_product"};
+    }
 
-    // TODO: Modify order -> {performed: true, action: "", error: ""};
+    // Add Vairant to Order
+    for (const v of variants) {
+      const added = await addVariantToOrder(merchant, order_edit, v.variant_id);
+      if (!added) {
+        console.error("Cant Add Requested Variants to order");
+        return {performed: false, action: "", error: "change_product"};
+      }
+    }
 
     return {
-      performed: false,
-      action: JSON.stringify(line_items),
-      error: "change_product",
+      performed: true,
+      action: "",
+      error: "",
     };
   } catch (error) {
-    console.error("CANT PARSE SHIPPING: ", error);
+    console.error("CANT PARSE EXTRACED PRODUCTS: ", {error, gpt_response});
     return {performed: false, action: "", error: "change_product"};
   }
 };

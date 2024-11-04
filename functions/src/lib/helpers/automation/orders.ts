@@ -1,5 +1,6 @@
 import {ChatDocument} from "../../types/chats";
 import {EmailDocument} from "../../types/emails";
+import {ChangeProductLineItem} from "../../types/openai/products";
 
 type LineItem = {
   quantity: number;
@@ -10,7 +11,7 @@ type LineItem = {
 };
 
 export const checkForChangedLineItems = (
-  gpt_line_items: LineItem[],
+  gpt_line_items: ChangeProductLineItem[],
   chat: ChatDocument | EmailDocument,
 ) => {
   if (!chat.order) return null;
@@ -42,7 +43,6 @@ export const checkForChangedLineItems = (
     );
 
     if (matching) {
-      console.log({matching});
       if (
         matching.quantity !== gptItem.quantity ||
         matching.options.toLocaleLowerCase().replace(" ", "") !==

@@ -123,7 +123,7 @@ export const extractProductsFromThread = async (
   if (!product_list) return null;
 
   console.log({
-    ADDRESS_EXTRACTION_TOKENS: response.usage.total_tokens.toFixed(1),
+    PRODUCT_CHANGE_EXTRACTION_TOKENS: response.usage.total_tokens.toFixed(1),
   });
   return product_list;
 };
@@ -142,7 +142,7 @@ export const findCorrectVariantFromProduct = async (
 
   prompt += ` 
     **CUSTOMER Variant Change Request**: \n 
-      - ${li.options} x ${li.title} (${li.options}) \n
+      - ${li.quantity} x ${li.title} (${li.options}) \n
   `;
 
   const blocks = [
@@ -171,7 +171,7 @@ export const findCorrectVariantFromProduct = async (
   if (!product_list) return null;
 
   console.log({
-    ADDRESS_EXTRACTION_TOKENS: response.usage.total_tokens.toFixed(1),
+    MATCH_IDS_TOKENS: response.usage.total_tokens.toFixed(1),
   });
   return product_list;
 };

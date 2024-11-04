@@ -1,6 +1,8 @@
 import {
   CleanedCustomerOrder,
+  CleanedOrderEdit,
   OrderEdge,
+  OrderEditBeginResponse,
   ShopifyOrder,
 } from "../../types/shopify/orders";
 
@@ -71,4 +73,29 @@ export const cleanCustomerOrderPayload = (order: ShopifyOrder) => {
     current_total_price: order.totalPriceSet.presentmentMoney.amount || "",
     email: order.email || "",
   } as CleanedCustomerOrder;
+};
+
+export const cleanOrderEditPayload = (
+  order_edit: OrderEditBeginResponse,
+): CleanedOrderEdit => {
+  const order_edited = {
+    id: order_edit.orderEditBegin.calculatedOrder.id,
+    line_items: [] as {
+      calclulated_id: string;
+      variant_id: string;
+      quantity: number;
+    }[],
+  };
+
+  const line_items = order_edit.orderEditBegin.calculatedOrder.lineItems;
+
+  for (const li of line_items.edges) {
+    const line_item = {
+      calclulated_id: li.node.id,
+      variant_id: li.node.variant.id,
+      quantity: li.node.quantity,
+    };
+    order_edited.line_items.push(line_item);
+  }
+  return order_edited;
 };

@@ -2,15 +2,18 @@ import {shopifyGraphQlRequest} from ".";
 import {
   cleanCustomerOrderPayload,
   cleanCustomerOrdersPayload,
+  cleanOrderEditPayload,
 } from "../../lib/payloads/shopify/orders";
 import {ChatDocument} from "../../lib/types/chats";
 import {EmailDocument} from "../../lib/types/emails";
 import {MerchantDocument} from "../../lib/types/merchant";
 import {
   CleanedCustomerOrder,
+  CleanedOrderEdit,
   NewShippingAddress,
   OrderCancelResponse,
   OrderEditBeginResponse,
+  OrderEditSetQuantityResponse,
   OrderUpdateResponse,
   ShopifOrderResponse,
   ShopifyOrdersResponse,
@@ -265,27 +268,39 @@ export const startOrderEdit = async (
   const order = chat.order;
   if (!order) return null;
 
-  const query = `mutation beginEdit{
-    orderEditBegin(id: "${order.order_id}"){
-        calculatedOrder{
-          id
+  const query = `
+  mutation beginOrderEdit{
+    orderEditBegin(id: "gid://shopify/Order/6303030083893"){
+      calculatedOrder{
+        id
+        lineItems(first: 20) {
+          edges {
+            node {
+              id
+              quantity
+              variant {
+                id
+              }
+            }
+          }
         }
       }
-    }`;
+    }
+  }`;
 
   const shop = merchant.id.split(".")[0];
   const shpat = await decryptMsg(merchant.access_token);
   const response = await shopifyGraphQlRequest(shop, shpat, {query});
   const data = response.data as OrderEditBeginResponse;
 
-  console.error(data);
-
   if (!data.orderEditBegin.calculatedOrder) {
     console.error(data.orderEditBegin);
     return null;
   }
 
-  return data.orderEditBegin.calculatedOrder.id;
+  const order_edit = cleanOrderEditPayload(data);
+
+  return order_edit;
 };
 
 export const updateShippingAddress = async (
@@ -339,4 +354,88 @@ export const updateShippingAddress = async (
   }
 
   return {performed: true, action: data.orderUpdate.order.id, error: ""};
+};
+
+export const removeVariantFromOrder = async (
+  merchant: MerchantDocument,
+  order_edit: CleanedOrderEdit,
+  calc_line_item: CleanedOrderEdit["line_items"][0],
+) => {
+  const query = `
+  mutation removeLineItem {
+    orderEditSetQuantity(id: "${order_edit.id}", lineItemId: "${calc_line_item.calclulated_id}", quantity: 0) {
+      calculatedOrder {
+        id
+        lineItems(first: 5) {
+          edges {
+            node {
+              id
+              quantity
+            }
+          }
+        }
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }`;
+
+  const shop = merchant.id.split(".")[0];
+  const shpat = await decryptMsg(merchant.access_token);
+  const response = await shopifyGraphQlRequest(shop, shpat, {query});
+  const data = response.data as OrderEditSetQuantityResponse;
+
+  if (!data.orderEditSetQuantity.calculatedOrder) {
+    console.error(data.orderEditSetQuantity.userErrors);
+    return null;
+  }
+
+  const line_items = data.orderEditSetQuantity.calculatedOrder.lineItems.edges;
+
+  const item = line_items.find(
+    (l) => l.node.id == calc_line_item.calclulated_id,
+  );
+
+  if (item && item?.node.quantity > 0) {
+    return null;
+  }
+
+  return data.orderEditSetQuantity.calculatedOrder.id;
+};
+
+export const addVariantToOrder = async (
+  merchant: MerchantDocument,
+  order_edit: CleanedOrderEdit,
+  variant_id: string,
+) => {
+  const query = `
+  mutation addVariantToOrder{
+    orderEditAddVariant(id: "${order_edit.id}", variantId: "${variant_id}", quantity: 1){
+      calculatedOrder {
+        id
+        addedLineItems(first:5) {
+          edges {
+            node {
+              id
+              quantity
+            }
+          }
+        }
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }`;
+
+  const shop = merchant.id.split(".")[0];
+  const shpat = await decryptMsg(merchant.access_token);
+  const response = await shopifyGraphQlRequest(shop, shpat, {query});
+  const data = response.data as OrderEditSetQuantityResponse;
+
+  console.log({added: data});
+  return data;
 };

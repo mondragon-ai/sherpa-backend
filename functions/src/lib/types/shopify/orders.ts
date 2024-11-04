@@ -138,12 +138,53 @@ export type OrderCancelResponse = {
     }[];
   };
 };
-
 export type OrderEditBeginResponse = {
   orderEditBegin: {
     calculatedOrder: {
-      id: string; // e.g., 'gid://shopify/CalculatedOrder/5678'
+      id: string; // e.g., 'gid://shopify/CalculatedOrder/120454021429'
+      lineItems: {
+        edges: OrderEditNode[];
+      };
     };
+  };
+};
+
+export type OrderEditNode = {
+  node: {
+    id: string; // e.g., 'gid://shopify/CalculatedLineItem/15905723416885'
+    quantity: number;
+    variant: {
+      id: string; // e.g., 'gid://shopify/ProductVariant/50007230906677'
+    };
+  };
+};
+
+export type CleanedOrderEdit = {
+  id: string;
+  line_items: {
+    calclulated_id: string;
+    variant_id: string;
+    quantity: number;
+  }[];
+};
+
+export type OrderEditSetQuantityResponse = {
+  orderEditSetQuantity: {
+    calculatedOrder: {
+      id: string; // e.g., 'gid://shopify/CalculatedOrder/120455889205'
+      lineItems: {
+        edges: {
+          node: {
+            id: string; // e.g., 'gid://shopify/CalculatedLineItem/15905723416885'
+            quantity: number;
+          };
+        }[];
+      };
+    };
+    userErrors: {
+      message: string;
+      field?: string[];
+    }[];
   };
 };
 

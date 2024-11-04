@@ -153,7 +153,7 @@ export const searchProductById = async (
   };
 
   const {data} = await shopifyGraphQlRequest(shop, shpat, {query, variables});
-  const product = data.data as ProductVariantsResponse["data"];
+  const product = data as ProductVariantsResponse["data"];
 
   if (!product.product) return null;
 

@@ -53,11 +53,9 @@ export const decodeFromBase64 = (s: string) => {
   return Buffer.from(s || "", "base64").toString("utf-8");
 };
 
-// const messageToPromptString = (message: EmailMessage): string => {
-//   return `**Subject:**\n${message.subject}\n\n**Email Body:**\n${message.message}`;
-// };
-
-// export const extractOrderNumberFromEmail = async (email: EmailMessage): Promise<string | null> => {
-//     const input = messageToPromptString(email);
-//     return await extractWithGPT<string>(input, "extraction/order_number");
-// };
+export const cleanGPTResponse = (gptResponse: string): string => {
+  return gptResponse
+    .replace(/```json\n?/, "") // Remove the starting "```json" with an optional newline
+    .replace(/```$/, "") // Remove the ending "```"
+    .replace(/\n/g, ""); // Remove any remaining newlines
+};

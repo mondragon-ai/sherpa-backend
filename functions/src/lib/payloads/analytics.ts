@@ -6,8 +6,27 @@ import {ClassificationTypes, IssueTypes} from "../types/shared";
 export const initCreateTicketAnalytics = (
   time: number,
   type: "chat" | "email",
-  chat: ChatDocument | EmailDocument,
+  chat?: ChatDocument | EmailDocument,
 ) => {
+  if (!chat) {
+    const analytics: AnalyticsDocument = {
+      id: time,
+      total_chats: [],
+      total_emails: [],
+      total_volume: [],
+      resolution_ratio: {sherpa: 0, human: 0},
+      csat: {positive: 0, negative: 0, neutral: 0},
+      sentiment_analysis: {positive: 0, negative: 0, neutral: 0},
+      category_csat: {},
+      top_errors: {},
+      top_issues: {},
+      top_tickets: {},
+      created_at: time,
+      updated_at: time,
+    };
+
+    return analytics;
+  }
   const new_ticket = [{date: `${chat.updated_at}`, value: 1}] as LineChart[];
 
   const analytics: AnalyticsDocument = {

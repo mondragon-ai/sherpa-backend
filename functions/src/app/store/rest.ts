@@ -9,6 +9,7 @@ import {discountRoutes} from "./routes/discounts";
 import {merchantRoutes} from "./routes/merchant";
 import {emailtRoutes} from "./routes/email";
 import {chatRoutes} from "./routes/chats";
+import {analyticsRoutes} from "./routes/anlaytics";
 
 export const rest = () => {
   const app = express();
@@ -20,6 +21,7 @@ export const rest = () => {
 
   // CRUD Routes Here
   configurationRoutes(app);
+  analyticsRoutes(app);
   merchantRoutes(app);
   discountRoutes(app);
   emailtRoutes(app);

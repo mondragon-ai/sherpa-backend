@@ -21,3 +21,10 @@ export type LineChart = {
   date: string;
   value: number;
 };
+
+export type TimeFrameTypes =
+  | "today"
+  | "seven_days"
+  | "thirty_days"
+  | "ninety_days"
+  | "twelve_months";

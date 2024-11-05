@@ -5,6 +5,7 @@ import * as bearer from "express-bearer-token";
 
 // Routes
 import {gmailRoutes} from "./routes/gmail";
+import {rechargeRoutes} from "./routes/recharge";
 
 export const rest = () => {
   const app = express();
@@ -15,6 +16,7 @@ export const rest = () => {
   app.use(cors({origin: true}));
 
   // CRUD Routes Here
+  rechargeRoutes(app);
   gmailRoutes(app);
 
   return app;

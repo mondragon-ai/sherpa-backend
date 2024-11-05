@@ -827,7 +827,7 @@ export const analyticsSearch = async (
         .collection(root)
         .doc(id)
         .collection(collection)
-        .where("id", ">=", date)
+        .where("id", ">=", Number(date))
         .get();
 
     if (query.empty) {

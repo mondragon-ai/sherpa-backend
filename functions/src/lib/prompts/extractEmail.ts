@@ -1,4 +1,4 @@
-export const VALID_CUSTOMER_EMAIL_PROMPT = `
+export const CLEAN_EMAIL_PROMPT = `
     You are an AI tool designed to process an email body extracted via the Gmail API, which may contain HTML formatting. Your task is to extract only the plain text content of the email, removing all HTML tags, scripts, and extraneous formatting, while preserving the original message structure and text.
 
     **Instructions:**

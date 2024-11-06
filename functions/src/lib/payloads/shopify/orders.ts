@@ -9,7 +9,6 @@ import {
 export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
   const cleaned: CleanedCustomerOrder[] = [];
   for (const n of nodes) {
-    console.log({node: n.node});
     const tracking =
       n.node.fulfillments[0] && n.node.fulfillments[0].trackingInfo[0]
         ? n.node.fulfillments[0].trackingInfo[0].url

@@ -66,7 +66,8 @@ export const createEmailPayload = (
           attachments: cleaned_email.attachments || [],
         },
       ],
-      created_at: prev_email.created_at,
+      time: internal_date,
+      created_at: internal_date,
     };
   }
 

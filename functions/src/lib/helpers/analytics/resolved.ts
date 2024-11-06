@@ -16,7 +16,7 @@ import {
 } from "../../payloads/analytics";
 import {ChatDocument} from "../../types/chats";
 import {EmailDocument} from "../../types/emails";
-import {AnalyticsDocument} from "../../types/analytics";
+import {AnalyticsDocument, LineChart} from "../../types/analytics";
 
 export const resolveTicketAnalytics = async (
   type: "chat" | "email",
@@ -70,7 +70,16 @@ export const resolveDailyTicketAnalytics = async (
   if (!daily) {
     daily = initResolveTicketAnalytics(today, type, chat);
   } else {
-    const agent = chat.manually_triggerd ? "sherpa" : "human";
+    const agent = chat.suggested_action ? "sherpa" : "human";
+    /* eslint-disable indent */
+    const discount_used = chat.suggested_action == "apply_discount";
+    const order: LineChart | null = discount_used
+      ? {
+          date: `${chat.order?.created_at}`,
+          value: Number(chat.order?.current_total_price),
+        }
+      : null;
+
     daily = {
       ...daily,
       id: today,
@@ -87,7 +96,11 @@ export const resolveDailyTicketAnalytics = async (
         ? appendToError(chat.classification, daily)
         : daily.top_errors,
       updated_at: today,
+      amount_saved: order
+        ? [...(daily.amount_saved || []), order]
+        : daily.amount_saved || [],
     };
+    /* eslint-enable indent */
   }
   return daily;
 };
@@ -110,7 +123,16 @@ export const resolveMonthlyTicketAnalytics = async (
   if (!monthly) {
     monthly = initResolveTicketAnalytics(month, type, chat);
   } else {
-    const agent = chat.manually_triggerd ? "sherpa" : "human";
+    const agent = chat.suggested_action_done ? "sherpa" : "human";
+    /* eslint-disable indent */
+    const discount_used = chat.suggested_action == "apply_discount";
+    const order: LineChart | null = discount_used
+      ? {
+          date: `${chat.order?.created_at}`,
+          value: Number(chat.order?.current_total_price),
+        }
+      : null;
+
     monthly = {
       ...monthly,
       id: month,
@@ -127,7 +149,10 @@ export const resolveMonthlyTicketAnalytics = async (
         ? appendToError(chat.classification, monthly)
         : monthly.top_errors,
       updated_at: month,
-    };
+      amount_saved: order
+        ? [...(monthly.amount_saved || []), order]
+        : monthly.amount_saved || [],
+    }; /* eslint-enable indent */
   }
   return monthly;
 };

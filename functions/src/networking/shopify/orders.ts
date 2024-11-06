@@ -85,8 +85,6 @@ export const fetchCustomerOrderList = async (
 
   if (!products.orders.edges) return null;
 
-  console.log({order_list: products.orders.edges});
-
   const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
 
   return cleaned_orders;
@@ -347,13 +345,14 @@ export const updateShippingAddress = async (
   const response = await shopifyGraphQlRequest(shop, shpat, {query, variables});
   const data = response.data as OrderUpdateResponse;
 
-  console.log({data: data.orderUpdate.order.id});
-
   if (!data.orderUpdate.order.id) {
     return {performed: false, action: "", error: "change_address"};
   }
 
-  return {performed: true, action: data.orderUpdate.order.id, error: ""};
+  const {address1, city, provinceCode, countryCode, zip} = newShippingAddress;
+  const address = `${address1}, ${city}, ${provinceCode}, ${countryCode} ${zip}`;
+
+  return {performed: true, action: address, error: ""};
 };
 
 export const removeVariantFromOrder = async (

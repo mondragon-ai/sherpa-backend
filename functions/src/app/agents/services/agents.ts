@@ -20,7 +20,6 @@ import {
   fetchChatMessages,
   generateChatMessages,
 } from "../../../lib/payloads/openai/conversation";
-import * as functions from "firebase-functions";
 import {decryptMsg} from "../../../util/encryption";
 import {createResponse} from "../../../util/errors";
 import {EmailDocument} from "../../../lib/types/emails";
@@ -39,7 +38,6 @@ import {buildResponsePayload} from "../../../lib/payloads/openai/respond";
 import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
 import {generateSuggestedAction} from "../../../lib/helpers/agents/resolve";
 import {cleanCustomerPayload} from "../../../lib/payloads/shopify/customers";
-import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 
 export const searchCustomer = async (domain: string, email: string) => {
   if (!domain || !email) return createResponse(400, "Missing params", null);
@@ -267,7 +265,6 @@ export const resolveChat = async (
 
   // Generate Suggested Action Keyword
   const {action, prompt} = await generateSuggestedAction(chat);
-  functions.logger.info({action, prompt});
 
   // Summarize
   const summary = (await generateSummary(prompt)) || "";
@@ -292,7 +289,7 @@ export const resolveChat = async (
     summary,
     sentiment,
   );
-  functions.logger.info({resolved_saved: payload});
+  // functions.logger.info({resolved_saved: payload});
 
   // Update Doc
   await updateSubcollectionDocument(
@@ -332,26 +329,6 @@ export const automateAction = async (
     merchant,
     action,
   );
-
-  if (type == "email") {
-    const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
-    chat.conversation = [
-      ...chat.conversation,
-      {
-        time: time,
-        is_note: false,
-        message: suggested_email,
-        sender: "agent",
-        action: null,
-        id: `${time}`,
-        history_id: "",
-        internal_date: String(time),
-        from: "",
-        subject: "",
-        attachments: [],
-      },
-    ];
-  }
 
   if (!performed) {
     return {

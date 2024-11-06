@@ -46,7 +46,7 @@ export type EmailConversation = {
   time: number;
   is_note: boolean;
   action: null | "closed" | "opened";
-  sender: "agent" | "customer";
+  sender: "agent" | "customer" | "email";
   id: string;
   history_id: string;
   internal_date: string;

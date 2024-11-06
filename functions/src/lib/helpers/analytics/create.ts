@@ -74,7 +74,7 @@ export const createDailyTicketAnalytics = async (
   } else {
     const new_ticket = {date: `${chat.updated_at}`, value: 1} as LineChart;
 
-    const agent = chat.manually_triggerd ? "sherpa" : "human";
+    const agent = chat.suggested_action_done ? "sherpa" : "human";
     daily = {
       id: today,
       total_chats:
@@ -104,6 +104,7 @@ export const createDailyTicketAnalytics = async (
         : daily.top_issues,
       created_at: today,
       updated_at: today,
+      amount_saved: [],
     };
   }
   return daily;
@@ -129,7 +130,7 @@ export const createMonthlyTicketAnalytics = async (
   } else {
     const new_ticket = {date: `${chat.updated_at}`, value: 1} as LineChart;
 
-    const agent = chat.manually_triggerd ? "sherpa" : "human";
+    const agent = chat.suggested_action_done ? "sherpa" : "human";
     monthly = {
       id: month,
       total_chats:
@@ -161,6 +162,7 @@ export const createMonthlyTicketAnalytics = async (
         : monthly.top_issues,
       created_at: month,
       updated_at: month,
+      amount_saved: [],
     };
   }
   return monthly;

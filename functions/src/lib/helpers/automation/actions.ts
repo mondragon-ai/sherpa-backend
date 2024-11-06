@@ -80,7 +80,7 @@ const changeAddress = async (
   merchant: MerchantDocument,
 ) => {
   const gpt_response = await extractAddressFromThread(chat);
-  console.log(gpt_response);
+  // console.log(gpt_response);
   if (!gpt_response || gpt_response == "null") {
     return {performed: false, action: "", error: "change_address"};
   }

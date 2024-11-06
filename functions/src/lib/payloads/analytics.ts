@@ -23,6 +23,7 @@ export const initCreateTicketAnalytics = (
       top_tickets: {},
       created_at: time,
       updated_at: time,
+      amount_saved: [],
     };
 
     return analytics;
@@ -43,6 +44,7 @@ export const initCreateTicketAnalytics = (
     top_tickets: {[chat.classification || "none"]: 1},
     created_at: time,
     updated_at: time,
+    amount_saved: [],
   };
 
   return analytics;
@@ -56,6 +58,14 @@ export const initResolveTicketAnalytics = (
   const new_ticket = [{date: `${chat.updated_at}`, value: 1}] as LineChart[];
 
   /* eslint-disable indent */
+  const discount_used = chat.suggested_action == "apply_discount";
+  const order: LineChart | null = discount_used
+    ? {
+        date: `${chat.order?.created_at}`,
+        value: Number(chat.order?.current_total_price),
+      }
+    : null;
+
   const analytics: AnalyticsDocument = {
     id: time,
     total_chats: type === "chat" ? new_ticket : [],
@@ -93,6 +103,7 @@ export const initResolveTicketAnalytics = (
     top_tickets: chat.classification ? {[chat.classification]: 1} : {none: 1},
     created_at: time,
     updated_at: time,
+    amount_saved: order ? [order] : [],
   };
   /* eslint-enable indent */
 

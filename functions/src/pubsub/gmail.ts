@@ -24,6 +24,7 @@ import {validateEmailIsCustomer} from "../networking/openAi/respond";
 import {getValidGmailAccessToken} from "../lib/helpers/emails/validate";
 import {fetchCustomerDataFromEmail} from "../lib/helpers/emails/emails";
 import {getCurrentUnixTimeStampFromTimezone} from "../util/formatters/time";
+import {cleanEmailFromHtml} from "../networking/openAi/cleanEmail";
 
 const settings: functions.RuntimeOptions = {
   timeoutSeconds: 120,
@@ -34,7 +35,6 @@ export const receiveGmailNotification = functions
   .pubsub.topic("gmail-messages")
   .onPublish(async (message) => {
     const data = (await message.json) as unknown as GmailNotifications;
-    console.log({data});
 
     const email = data.emailAddress;
     if (!email) return;
@@ -53,13 +53,13 @@ export const receiveGmailNotification = functions
     const {id: domain} = merchant;
 
     // Fetch Email from History
-    const cleaned = await getEmailFromHistory(data, access_token, merchant);
-    if (!cleaned) return createResponse(400, "Can't Clean", null);
+    const scrubbed = await getEmailFromHistory(data, access_token, merchant);
+    if (!scrubbed) return createResponse(400, "Can't Clean", null);
 
-    const msg = `**Subject**:<br> ${
-      cleaned[0].subject
-    }<br><br> **Message**:<br> ${cleaned[0].content.join(" ")} `;
-    functions.logger.info({cleaned: cleaned[0]});
+    const cleaned = await cleanEmailFromHtml(scrubbed[0].content.join(" "));
+
+    const msg = `**Subject**:<br> ${scrubbed[0].subject}<br><br> **Message**:<br> ${cleaned} `;
+    functions.logger.info({scrubbed: cleaned});
 
     const is_email = await validateEmailIsCustomer(msg);
     if (!is_email || is_email.includes("invalid")) {
@@ -77,7 +77,7 @@ export const receiveGmailNotification = functions
       "shopify_merchant",
       domain,
       "emails",
-      cleaned[0].from,
+      scrubbed[0].from,
     );
 
     const existing_email = doc as EmailDocument;
@@ -85,7 +85,7 @@ export const receiveGmailNotification = functions
       await updateExistingEmailConversation(
         existing_email,
         msg,
-        cleaned[0],
+        scrubbed[0],
         merchant,
       );
       return createResponse(201, "Still Open", null);
@@ -98,7 +98,7 @@ export const receiveGmailNotification = functions
     const {order, customer} = await fetchCustomerDataFromEmail(
       merchant,
       msg,
-      cleaned[0].from,
+      scrubbed[0].from,
     );
 
     if (customer?.email && order && order[0] && order[0].email !== "") {
@@ -113,7 +113,7 @@ export const receiveGmailNotification = functions
       existing_email,
       customer,
       (order && order[0]) || null,
-      cleaned[0],
+      scrubbed[0],
       msg,
     );
     if (!payload) return createResponse(400, "Couldn't Respond", null);
@@ -126,7 +126,7 @@ export const receiveGmailNotification = functions
       "shopify_merchant",
       domain,
       "emails",
-      cleaned[0].from,
+      scrubbed[0].from,
       payload,
     );
 
@@ -152,7 +152,6 @@ export const getEmailFromHistory = async (
     });
 
     if (!history.data.history) {
-      console.error(history.data);
       console.warn("No history found for the provided historyId.");
 
       history = await gmail.users.history.list({

@@ -15,6 +15,7 @@ export type AnalyticsDocument = {
     string,
     {positive: number; neutral: number; negative: number}
   >;
+  amount_saved: LineChart[];
 };
 
 export type LineChart = {

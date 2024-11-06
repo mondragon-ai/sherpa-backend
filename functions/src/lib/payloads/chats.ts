@@ -1,10 +1,11 @@
 import {
   AlgoliaSearchType,
+  Conversation,
   CustomerData,
   OrderData,
   SuggestedActions,
 } from "../types/shared";
-import {EmailDocument} from "../types/emails";
+import {EmailConversation, EmailDocument} from "../types/emails";
 import {MerchantDocument} from "../types/merchant";
 import {generateRandomID} from "../../util/generators";
 import {capitalizeWords} from "../../util/formatters/text";
@@ -53,7 +54,7 @@ export const createChatPayload = (
           action: null,
         },
       ],
-      created_at: prev_chat.created_at,
+      created_at: time,
     };
   }
 
@@ -167,17 +168,41 @@ export const buildResolvedChatPayload = (
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
 
   /* eslint-disable indent */
-  const conversation =
+  const has_email = actions.suggested_email !== "";
+  const email: Conversation | EmailConversation =
     type == "chat"
       ? {
           time: Math.round(Number(time) - 5),
+          is_note: false,
+          message: actions.suggested_email || "",
+          sender: "email",
+          action: null,
+        }
+      : {
+          time: Math.round(Number(time) - 5),
+          is_note: false,
+          message: actions.suggested_email || "",
+          sender: "email",
+          action: null,
+          id: "",
+          history_id: "",
+          internal_date: "",
+          from: "",
+          subject: "",
+          attachments: [],
+        };
+
+  const conversation =
+    type == "chat"
+      ? {
+          time: Math.round(Number(time) - 3),
           is_note: false,
           message: "",
           sender: "agent",
           action: "closed",
         }
       : {
-          time: time,
+          time: Math.round(Number(time) - 3),
           is_note: false,
           message: "",
           sender: "agent",
@@ -194,7 +219,7 @@ export const buildResolvedChatPayload = (
     ...chat,
     suggested_email: actions.suggested_email,
     email_sent: actions.email,
-    suggested_action_done: actions.action,
+    suggested_action_done: suggested == "resolve" || actions.action,
     summary: summary,
     sentiment: sentiment.toLocaleLowerCase(),
     error_info: actions.error || "",
@@ -206,7 +231,9 @@ export const buildResolvedChatPayload = (
         : "action_required",
     suggested_action: suggested,
     updated_at: time,
-    conversation: [...(chat.conversation || []), conversation],
+    conversation: has_email
+      ? [...(chat.conversation || []), email, conversation]
+      : [...(chat.conversation || []), conversation],
   } as ChatDocument;
   /* eslint-enable indent */
 };

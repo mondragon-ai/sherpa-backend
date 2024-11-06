@@ -21,7 +21,11 @@ export const cleanEmailFromGmail = (
         body.push(decodeFromBase64(part.body.data || ""));
       }
       if (part.mimeType.includes("image") || part.mimeType.includes("pdf")) {
-        attatchments.push(part.body.attachmentId || "");
+        attatchments.push({
+          id: part.body.attachmentId || "",
+          data: part.body.data || "",
+          mime: part.mimeType,
+        });
       }
     }
 

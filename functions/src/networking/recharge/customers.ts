@@ -14,6 +14,7 @@ export const findRechargeCustomer = async (
   const recharge = merchant.apps.find((a) => a.name == "recharge");
   if (!recharge || !recharge.token) return null;
 
+  console.log({recharge});
   const {data} = await rechargeAPIRequests(
     `/customers?email=${chat.customer.email}`,
     "GET",
@@ -21,6 +22,6 @@ export const findRechargeCustomer = async (
     recharge.token,
   );
 
-  console.log({data});
+  console.log({customer: data});
   return data;
 };

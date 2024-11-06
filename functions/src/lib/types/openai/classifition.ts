@@ -1,4 +1,4 @@
-type ChatCompletionResponse = {
+export type ChatCompletionResponse = {
   id: string;
   object: string;
   created: number;

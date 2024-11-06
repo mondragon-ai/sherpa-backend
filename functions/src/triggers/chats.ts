@@ -9,7 +9,7 @@ import {resolveTicket} from "../queues/resolveTicket";
 
 export const chatsCreated = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
-  .onCreate(async (snap, _context) => {
+  .onCreate(async (snap) => {
     console.log("CREATED");
 
     const data = snap.exists ? snap.data() : null;
@@ -35,7 +35,7 @@ export const chatsCreated = functions.firestore
 
 export const chatUpdated = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
-  .onUpdate(async (snap, _context) => {
+  .onUpdate(async (snap) => {
     console.log("UPDATE");
 
     const before = snap.before.exists ? snap.before.data() : null;
@@ -63,7 +63,7 @@ export const chatUpdated = functions.firestore
 
 export const chatDeleted = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
-  .onDelete(async (snap, _context) => {
+  .onDelete(async (snap) => {
     console.log("DELETED");
 
     const data = snap.exists ? snap.data() : null;

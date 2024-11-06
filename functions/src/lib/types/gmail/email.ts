@@ -122,6 +122,6 @@ export type CleanedEmail = {
   from: string;
   subject: string;
   content: string[];
-  attachments: string[];
+  attachments: {id: string; data: string; mime: string}[];
   created_at: number;
 };

@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import * as functions from "firebase-functions";
 
-const URL = "https://api.rechargeapps.com";
+const base = "https://api.rechargeapps.com";
 
 export const rechargeAPIRequests = async (
   resource: string,
@@ -27,8 +27,13 @@ export const rechargeAPIRequests = async (
     };
   }
 
+  const url = `${base}${resource}`;
+
+  console.log({options, url});
   try {
-    const response = await fetch(URL + resource, options);
+    const response = await fetch(url, options);
+
+    console.log({recharge: response.status});
 
     if (response.status === 200) {
       const result = await response.json();

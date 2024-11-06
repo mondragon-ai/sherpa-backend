@@ -8,7 +8,7 @@ import {resolveTicketAnalytics} from "../lib/helpers/analytics/resolved";
 
 export const emailCreated = functions.firestore
   .document("/shopify_merchant/{shopify_merchantID}/emails/{chatID}")
-  .onCreate(async (snap, _context) => {
+  .onCreate(async (snap) => {
     console.log("CREATED");
 
     const data = snap.exists ? snap.data() : null;
@@ -30,7 +30,7 @@ export const emailCreated = functions.firestore
 
 export const emailUpdated = functions.firestore
   .document("/shopify_merchant/{shopify_merchantID}/emails/{chatID}")
-  .onUpdate(async (snap, _context) => {
+  .onUpdate(async (snap) => {
     console.log("UPDATE");
 
     const before = snap.before.exists ? snap.before.data() : null;
@@ -58,7 +58,7 @@ export const emailUpdated = functions.firestore
 
 export const emailDeleted = functions.firestore
   .document("/shopify_merchant/{shopify_merchantID}/emails/{chatID}")
-  .onDelete(async (snap, _context) => {
+  .onDelete(async (snap) => {
     console.log("DELETED");
     const data = snap.exists ? snap.data() : null;
     if (!data) return;

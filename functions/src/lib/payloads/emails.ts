@@ -7,6 +7,7 @@ import {CustomerData, OrderData, SuggestedActions} from "../types/shared";
 import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
 import {CleanedEmail} from "../types/gmail/email";
 import {updateSubcollectionDocument} from "../../database/firestore";
+import {uploadToGCP} from "../../database/storage";
 
 export const createEmailPayload = (
   merchant: MerchantDocument,
@@ -28,6 +29,27 @@ export const createEmailPayload = (
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   if (prev_email) {
     const internal_date = Number(cleaned_email.internalDate) / 1000;
+
+    const attachments: string[] = [];
+
+    if (cleaned_email.attachments) {
+      cleaned_email.attachments.forEach(async (a) => {
+        console.log({a});
+        const buffer = Buffer.from(a.data, "base64");
+        console.log({buffer});
+
+        const upload = await uploadToGCP(
+          buffer,
+          merchant.id,
+          prev_email.id,
+          a.mime,
+        );
+        if (upload) {
+          attachments.push(upload.file_url);
+        }
+      });
+    }
+
     email = {
       ...prev_email,
       status: "open",
@@ -63,7 +85,7 @@ export const createEmailPayload = (
           internal_date: String(internal_date),
           from: cleaned_email.from,
           subject: cleaned_email.subject,
-          attachments: cleaned_email.attachments || [],
+          attachments: attachments.length ? attachments : [],
         },
       ],
       time: internal_date,
@@ -84,6 +106,23 @@ export const initializeEmailPyaload = (
   const ID = generateRandomID("chat_");
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   const internal_date = Number(cleaned_email.internalDate) / 1000;
+
+  const attachments: string[] = [];
+
+  if (cleaned_email.attachments) {
+    cleaned_email.attachments.forEach(async (a) => {
+      const buffer = Buffer.from(a.data, "base64");
+      const upload = await uploadToGCP(
+        buffer,
+        merchant.id,
+        cleaned_email.from || ID,
+        a.mime,
+      );
+      if (upload) {
+        attachments.push(upload.file_url);
+      }
+    });
+  }
 
   return {
     sentiment: null,
@@ -136,7 +175,7 @@ export const initializeEmailPyaload = (
         internal_date: String(internal_date),
         from: cleaned_email.from,
         subject: cleaned_email.subject,
-        attachments: cleaned_email.attachments || [],
+        attachments: attachments.length ? attachments : [],
       },
     ],
     time: time,

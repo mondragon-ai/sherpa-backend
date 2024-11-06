@@ -23,7 +23,7 @@ export const fetchAnalytics = async (domain: string, timezone: string) => {
   const analytics = data as AnalyticsDocument;
   if (!analytics) return createResponse(422, "No analytics found", null);
 
-  return createResponse(200, "Fetched Analytics", {analytics});
+  return createResponse(200, "Fetched Analytics", {analytics: [analytics]});
 };
 
 export const fetchSearchedAnalytics = async (

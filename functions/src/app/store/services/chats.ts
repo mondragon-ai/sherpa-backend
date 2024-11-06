@@ -47,7 +47,7 @@ export const fetchNextChats = async (domain: string, time: string) => {
     domain,
     "chats",
     time,
-    "next",
+    "prev",
   );
   const chats = data as ChatDocument[];
   if (!chats) return createResponse(422, "No chats found", null);

@@ -506,7 +506,6 @@ export const fetchPaginatedSubcollection = async (
   direction: "next" | "prev" = "next",
 ): Promise<FirestoreResponse> => {
   try {
-    // Validate input parameters
     if (!root || !id || !collection || !timestamp) {
       return {
         text: " - Invalid input parameters.",
@@ -521,15 +520,15 @@ export const fetchPaginatedSubcollection = async (
       .collection(root)
       .doc(id)
       .collection(collection)
-      .orderBy("time", orderDirection)
-      .startAfter(timestamp)
+      .orderBy("created_at", orderDirection)
+      .startAt(timestamp)
       .limit(250)
       .get();
 
     if (query.empty) {
       return {
         text: " - Collection fetched but it is empty.",
-        status: 422, // No Content
+        status: 422,
         data: [],
       };
     }

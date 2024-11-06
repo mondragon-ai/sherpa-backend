@@ -12,6 +12,9 @@ export const saveToken = async (domain: string, token: string) => {
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
 
+  const recharge = merchant.apps.some((a) => a.name === "recharge");
+  if (recharge) return createResponse(409, "Already Linked", null);
+
   merchant.updated_at = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   merchant.apps = [
     ...merchant.apps,
@@ -24,32 +27,22 @@ export const saveToken = async (domain: string, token: string) => {
       email: "",
     },
   ];
+
   await updateRootDocument("shopify_merchant", merchant.id, merchant);
 
   return createResponse(200, "Saved Recharge", null);
 };
 
-export const removeToken = async (domain: string, token: string) => {
+export const removeToken = async (domain: string) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
 
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
 
   merchant.updated_at = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
-  merchant.apps = [
-    ...merchant.apps,
-    {
-      name: "recharge",
-      time: 1000000000000,
-      token: token,
-      refresh_token: token,
-      connected: true,
-      email: "",
-    },
-  ];
-  const apps = merchant.apps.filter((a) => a.name == "recharge");
-  console.log(apps);
-  // await updateRootDocument("shopify_merchant", merchant.id, merchant);
+  const apps = merchant.apps.filter((a) => a.name !== "recharge");
+  merchant.apps = apps;
+  await updateRootDocument("shopify_merchant", merchant.id, merchant);
 
   return createResponse(200, "Removed Recharge", null);
 };

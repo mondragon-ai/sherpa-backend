@@ -7,6 +7,7 @@ import {
   fetchEmails,
   subscribeToGmail,
   testSubPub,
+  removeGmail,
 } from "../services/gmail";
 
 /**
@@ -21,9 +22,11 @@ export const handleAuthGmail = async (
   const domain = req.params.domain as string;
   functions.logger.info(` 📧 [/AUTH]: initiate Gmail oAuth for ${domain}`);
 
-  const {data} = await initiateAuth(domain);
+  const {data, message, status} = await initiateAuth(domain);
 
-  res.redirect(data);
+  console.log(data, message, status);
+  res.status(200).json({url: data});
+  // res.redirect(data);
 };
 
 /**
@@ -42,9 +45,14 @@ export const handleCallback = async (
 
   if (!token) res.status(401).send("Authorization code missing.");
 
-  const {data, status, message} = await gmailCallback(domain, token);
+  await gmailCallback(domain, token);
 
-  res.status(status).json({data, message});
+  // res.status(status).json({data, message});
+  res.redirect(
+    `https://admin.shopify.com/store/${
+      domain.split(".")[0]
+    }/apps/sherpa-dev-1/app/integrate`,
+  );
 };
 
 /**
@@ -130,6 +138,26 @@ export const handleTestPubSub = async (
     email,
     Number(history_id),
   );
+
+  res.status(status).json({
+    message: message,
+    data: data,
+  });
+};
+
+/**
+ * Remove Email
+ * @param {express.Request} req - The request object containing the domain parameter.
+ * @param {express.Response} res - The response object to confirm deletion.
+ */
+export const handleRemoveGmail = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const {domain} = req.params;
+  functions.logger.info(` 📧 [/REMOVE]: Remove Gmail App ${domain}`);
+
+  const {status, message, data} = await removeGmail(domain);
 
   res.status(status).json({
     message: message,

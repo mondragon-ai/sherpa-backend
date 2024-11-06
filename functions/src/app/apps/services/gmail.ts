@@ -355,3 +355,17 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
   );
   return createResponse(save.status, "Success", payload);
 };
+
+export const removeGmail = async (domain: string) => {
+  if (!domain) return createResponse(400, "Missing Domain", null);
+
+  const {data} = await fetchRootDocument("shopify_merchant", domain);
+  const merchant = data as MerchantDocument;
+
+  merchant.updated_at = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+  const apps = merchant.apps.filter((a) => a.name !== "gmail");
+  merchant.apps = apps;
+  await updateRootDocument("shopify_merchant", merchant.id, merchant);
+
+  return createResponse(200, "Removed Recharge", null);
+};

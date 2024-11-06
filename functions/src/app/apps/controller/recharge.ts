@@ -28,12 +28,12 @@ export const handleRemoveRecharge = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  const {domain, at} = req.params;
+  const {domain} = req.params;
   functions.logger.info(
     ` 💳  [/REMOVE]: Removing Recharge Token for ${domain}`,
   );
 
-  const {status, data, message} = await removeToken(domain, at);
+  const {status, data, message} = await removeToken(domain);
 
   res.status(status).json({message, data});
 };

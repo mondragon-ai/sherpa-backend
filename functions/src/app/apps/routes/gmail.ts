@@ -13,7 +13,7 @@ export const gmailRoutes = (app: express.Router) => {
   app.get("/gmail/:domain/auth", handleAuthGmail);
   app.get("/gmail/auth/callback", handleCallback);
   app.delete("/gmail/auth/:domain/remove", handleRemoveGmail);
-  app.post("/gmail/:domain/email/send", handleSendEmail);
+  app.post("/gmail/:domain/email/send/:type", handleSendEmail);
   app.get("/gmail/:domain/email/receive", handleReceiveEmails);
   app.post("/gmail/:domain/subscribe", handleSubscription);
   app.post("/gmail/:domain/test/:email", handleTestPubSub);

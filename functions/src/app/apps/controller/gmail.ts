@@ -64,7 +64,7 @@ export const handleSendEmail = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  const {domain} = req.params;
+  const {domain, type} = req.params;
   const {to, subject, email} = req.body;
   functions.logger.info(` 📧 [/SEND]: Send email for ${domain} to ${to}`);
 
@@ -73,6 +73,7 @@ export const handleSendEmail = async (
     to,
     subject,
     email,
+    type as any,
   );
 
   res.status(status).json({data, message});

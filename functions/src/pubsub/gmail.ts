@@ -152,6 +152,10 @@ export const getEmailFromHistory = async (
   oAuth2Client.setCredentials({access_token: token});
   const gmail = google.gmail({version: "v1", auth: oAuth2Client});
 
+  const profile = await gmail.users.getProfile({userId: "me"});
+  const sender = profile.data.emailAddress;
+  if (data.emailAddress == sender) return null;
+
   const profileResponse = await gmail.users.getProfile({userId: "me"});
   const history_id = profileResponse.data.historyId;
 

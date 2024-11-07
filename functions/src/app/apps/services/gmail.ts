@@ -24,6 +24,7 @@ import {validateEmailIsCustomer} from "../../../networking/openAi/respond";
 import {fetchCustomerDataFromEmail} from "../../../lib/helpers/emails/emails";
 import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
+import {ChatDocument} from "../../../lib/types/chats";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -124,6 +125,7 @@ export const sendGmailEmail = async (
   to: string,
   subject: string,
   message: string,
+  type: "email" | "chat",
 ) => {
   if (!domain || !to || !message) {
     return createResponse(400, "Missing params", null);
@@ -140,14 +142,29 @@ export const sendGmailEmail = async (
   oAuth2Client.setCredentials({access_token: token});
   const gmail = google.gmail({version: "v1", auth: oAuth2Client});
 
-  const email = [
-    `To: ${to}`,
-    "Content-Type: text/plain; charset=utf-8",
-    "MIME-Version: 1.0",
-    `Subject: ${subject}`,
-    "",
-    message,
-  ].join("\n");
+  // const email = [
+  //   `To: ${to}`,
+  //   "Content-Type: text/html; charset=utf-8",
+  //   "MIME-Version: 1.0",
+  //   `Subject: ${subject}`,
+  //   "Content-Transfer-Encoding: base64",
+  //   "",
+  //   message,
+  // ].join("\n");
+
+  const email =
+    "From: 'me'\r\n" +
+    "To: " +
+    to +
+    "\r\n" +
+    "Subject: " +
+    subject +
+    "\r\n" +
+    "Content-Type: text/html; charset='UTF-8'\r\n" +
+    "Content-Transfer-Encoding: base64\r\n\r\n" +
+    "<html><body>" +
+    message +
+    "</body></html>";
 
   const encodedEmail = Buffer.from(email)
     .toString("base64")
@@ -161,7 +178,22 @@ export const sendGmailEmail = async (
     },
   });
 
-  return createResponse(response.status as Status, response.statusText, {
+  if (response.status > 300) {
+    return createResponse(response.status as Status, "Couldn't Send", null);
+  }
+
+  const sub_collection = type == "chat" ? "chats" : "emails";
+
+  const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    sub_collection,
+    to,
+    {email_sent: true, updated_at: time} as ChatDocument,
+  );
+
+  return createResponse(response.status as Status, "Email Sent", {
     email: response.data,
   });
 };

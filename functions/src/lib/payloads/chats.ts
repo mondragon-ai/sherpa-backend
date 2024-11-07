@@ -239,6 +239,52 @@ export const buildResolvedChatPayload = (
   /* eslint-enable indent */
 };
 
+export const buildCloseTicketPayload = (
+  chat: ChatDocument | EmailDocument,
+  merchant: MerchantDocument,
+  type: "email" | "chat",
+  summary = "",
+) => {
+  const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
+
+  /* eslint-disable indent */
+
+  const conversation =
+    type == "chat"
+      ? {
+          time: Math.round(Number(time) - 3),
+          is_note: false,
+          message: "",
+          sender: "agent",
+          action: "closed",
+        }
+      : {
+          time: Math.round(Number(time) - 3),
+          is_note: false,
+          message: "",
+          sender: "agent",
+          action: "closed",
+          id: "",
+          history_id: "",
+          internal_date: "",
+          from: "",
+          subject: "",
+          attachments: [],
+        };
+
+  return {
+    ...chat,
+    suggested_email: "",
+    email_sent: false,
+    suggested_action_done: false,
+    summary: summary,
+    status: "resolved",
+    updated_at: time,
+    conversation: [...(chat.conversation || []), conversation],
+  } as ChatDocument;
+  /* eslint-enable indent */
+};
+
 export const algoliaChatCreatePayload = (
   chat: ChatDocument | EmailDocument,
 ) => {

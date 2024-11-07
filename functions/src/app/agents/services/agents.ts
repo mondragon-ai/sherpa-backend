@@ -1,4 +1,5 @@
 import {
+  buildCloseTicketPayload,
   buildResolvedChatPayload,
   createChatPayload,
   respondToChatPayload,
@@ -266,13 +267,27 @@ export const resolveChat = async (
   const chat = doc as ChatDocument | EmailDocument;
   if (!chat) return createResponse(422, "Chat not found", null);
   if (chat.status == "resolved") {
-    return createResponse(409, "Chat Resovled", null);
+    return createResponse(409, "Already Resovled", null);
   }
 
   // Fetch Mercahant Doc
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "Merchant not found", null);
+
+  // Build Close Chat Payload
+  if (chat.status == "action_required") {
+    const payload = buildCloseTicketPayload(chat, merchant, type);
+
+    await updateSubcollectionDocument(
+      "shopify_merchant",
+      domain,
+      sub_collection,
+      id,
+      payload,
+    );
+    return createResponse(200, "Ticket Closed", null);
+  }
 
   // Create sentiment analysis
   let sentiment: RatingTypes = "neutral";
@@ -303,7 +318,6 @@ export const resolveChat = async (
     actions = await automateAction(chat, merchant, type, action);
   }
 
-  // Build Resolve Chat Payload
   if (type == "email") {
     // Generate Suggested Action Keyword
     const action_repsonse = await generateSuggestedAction(chat);
@@ -321,6 +335,7 @@ export const resolveChat = async (
     sentiment = (await generateSentimentGPT(prompt)) || "neutral";
   }
 
+  // Build Resolve Chat Payload
   const payload = buildResolvedChatPayload(
     chat,
     merchant,
@@ -341,7 +356,7 @@ export const resolveChat = async (
     payload,
   );
 
-  return createResponse(200, "Resolved", {chat: payload});
+  return createResponse(200, "Ticket Resolved", {chat: payload});
 };
 
 type AutomaticAction = {
@@ -434,4 +449,104 @@ export const testActions = async (domain: string, email: string) => {
   console.log(response);
 
   return createResponse(200, "Success", response);
+};
+
+export const closeChat = async (
+  domain: string,
+  id: string,
+  type: "email" | "chat",
+) => {
+  if (!domain || !id) {
+    return createResponse(400, "Missing params", null);
+  }
+
+  const sub_collection = type == "chat" ? "chats" : "emails";
+
+  // Fetch chat data:
+  const {data: doc} = await fetchSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    sub_collection,
+    id,
+  );
+
+  const chat = doc as ChatDocument | EmailDocument;
+  if (!chat) return createResponse(422, "Chat not found", null);
+  if (chat.status == "resolved") {
+    return createResponse(409, "Chat Resovled", null);
+  }
+
+  // Fetch Mercahant Doc
+  const {data} = await fetchRootDocument("shopify_merchant", domain);
+  const merchant = data as MerchantDocument;
+  if (!merchant) return createResponse(422, "Merchant not found", null);
+
+  // Create sentiment analysis
+  let sentiment: RatingTypes = "neutral";
+  let action: SuggestedActions = "unknown";
+  let prompt = "";
+  let summary = "";
+
+  let actions: AutomaticAction = {
+    email: false,
+    action: false,
+    suggested_email: "",
+    error: "",
+  };
+
+  if (type == "chat") {
+    // Generate Suggested Action Keyword
+    const action_repsonse = await generateSuggestedAction(chat);
+    action = action_repsonse.action;
+    prompt = action_repsonse.prompt;
+
+    // Summarize
+    summary = (await generateSummary(prompt)) || "";
+
+    // Create Sentiment
+    sentiment = (await generateSentimentGPT(prompt)) || "neutral";
+
+    // Create Actions
+    actions = await automateAction(chat, merchant, type, action);
+  }
+
+  // Build Resolve Chat Payload
+  if (type == "email") {
+    // Generate Suggested Action Keyword
+    const action_repsonse = await generateSuggestedAction(chat);
+    action = action_repsonse.action;
+    prompt = action_repsonse.prompt;
+
+    // Create Actions
+    actions = await automateAction(chat, merchant, type, action);
+
+    // Summarize
+    prompt = `- Agent: ${actions.suggested_email}.\n`;
+    summary = (await generateSummary(prompt)) || "";
+
+    // Create Sentiment
+    sentiment = (await generateSentimentGPT(prompt)) || "neutral";
+  }
+
+  const payload = buildResolvedChatPayload(
+    chat,
+    merchant,
+    action,
+    actions,
+    type,
+    summary,
+    sentiment,
+  );
+  // functions.logger.info({resolved_saved: payload});
+
+  // Update Doc
+  await updateSubcollectionDocument(
+    "shopify_merchant",
+    domain,
+    sub_collection,
+    id,
+    payload,
+  );
+
+  return createResponse(200, "Resolved", {chat: payload});
 };

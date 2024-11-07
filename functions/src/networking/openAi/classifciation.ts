@@ -1,5 +1,6 @@
 import {openAIRequest} from ".";
 import {CLASSIFICATION_PROMPT} from "../../lib/prompts/classification";
+import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
 import {ClassificationTypes} from "../../lib/types/shared";
 
 export const classifyMessageGPT = async (

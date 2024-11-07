@@ -165,7 +165,7 @@ export const fetchCustomerDataFromEmail = async (
   }
 
   const last_order = customer.last_order_id;
-  if (last_order && !orders) {
+  if (last_order && (!orders || !orders.length)) {
     const res = await fetchShopifyOrder(domain, shpat, `${last_order}`);
     if (res) orders = [res];
   }

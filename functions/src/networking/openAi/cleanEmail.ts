@@ -1,5 +1,6 @@
 import {openAIRequest} from ".";
 import {CLEAN_EMAIL_PROMPT} from "../../lib/prompts/extractEmail";
+import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
 
 export const cleanEmailFromHtml = async (
   body: string,

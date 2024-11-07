@@ -11,6 +11,7 @@ import {generateChatMessages} from "../../lib/payloads/openai/conversation";
 import {generateCustomerSummary} from "../../lib/helpers/agents/resolve";
 import {CleanedSingleVariant} from "../../lib/types/shopify/products";
 import {ChangeProductLineItem} from "../../lib/types/openai/products";
+import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
 
 export const extractOrderNumber = async (s: string) => {
   const token = process.env.CLASSIFICATION_API || "";

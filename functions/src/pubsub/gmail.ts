@@ -12,7 +12,7 @@ import {
   createEmailPayload,
   updateExistingEmailConversation,
 } from "../lib/payloads/emails";
-import {google} from "googleapis";
+import {gmail_v1, google} from "googleapis";
 import {createResponse} from "../util/errors";
 import * as functions from "firebase-functions";
 import {MerchantDocument} from "../lib/types/merchant";
@@ -20,16 +20,17 @@ import {EmailDocument, EmailMap} from "../lib/types/emails";
 import {classifyMessage} from "../lib/helpers/agents/classify";
 import {cleanEmailFromGmail} from "../lib/payloads/gmail/emails";
 import {updateMerchantUsage} from "../networking/shopify/billing";
+import {cleanEmailFromHtml} from "../networking/openAi/cleanEmail";
 import {validateEmailIsCustomer} from "../networking/openAi/respond";
 import {getValidGmailAccessToken} from "../lib/helpers/emails/validate";
 import {fetchCustomerDataFromEmail} from "../lib/helpers/emails/emails";
 import {getCurrentUnixTimeStampFromTimezone} from "../util/formatters/time";
-import {cleanEmailFromHtml} from "../networking/openAi/cleanEmail";
 
 const settings: functions.RuntimeOptions = {
   timeoutSeconds: 120,
 };
 
+// avg price = $0.0045
 export const receiveGmailNotification = functions
   .runWith(settings)
   .pubsub.topic("gmail-messages")
@@ -59,7 +60,7 @@ export const receiveGmailNotification = functions
     const cleaned = await cleanEmailFromHtml(scrubbed[0].content.join(" "));
 
     const msg = `**Subject**:<br> ${scrubbed[0].subject}<br><br> **Message**:<br> ${cleaned} `;
-    functions.logger.info({scrubbed: cleaned});
+    // functions.logger.info({scrubbed: cleaned});
 
     const is_email = await validateEmailIsCustomer(msg);
     if (!is_email || is_email.includes("invalid")) {
@@ -82,6 +83,13 @@ export const receiveGmailNotification = functions
 
     const existing_email = doc as EmailDocument;
     if (existing_email && existing_email.status == "open") {
+      const last =
+        existing_email.conversation[existing_email.conversation.length - 1];
+      console.log({last: last.history_id, scrubbed: scrubbed[0].historyId});
+
+      if (last.history_id == scrubbed[0].historyId) {
+        return createResponse(409, "Repeat", null);
+      }
       await updateExistingEmailConversation(
         existing_email,
         msg,
@@ -101,14 +109,14 @@ export const receiveGmailNotification = functions
       scrubbed[0].from,
     );
 
-    if (customer?.email && order && order[0] && order[0].email !== "") {
-      if (order[0].email !== email) {
+    if (scrubbed[0].from && order && order[0] && order[0].email !== "") {
+      if (order[0].email !== scrubbed[0].from) {
         return createResponse(409, "Email Must Match", {chat: null});
       }
     }
 
     // Create payload
-    const {email: payload} = createEmailPayload(
+    const {email: payload} = await createEmailPayload(
       merchant,
       existing_email,
       customer,
@@ -117,11 +125,13 @@ export const receiveGmailNotification = functions
       msg,
     );
     if (!payload) return createResponse(400, "Couldn't Respond", null);
+    // functions.logger.info({payload});
 
     // Update/Save
     const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
     payload.classification = classification;
     payload.updated_at = time;
+
     const save = await updateSubcollectionDocument(
       "shopify_merchant",
       domain,
@@ -141,70 +151,120 @@ export const getEmailFromHistory = async (
   const oAuth2Client = new google.auth.OAuth2();
   oAuth2Client.setCredentials({access_token: token});
   const gmail = google.gmail({version: "v1", auth: oAuth2Client});
-  // const hitory_id = data.historyId;
+
   const profileResponse = await gmail.users.getProfile({userId: "me"});
-  const hitory_id = profileResponse.data.historyId;
+  const history_id = profileResponse.data.historyId;
 
   try {
-    let history = await gmail.users.history.list({
-      userId: "me",
-      startHistoryId: String(hitory_id),
-    });
+    const history = await getHistoryFromID(gmail, history_id || "", data);
+    if (!history || !history.data.history) {
+      const messaage = await getMessagesFromData(gmail, merchant);
+      if (!messaage) return null;
 
-    if (!history.data.history) {
-      console.warn("No history found for the provided historyId.");
-
-      history = await gmail.users.history.list({
-        userId: "me",
-        startHistoryId: String(data.historyId),
-      });
-      if (!history.data.history) return null;
+      return messaage;
     }
 
-    const cleanedEmails: CleanedEmail[] = [];
-    for (const item of history.data.history) {
-      if (item.messages) {
-        for (const msg of item.messages) {
-          try {
-            const fullMessage = await gmail.users.messages.get({
-              userId: "me",
-              id: msg.id || "",
-            });
+    return await handleCleaningHistory(history.data.history, gmail, merchant);
+  } catch (error: any) {
+    return handleCatchGmail(error.code);
+  }
+};
 
-            if (fullMessage.data) {
-              const cleanedEmail = cleanEmailFromGmail(
-                [fullMessage.data as EmailFetchResponseData],
-                merchant,
-              );
-              cleanedEmails.push(...cleanedEmail);
-            }
-          } catch (messageError: any) {
-            if (messageError.code === 404) {
-              console.error(`Email message with ID ${msg.id} was not found.`);
-            } else {
-              console.error(
-                `Error fetching message ID ${msg.id}:`,
-                messageError.message,
-              );
-            }
+export const handleCatchGmail = (status: number) => {
+  if (status === 404) {
+    console.error("The specified history ID was not found: 404");
+  } else if (status === 401) {
+    console.error("Access token may be invalid or expired.");
+  } else {
+    console.error("Error fetching Gmail history: else");
+  }
+  return null;
+};
+
+export const handleCleaningHistory = async (
+  history: gmail_v1.Schema$History[],
+  gmail: gmail_v1.Gmail,
+  merchant: MerchantDocument,
+) => {
+  const cleaned_emails: CleanedEmail[] = [];
+  for (const item of history) {
+    if (item.messages) {
+      for (const msg of item.messages) {
+        try {
+          const fullMessage = await gmail.users.messages.get({
+            userId: "me",
+            id: msg.id || "",
+          });
+
+          if (fullMessage.data) {
+            const cleanedEmail = await cleanEmailFromGmail(
+              [fullMessage.data as EmailFetchResponseData],
+              merchant,
+              msg.id || "",
+              gmail,
+            );
+            cleaned_emails.push(...cleanedEmail);
           }
+        } catch (error: any) {
+          return handleCatchGmail(error.code);
         }
       }
     }
-    return cleanedEmails;
-  } catch (historyError: any) {
-    if (historyError.code === 404) {
-      console.error(
-        "The specified history ID was not found:",
-        historyError.message,
-      );
-    } else if (historyError.code === 401) {
-      console.error(
-        "Authorization error - access token may be invalid or expired.",
-      );
-    } else {
-      console.error("Error fetching Gmail history:", historyError.message);
-    }
+  }
+  return cleaned_emails;
+};
+
+export const getHistoryFromID = async (
+  gmail: gmail_v1.Gmail,
+  history_id: string,
+  data: GmailNotifications,
+) => {
+  const history = await gmail.users.history.list({
+    userId: "me",
+    startHistoryId: String(history_id),
+  });
+
+  if (!history.data.history) {
+    console.warn("No history found for the provided historyId: ", history_id);
     return null;
   }
+
+  return history;
+};
+
+export const getMessagesFromData = async (
+  gmail: gmail_v1.Gmail,
+  merchant: MerchantDocument,
+) => {
+  const messages = await gmail.users.messages.list({
+    userId: "me",
+    labelIds: ["INBOX"],
+    q: "is:unread",
+    maxResults: 1,
+  });
+
+  const cleaned_emails: CleanedEmail[] = [];
+  if (messages.data.messages && messages.data.messages.length > 0) {
+    const msg = messages.data.messages[0];
+    const message = await gmail.users.messages.get({
+      userId: "me",
+      id: msg.id || "",
+    });
+
+    try {
+      if (message.data) {
+        const cleanedEmail = await cleanEmailFromGmail(
+          [message.data as EmailFetchResponseData],
+          merchant,
+          msg.id || "",
+          gmail,
+        );
+
+        cleaned_emails.push(...cleanedEmail);
+      }
+    } catch (error: any) {
+      return handleCatchGmail(error.code);
+    }
+  }
+  return cleaned_emails;
 };

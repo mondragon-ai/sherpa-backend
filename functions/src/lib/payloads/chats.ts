@@ -3,6 +3,7 @@ import {
   Conversation,
   CustomerData,
   OrderData,
+  RatingTypes,
   SuggestedActions,
 } from "../types/shared";
 import {EmailConversation, EmailDocument} from "../types/emails";
@@ -163,7 +164,7 @@ export const buildResolvedChatPayload = (
   actions: AutomaticAction,
   type: "email" | "chat",
   summary = "",
-  sentiment: string,
+  sentiment: RatingTypes,
 ) => {
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
 

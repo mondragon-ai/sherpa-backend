@@ -1,9 +1,11 @@
 import {openAIRequest} from ".";
 import {SENTIMENT_PROMPT} from "../../lib/prompts/sentiment";
+import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
+import {RatingTypes} from "../../lib/types/shared";
 
 export const generateSentimentGPT = async (
   history: string,
-): Promise<string | null> => {
+): Promise<RatingTypes | null> => {
   const token = process.env.CLASSIFICATION_API || "";
 
   const payload = {
@@ -31,5 +33,5 @@ export const generateSentimentGPT = async (
 
   console.log({SENTIMENT_TOKENS: response.usage.total_tokens.toFixed(1)});
 
-  return summary;
+  return summary as RatingTypes;
 };

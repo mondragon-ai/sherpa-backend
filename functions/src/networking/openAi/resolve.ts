@@ -1,5 +1,6 @@
 import {openAIRequest} from ".";
 import {SUGGESTED_ACTION_PROMPT} from "../../lib/prompts/suggestedAction";
+import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
 import {SuggestedActions} from "../../lib/types/shared";
 
 export const generateSuggestedActionsGPT = async (

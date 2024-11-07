@@ -6,14 +6,9 @@ import {
   updateSubcollectionDocument,
 } from "../../../database/firestore";
 import {
-  EmailFetchResponseData,
-  GmailWatchResponse,
-} from "../../../lib/types/gmail/email";
-import {
   createEmailPayload,
   updateExistingEmailConversation,
 } from "../../../lib/payloads/emails";
-import {validateEmailIsCustomer} from "../../../networking/openAi/respond";
 import {gmail_v1, google} from "googleapis";
 import * as functions from "firebase-functions";
 import {Status} from "../../../lib/types/shared";
@@ -21,10 +16,11 @@ import {createResponse} from "../../../util/errors";
 import {EmailDocument} from "../../../lib/types/emails";
 import {getEmailFromHistory} from "../../../pubsub/gmail";
 import {GmailTokenData} from "../../../lib/types/gmail/auth";
+import {GmailWatchResponse} from "../../../lib/types/gmail/email";
 import {classifyMessage} from "../../../lib/helpers/agents/classify";
-import {cleanEmailFromGmail} from "../../../lib/payloads/gmail/emails";
 import {updateMerchantUsage} from "../../../networking/shopify/billing";
 import {DomainMap, MerchantDocument} from "../../../lib/types/merchant";
+import {validateEmailIsCustomer} from "../../../networking/openAi/respond";
 import {fetchCustomerDataFromEmail} from "../../../lib/helpers/emails/emails";
 import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
@@ -173,39 +169,39 @@ export const sendGmailEmail = async (
 export const fetchEmails = async (domain: string, seconds: string) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
 
-  const {data} = await fetchRootDocument("shopify_merchant", domain);
-  const merchant = data as MerchantDocument;
-  if (!merchant) return createResponse(422, "Merchant Not Found", null);
+  // const {data} = await fetchRootDocument("shopify_merchant", domain);
+  // const merchant = data as MerchantDocument;
+  // if (!merchant) return createResponse(422, "Merchant Not Found", null);
 
-  const access_token = await getValidGmailAccessToken(merchant);
-  if (!access_token) return createResponse(401, "No Token", null);
-  console.log({access_token});
+  // const access_token = await getValidGmailAccessToken(merchant);
+  // if (!access_token) return createResponse(401, "No Token", null);
+  // console.log({access_token});
 
-  const oAuth2Client = new google.auth.OAuth2();
-  oAuth2Client.setCredentials({access_token: access_token});
-  const gmail = google.gmail({version: "v1", auth: oAuth2Client});
+  // const oAuth2Client = new google.auth.OAuth2();
+  // oAuth2Client.setCredentials({access_token: access_token});
+  // const gmail = google.gmail({version: "v1", auth: oAuth2Client});
 
-  const res = await gmail.users.messages.list({
-    userId: "me",
-    maxResults: 100,
-    q: `after:${seconds}`,
-  });
-  const messages = res.data.messages || [];
+  // const res = await gmail.users.messages.list({
+  //   userId: "me",
+  //   maxResults: 100,
+  //   q: `after:${seconds}`,
+  // });
+  // const messages = res.data.messages || [];
 
-  const emails = (await Promise.all(
-    messages.map(async (msg) => {
-      const message = await gmail.users.messages.get({
-        userId: "me",
-        id: msg.id || "",
-      });
-      return message.data;
-    }),
-  )) as EmailFetchResponseData[];
+  // const emails = (await Promise.all(
+  //   messages.map(async (msg) => {
+  //     const message = await gmail.users.messages.get({
+  //       userId: "me",
+  //       id: msg.id || "",
+  //     });
+  //     return message.data;
+  //   }),
+  // )) as EmailFetchResponseData[];
 
-  const cleaned_emails = cleanEmailFromGmail(emails, merchant);
-  console.log(cleaned_emails);
+  // const cleaned_emails = await cleanEmailFromGmail(emails, merchant);
+  // console.log(cleaned_emails);
 
-  return createResponse(200, "Fetched email", {emails: cleaned_emails});
+  return createResponse(200, "Fetched email", {emails: null});
 };
 
 export const subscribeToGmail = async (domain: string) => {
@@ -332,7 +328,7 @@ export const testSubPub = async (domain: string, email: string, id: number) => {
   }
 
   // Create payload
-  const {email: payload} = createEmailPayload(
+  const {email: payload} = await createEmailPayload(
     merchant,
     existing_email,
     customer,

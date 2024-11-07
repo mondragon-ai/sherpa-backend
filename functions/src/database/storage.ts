@@ -17,7 +17,7 @@ export const uploadToGCP = async (
   const fileUpload = admin
     .storage()
     .bucket("sherpa-dc1fe.appspot.com")
-    .file(`${domain}/attachments/${email}_${date}.${extension}`);
+    .file(`${domain}/attachments/${email}/${date}.${extension}`);
 
   const blobStream = fileUpload.createWriteStream({
     metadata: {

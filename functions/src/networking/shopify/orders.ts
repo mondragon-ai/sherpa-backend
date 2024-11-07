@@ -209,7 +209,7 @@ export const fetchShopifyOrderByName = async (
   if (!products.orders) return null;
   if (!products.orders.edges) return null;
 
-  console.log({orders: products.orders.edges});
+  console.log({order_name: products.orders.edges});
   const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
 
   return cleaned_orders;

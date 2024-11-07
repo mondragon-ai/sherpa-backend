@@ -5,10 +5,13 @@ import {
 import {MerchantDocument} from "../../types/merchant";
 import {CleanedEmail, EmailFetchResponseData} from "../../types/gmail/email";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
+import {gmail_v1} from "googleapis";
 
-export const cleanEmailFromGmail = (
+export const cleanEmailFromGmail = async (
   list: EmailFetchResponseData[],
   merchant: MerchantDocument,
+  messageId: string,
+  gmailClient: gmail_v1.Gmail,
 ) => {
   const emails = [] as CleanedEmail[];
 
@@ -21,20 +24,28 @@ export const cleanEmailFromGmail = (
         body.push(decodeFromBase64(part.body.data || ""));
       }
       if (part.mimeType.includes("image") || part.mimeType.includes("pdf")) {
-        attatchments.push({
-          id: part.body.attachmentId || "",
-          data: part.body.data || "",
-          mime: part.mimeType,
-        });
+        if (part.body.attachmentId) {
+          const img_data = await getAttachment(
+            part.body?.attachmentId,
+            messageId,
+            gmailClient,
+          );
+
+          if (img_data.data.data) {
+            attatchments.push({
+              id: part.body.attachmentId || "",
+              data: img_data.data.data,
+              mime: part.mimeType,
+            });
+          }
+        }
       }
     }
 
     if (body.length == 0) {
       for (const part of email.payload.parts) {
-        console.log({Parent_Part: part.mimeType});
         if (part.mimeType == "multipart/alternative" && part.parts) {
           for (const child of part.parts) {
-            console.log({Child_Part: child.mimeType});
             if (child.mimeType == "text/plain") {
               body.push(decodeFromBase64(child.body.data || ""));
             }
@@ -63,4 +74,17 @@ export const cleanEmailFromGmail = (
     });
   }
   return emails;
+};
+
+export const getAttachment = async (
+  attachmentId: string,
+  messageId: string,
+  gmailClient: gmail_v1.Gmail,
+) => {
+  const response = await gmailClient.users.messages.attachments.get({
+    id: attachmentId,
+    messageId,
+    userId: "me",
+  });
+  return response;
 };

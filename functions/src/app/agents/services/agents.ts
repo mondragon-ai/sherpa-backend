@@ -23,7 +23,7 @@ import {
 import {decryptMsg} from "../../../util/encryption";
 import {createResponse} from "../../../util/errors";
 import {EmailDocument} from "../../../lib/types/emails";
-import {SuggestedActions} from "../../../lib/types/shared";
+import {RatingTypes, SuggestedActions} from "../../../lib/types/shared";
 import {MerchantDocument} from "../../../lib/types/merchant";
 import {respondToChatGPT} from "../../../networking/openAi/respond";
 import {classifyMessage} from "../../../lib/helpers/agents/classify";
@@ -180,6 +180,7 @@ export const fetchCustomerData = async (
   return {customer: cleaned_customer, order: order};
 };
 
+// Avg Response: $0.4704
 export const respondToChat = async (
   domain: string,
   id: string,
@@ -238,6 +239,11 @@ export const respondToChat = async (
   return createResponse(200, "Responded", {response});
 };
 
+// Avg Price: $0.014193
+// avg Action: $0.017109
+
+// AVG CHAT: $0.501702
+// AVG EMAIL: $0.035802
 export const resolveChat = async (
   domain: string,
   id: string,
@@ -263,23 +269,58 @@ export const resolveChat = async (
     return createResponse(409, "Chat Resovled", null);
   }
 
-  // Generate Suggested Action Keyword
-  const {action, prompt} = await generateSuggestedAction(chat);
-
-  // Summarize
-  const summary = (await generateSummary(prompt)) || "";
-
-  // Create sentiment analysis
-  const sentiment = (await generateSentimentGPT(prompt)) || "neutral";
-
   // Fetch Mercahant Doc
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
   if (!merchant) return createResponse(422, "Merchant not found", null);
 
-  const actions = await automateAction(chat, merchant, type, action);
+  // Create sentiment analysis
+  let sentiment: RatingTypes = "neutral";
+  let action: SuggestedActions = "unknown";
+  let prompt = "";
+  let summary = "";
+
+  let actions: AutomaticAction = {
+    email: false,
+    action: false,
+    suggested_email: "",
+    error: "",
+  };
+
+  if (type == "chat") {
+    // Generate Suggested Action Keyword
+    const action_repsonse = await generateSuggestedAction(chat);
+    action = action_repsonse.action;
+    prompt = action_repsonse.prompt;
+
+    // Summarize
+    summary = (await generateSummary(prompt)) || "";
+
+    // Create Sentiment
+    sentiment = (await generateSentimentGPT(prompt)) || "neutral";
+
+    // Create Actions
+    actions = await automateAction(chat, merchant, type, action);
+  }
 
   // Build Resolve Chat Payload
+  if (type == "email") {
+    // Generate Suggested Action Keyword
+    const action_repsonse = await generateSuggestedAction(chat);
+    action = action_repsonse.action;
+    prompt = action_repsonse.prompt;
+
+    // Create Actions
+    actions = await automateAction(chat, merchant, type, action);
+
+    // Summarize
+    prompt = `- Agent: ${actions.suggested_email}.\n`;
+    summary = (await generateSummary(prompt)) || "";
+
+    // Create Sentiment
+    sentiment = (await generateSentimentGPT(prompt)) || "neutral";
+  }
+
   const payload = buildResolvedChatPayload(
     chat,
     merchant,

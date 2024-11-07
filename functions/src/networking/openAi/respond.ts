@@ -1,11 +1,13 @@
 import {openAIRequest} from ".";
 import {VALID_CUSTOMER_EMAIL_PROMPT} from "../../lib/prompts/validateEmail";
+import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
 
 type BlockType = {
   role: "user" | "system" | "assistant";
   content: string;
 };
 
+// TODO: ROUND ROBIN TOKEN
 export const respondToChatGPT = async (
   blocks: BlockType[],
 ): Promise<string | null> => {

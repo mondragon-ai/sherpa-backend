@@ -1,5 +1,6 @@
 import {openAIRequest} from ".";
 import {SUMMARIZE_PROMPT} from "../../lib/prompts/summarize";
+import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
 
 export const generateSummary = async (
   history: string,

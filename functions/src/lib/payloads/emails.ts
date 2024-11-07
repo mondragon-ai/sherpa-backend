@@ -1,24 +1,26 @@
+import {EmailDocument} from "../types/emails";
+import {CleanedEmail} from "../types/gmail/email";
+import {uploadToGCP} from "../../database/storage";
 import {MerchantDocument} from "../types/merchant";
 import {generateRandomID} from "../../util/generators";
 import {CleanedCustomerOrder} from "../types/shopify/orders";
-import {EmailDocument} from "../types/emails";
 import {CleanedCustomerPayload} from "../types/shopify/customers";
+import {updateSubcollectionDocument} from "../../database/firestore";
 import {CustomerData, OrderData, SuggestedActions} from "../types/shared";
 import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
-import {CleanedEmail} from "../types/gmail/email";
-import {updateSubcollectionDocument} from "../../database/firestore";
-import {uploadToGCP} from "../../database/storage";
 
-export const createEmailPayload = (
+export const createEmailPayload = async (
   merchant: MerchantDocument,
   prev_email: EmailDocument,
   customer: CleanedCustomerPayload | null,
   order: CleanedCustomerOrder | null,
   cleaned_email: CleanedEmail,
   message: string,
-): {email: EmailDocument; message: string} => {
+): Promise<{email: EmailDocument; message: string}> => {
   /* eslint-enable indent */
-  let email = initializeEmailPyaload(
+  const internal_date = Number(cleaned_email.internalDate) / 1000;
+
+  let email = await initializeEmailPyaload(
     merchant,
     customer,
     order,
@@ -26,29 +28,24 @@ export const createEmailPayload = (
     message,
   );
 
+  const attachments = await Promise.all(
+    (cleaned_email.attachments || []).map(async (a) => {
+      const buffer = Buffer.from(a.data, "base64");
+      const upload = await uploadToGCP(
+        buffer,
+        merchant.id,
+        prev_email.id,
+        a.mime,
+      );
+      return upload ? upload.file_url : null;
+    }),
+  );
+
+  const filteredAttachments = attachments.filter((url) => url !== null);
+
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   if (prev_email) {
     const internal_date = Number(cleaned_email.internalDate) / 1000;
-
-    const attachments: string[] = [];
-
-    if (cleaned_email.attachments) {
-      cleaned_email.attachments.forEach(async (a) => {
-        console.log({a});
-        const buffer = Buffer.from(a.data, "base64");
-        console.log({buffer});
-
-        const upload = await uploadToGCP(
-          buffer,
-          merchant.id,
-          prev_email.id,
-          a.mime,
-        );
-        if (upload) {
-          attachments.push(upload.file_url);
-        }
-      });
-    }
 
     email = {
       ...prev_email,
@@ -85,44 +82,38 @@ export const createEmailPayload = (
           internal_date: String(internal_date),
           from: cleaned_email.from,
           subject: cleaned_email.subject,
-          attachments: attachments.length ? attachments : [],
+          attachments: [],
         },
       ],
-      time: internal_date,
-      created_at: internal_date,
+      time: time,
+      created_at: time,
     };
   }
 
+  const convo = email.conversation.map((a) => {
+    if (a.time == internal_date) {
+      return {
+        ...a,
+        attachments: filteredAttachments,
+      };
+    }
+    return a;
+  });
+
+  email.conversation = convo;
   return {email, message};
 };
 
-export const initializeEmailPyaload = (
+export const initializeEmailPyaload = async (
   merchant: MerchantDocument,
   customer: CleanedCustomerPayload | null,
   order: CleanedCustomerOrder | null,
   cleaned_email: CleanedEmail,
   message: string,
-): EmailDocument => {
+): Promise<EmailDocument> => {
   const ID = generateRandomID("chat_");
   const time = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   const internal_date = Number(cleaned_email.internalDate) / 1000;
-
-  const attachments: string[] = [];
-
-  if (cleaned_email.attachments) {
-    cleaned_email.attachments.forEach(async (a) => {
-      const buffer = Buffer.from(a.data, "base64");
-      const upload = await uploadToGCP(
-        buffer,
-        merchant.id,
-        cleaned_email.from || ID,
-        a.mime,
-      );
-      if (upload) {
-        attachments.push(upload.file_url);
-      }
-    });
-  }
 
   return {
     sentiment: null,
@@ -175,7 +166,7 @@ export const initializeEmailPyaload = (
         internal_date: String(internal_date),
         from: cleaned_email.from,
         subject: cleaned_email.subject,
-        attachments: attachments.length ? attachments : [],
+        attachments: [],
       },
     ],
     time: time,
@@ -236,6 +227,22 @@ export const updateExistingEmailConversation = async (
   merchant: MerchantDocument,
 ) => {
   const internal_date = Number(cleaned.internalDate) / 1000;
+
+  const attachments = await Promise.all(
+    (cleaned.attachments || []).map(async (a) => {
+      const buffer = Buffer.from(a.data, "base64");
+      const upload = await uploadToGCP(
+        buffer,
+        merchant.id,
+        prev_email.id,
+        a.mime,
+      );
+      return upload ? upload.file_url : null;
+    }),
+  );
+
+  const filteredAttachments = attachments.filter((url) => url !== null);
+
   const payload = {
     ...prev_email,
     status: "open",
@@ -256,7 +263,7 @@ export const updateExistingEmailConversation = async (
         internal_date: String(internal_date),
         from: cleaned.from,
         subject: cleaned.subject,
-        attachments: cleaned.attachments || [],
+        attachments: filteredAttachments.length ? filteredAttachments : [],
       },
     ],
     created_at: prev_email.created_at,

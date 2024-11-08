@@ -66,6 +66,18 @@ export type ConfigurationsType = {
   tone: "standard" | "playful" | "custom";
   custom_tone: string;
   links: LinkType[] | [];
+  email_signature: EmailSignature;
+};
+
+export type EmailSignature = {
+  logo: string;
+  facebook: string;
+  twitter: string;
+  tiktok: string;
+  youtube: string;
+  instagram: string;
+  name: string;
+  company: string;
 };
 
 export type LinkType = {

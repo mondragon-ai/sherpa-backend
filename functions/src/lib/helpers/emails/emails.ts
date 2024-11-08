@@ -33,16 +33,26 @@ export const generateSuggestedEmail = (
 ) => {
   const {order} = chat;
 
+  if (!order) {
+    return "";
+    // TODO: Create non order email template
+  }
+
   switch (suggested_action) {
     case "apply_discount": {
       if (!actions) return "";
       return buildDiscountEmailPayload(chat, actions);
     }
     case "cancel_order": {
-      if (!order) {
-        return "";
-      }
-      if (order.fulfillment_status === "hold") {
+      const status = order.fulfillment_status.toLocaleUpperCase();
+      if (
+        status === "hold" ||
+        status === "unfulfilled" ||
+        status === "on_hold" ||
+        status === "open" ||
+        status === "in_progress" ||
+        status === "scheduled"
+      ) {
         return buildOrderCancelEmailPayload(chat);
       } else if (order.fulfillment_status === "pending") {
         return buildOrderCancelPendingEmailPayload(chat, merchant);
@@ -51,39 +61,53 @@ export const generateSuggestedEmail = (
       }
     }
     case "change_address": {
-      if (!order) {
-        return "";
-      }
-
+      const status = order.fulfillment_status.toLocaleUpperCase();
       if (!actions) return "";
-      if (order.fulfillment_status !== "hold") {
-        return buildAddressChangeCustomerEmailPayload(chat, merchant, actions);
+      // TODO: Create address not found order email template
+      if (
+        status === "hold" ||
+        status === "pending" ||
+        status === "unfulfilled" ||
+        status === "on_hold" ||
+        status === "open" ||
+        status === "in_progress" ||
+        status === "scheduled"
+      ) {
+        return buildAddressChangeCustomerEmailPayload(chat, actions);
       }
       return buildAddressChangeOrderEmailPayload(chat, actions);
     }
     case "resolve": {
-      if (!order) {
-        return buildResolveEmailPayload(chat);
-      }
+      const status = order.fulfillment_status.toLocaleUpperCase();
       if (chat.classification == ClassificationTypes.OrderStatus) {
         if (
-          order.fulfillment_status === "hold" ||
-          order.fulfillment_status === "pending"
+          status === "hold" ||
+          status === "pending" ||
+          status === "unfulfilled" ||
+          status === "on_hold" ||
+          status === "open" ||
+          status === "in_progress" ||
+          status === "scheduled"
         ) {
           return buildOrderStatusEmailPayload(chat);
         } else {
           return buildOrderTrackingEmailPayload(chat);
         }
+        // TODO: Create in_progress order email template (3rd party fulfillment)
       }
       return buildResolveEmailPayload(chat);
     }
     case "cancel_subscription": {
+      // TODO: create freeze email template
+      // TODO: create Cant Find Subscriptio email template
       return buildCancelSubscriptionEmailPayload(chat);
     }
     case "change_product": {
+      // TODO: create Cant Switch (out of stock)
       return buildChangeProductEmailPayload(chat);
     }
     case "exchange": {
+      // TODO: create Cant Switch (out of stock)
       return buildChangeProductEmailPayload(chat);
     }
     case "unknown": {

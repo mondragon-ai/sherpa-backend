@@ -4,20 +4,25 @@ import {EmailDocument} from "../../types/emails";
 export const buildOrderTrackingEmailPayload = (
   chat: ChatDocument | EmailDocument,
 ) => {
+  if (!chat.order) return "";
   const first_name = chat.customer ? chat.customer.first_name : "Dear Customer";
-  const tracking = chat.order ? chat.order.tracking_url : "";
+  const {order_number, tracking_url} = chat.order;
 
   return `
-    Hi ${first_name}},
-
-    I hope this message finds you well. I wanted to provide you with an update regarding the status of your order.
-
-    I'm pleased to inform you that your order has now entered the shipping process. To track the progress of your delivery, you can use the following tracking URL: [tracking](${tracking}).
-
-    Rest assured, our team is diligently working to ensure a smooth and expedited delivery for you. We have also marked your support request as "Resolved" for the time being. However, please don't hesitate to reach out to us if you have any further questions or concerns.
-
-    Your patience and understanding are greatly appreciated throughout this process.
-
-    If there's anything else we can assist you with, please don't hesitate to let us know.
+    <p>
+      Hi ${first_name},
+    </p>
+    <br />
+    <p>
+      I hope this message finds you well. I wanted to provide you with an update regarding the status of your order (#${order_number}).
+    </p>
+    <p>
+      I'm pleased to inform you that your order has been shipped! You can track the progress of your delivery using the following tracking link: <a href="${tracking_url}">Track Your Order</a>.
+    </p>    <p>
+      Our team is working diligently to ensure a smooth and timely delivery for you. We've marked your support request as "Resolved" for now, but please don't hesitate to reach out if you have any further questions or concerns.
+    </p>
+    <p>
+      Thank you for your patience and understanding, and we're here to help if there's anything else you need.
+    </p>
   `;
 };

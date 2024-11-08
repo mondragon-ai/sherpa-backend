@@ -8,10 +8,18 @@ export const buildChangeProductEmailPayload = (
   const order_number = chat.order ? chat.order.order_number : "";
 
   return `
-    Hi ${first_name},
-
-    Thank you for contacting us. One of our team members will be in touch with you shortly regarding your order ${order_number} and your request to change your product(s).
-
-    If you have any other questions or concerns, please let us know.
+    <p>
+      Hi ${first_name},
+    </p>
+    <br />
+    <p>
+      We're happy to let you know that the product change for your order (Order #${order_number}) has been successfully processed. Your updated order is now set, and we're working to get it to you as quickly as possible.
+    </p>
+    <p>
+      If you have any more questions or need additional assistance, please don't hesitate to reach out. We're here to help!
+    </p>
+    <p>
+      Thank you for choosing us, and we look forward to delivering your updated order soon.
+    </p>
   `;
 };

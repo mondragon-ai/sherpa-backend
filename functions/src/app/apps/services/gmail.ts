@@ -25,6 +25,7 @@ import {fetchCustomerDataFromEmail} from "../../../lib/helpers/emails/emails";
 import {getValidGmailAccessToken} from "../../../lib/helpers/emails/validate";
 import {getCurrentUnixTimeStampFromTimezone} from "../../../util/formatters/time";
 import {ChatDocument} from "../../../lib/types/chats";
+import {emailSignature} from "../../../lib/prompts/emails/signature";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -152,6 +153,7 @@ export const sendGmailEmail = async (
   //   message,
   // ].join("\n");
 
+  const signature = emailSignature(merchant);
   const email =
     "From: 'me'\r\n" +
     "To: " +
@@ -162,8 +164,133 @@ export const sendGmailEmail = async (
     "\r\n" +
     "Content-Type: text/html; charset='UTF-8'\r\n" +
     "Content-Transfer-Encoding: base64\r\n\r\n" +
-    "<html><body>" +
+    "<html>" +
+    `<head>
+        <style>
+          .parentWrapper {
+            width: 100%;
+            padding: 3rem 0;
+            margin: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+          }
+          .container {
+            width: 50%;
+            padding: 3rem;
+            margin: 0 auto;
+            background: #faf7f4;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 1px #e4e4e4;
+          }
+          h5, h6, p, a, span, strong {
+            font-family: sans-serif;
+            color: #333;
+          }
+          h5 { font-size: 20px; font-weight: 500; line-height: 1.1; }
+          h6 { font-size: 13px; font-weight: 500; margin: 0 0 10px; }
+          p { font-size: 13px; line-height: 18px; }
+          a, span { font-size: 12px; line-height: 18px; }
+          .signature {
+            width: 100%;
+            height: auto;
+            padding: 0rem 0;
+            margin: 0;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            display: flex;
+          }
+          .logoWrapper {
+            width: 15%;
+            height: auto;
+            padding: 2rem;
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+          }
+          .logoWrapper img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            object-fit: contain;
+          }
+          .dividerWrapper {
+            width: 2px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+          }
+          .dividerWrapper > div {
+            width: 1px;
+            height: 90%;
+            background-color: rgb(218, 218, 218);
+          }
+          .socialWrapper {
+            width: 100%;
+            height: auto;
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            margin: 0;
+            padding: 10px 0;
+          }
+          .socialWrapper > a {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            margin-right: 5px;
+          }
+          .socialWrapper > a > img {
+            object-fit: contain;
+            width: 25px;
+            height: 25px;
+          }
+          @media screen and (max-width: 480px) {
+            .container {
+              width: 80%;
+              padding: 1rem;
+            }
+            .signature {
+              display: block;
+            }
+            .logoWrapper {
+              width: 25%;
+              padding: 10px;
+              padding-left: 0;
+            }
+            .dividerWrapper {
+              width: 100% !important;
+              height: 2px;
+              display: flex;
+              flex-direction: row;
+              justify-content: flex-start;
+              align-items: flex-start;
+              margin: 10px 0;
+            }
+            .dividerWrapper > div {
+              width: 50%;
+              height: 1px;
+              background-color: rgb(218, 218, 218);
+            }
+          }
+        </style>
+    </head>` +
+    "<body>" +
+    "<div class='parentWrapper'>" +
+    "<div class='container'>" +
     message +
+    signature +
+    "<br />" +
+    "</div>" +
+    "</div>" +
     "</body></html>";
 
   const encodedEmail = Buffer.from(email)

@@ -121,6 +121,16 @@ export const merchantPayload = (
       tone: "standard",
       custom_tone: "",
       links: [],
+      email_signature: {
+        logo: "https://cdn.shopify.com/s/files/1/0783/4802/6165/files/bigly.png?v=1727644792",
+        facebook: "",
+        twitter: "",
+        tiktok: "",
+        youtube: "",
+        instagram: "",
+        name: "Sherpa Chatbot",
+        company: "",
+      },
     },
   } as MerchantDocument;
 

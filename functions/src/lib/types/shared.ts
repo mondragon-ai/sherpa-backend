@@ -98,7 +98,18 @@ export type OrderData = {
   id: string;
   order_id: string;
   current_total_price: string;
-  fulfillment_status: "hold" | "shipped" | "delivered" | "pending" | "transit";
+  fulfillment_status:
+    | "hold"
+    | "on_hold"
+    | "shipped"
+    | "delivered"
+    | "pending"
+    | "open"
+    | "fulfilled"
+    | "transit"
+    | "in_progress"
+    | "scheduled"
+    | "unfulfilled";
   payment_status: "hold" | "paid";
   tracking_url: string;
   order_number: number;

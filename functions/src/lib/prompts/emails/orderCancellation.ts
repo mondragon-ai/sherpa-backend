@@ -8,10 +8,18 @@ export const buildOrderCancelEmailPayload = (
   const order_number = chat.order ? chat.order.order_number : "";
 
   return `
-    Hi ${first_name}
-
-    We are sorry to hear that you are having trouble with your order. We have cancelled your order ${order_number} and issued a refund. Please allow 3-5 business days for the refund to appear on your statement.
-
-    If you have any other questions or concerns, please let us know.
+    <p>
+      Hi ${first_name},
+    </p>
+    <br />
+    <p>
+      We're sorry to hear that you needed to cancel your order, but we understand and are here to help. Your order (#${order_number}) has been successfully canceled, and we've processed a refund.
+    </p>
+    <p>
+    Please allow 3-5 business days for the refund to appear on your statement, depending on your bank's processing time.
+    </p>
+    <p>
+      If you have any further questions or need assistance with anything else, please don't hesitate to reach out. We're here to support you!
+    </p>
   `;
 };

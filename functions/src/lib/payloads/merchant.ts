@@ -1,3 +1,5 @@
+import {createDiscountRule} from "../../networking/shopify/discounts";
+import {decryptMsg} from "../../util/encryption";
 import {getCurrentUnixTimeStampFromTimezone} from "../../util/formatters/time";
 import {MerchantDocument} from "../types/merchant";
 import {ShopData} from "../types/shopify/shop";
@@ -18,16 +20,16 @@ const splitName = (fullName: string): {firstName: string; lastName: string} => {
  * @param {ShopData} store - Shop data including owner, email, phone, domain, and address details.
  * @returns {MerchantDocument} A structured MerchantDocument object containing comprehensive shop details, owner info, and webhook configurations.
  */
-export const merchantPayload = (
+export const merchantPayload = async (
   token: string,
   store: ShopData,
-): MerchantDocument => {
+): Promise<MerchantDocument> => {
   const {firstName, lastName} = splitName(store.shop_owner);
 
   const currentTime = getCurrentUnixTimeStampFromTimezone(store.timezone);
 
   /* eslint-disable operator-linebreak */
-  return {
+  const payload = {
     capped_usage: 5000,
     state: currentTime,
     created_at: currentTime,
@@ -133,6 +135,23 @@ export const merchantPayload = (
       },
     },
   } as MerchantDocument;
-
   /* eslint-enable operator-linebreak */
+
+  const shpat = await decryptMsg(token);
+  const discount = await createDiscountRule(
+    {
+      price: 12,
+      token: shpat,
+    },
+    store.domain,
+  );
+  if (!payload.id) return payload;
+
+  return {
+    ...payload,
+    configurations: {
+      ...payload.configurations,
+      price_rules: discount,
+    },
+  } as MerchantDocument;
 };

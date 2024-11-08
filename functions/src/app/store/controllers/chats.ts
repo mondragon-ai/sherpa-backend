@@ -25,7 +25,6 @@ export const handleFetchAllChats = async (
   functions.logger.info(" 💬 [/FETCH]: " + domain + " ");
 
   const {data, status, message} = await fetchChats(domain);
-  functions.logger.info({data: data});
 
   res.status(status).json({
     message: message,
@@ -70,7 +69,6 @@ export const handleFetchNextChats = async (
   );
 
   const {data, status, message} = await fetchNextChats(domain, time);
-  functions.logger.info({data: data});
 
   res.status(status).json({
     message: message,

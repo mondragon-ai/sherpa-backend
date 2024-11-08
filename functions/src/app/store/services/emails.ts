@@ -32,7 +32,7 @@ export const fetchNextEmails = async (domain: string, time: string) => {
     domain,
     "emails",
     time,
-    "prev",
+    "next",
   );
   const emails = data as EmailDocument[];
   if (!emails) return createResponse(422, "No emails found", null);

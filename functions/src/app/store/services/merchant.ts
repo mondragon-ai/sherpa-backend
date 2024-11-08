@@ -103,9 +103,8 @@ const handleMerchantNotInstalled = async (
   token: string,
 ): Promise<ServicesReponseType> => {
   const store = await fetchShopifyMerchantShop(shpat, shop);
-  console.log({store});
 
-  const payload = merchantPayload(token, store);
+  const payload = await merchantPayload(token, store);
   console.log({payload});
 
   await createRootDocument("domain_map", domain, {

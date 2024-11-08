@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .parentWrapper {
+        width: 100%;
+        padding: 3rem 0;
+        margin: 0;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .container {
+        width: 50%;
+        padding: 3rem;
+        margin: 0 auto;
+        background: #faf7f4;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px 1px #e4e4e4;
+      }
+      h5,
+      h6,
+      p,
+      a,
+      span,
+      strong {
+        font-family: sans-serif;
+        color: #333;
+      }
+      h5 {
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.1;
+      }
+      h6 {
+        font-size: 13px;
+        font-weight: 500;
+        margin: 0 0 10px;
+      }
+      p {
+        font-size: 13px;
+        line-height: 18px;
+      }
+      a,
+      span {
+        font-size: 12px;
+        line-height: 18px;
+      }
+      .signature {
+        width: 100%;
+        height: auto;
+        padding: 0rem 0;
+        margin: 0;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        display: flex;
+      }
+      .logoWrapper {
+        width: 15%;
+        height: auto;
+        padding: 2rem;
+        margin: 0;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+      .logoWrapper img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        object-fit: contain;
+      }
+      .dividerWrapper {
+        width: 2px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        margin-right: 10px;
+      }
+      .dividerWrapper > div {
+        width: 1px;
+        height: 90%;
+        background-color: rgb(218, 218, 218);
+      }
+      .socialWrapper {
+        width: 100%;
+        height: auto;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0;
+        padding: 10px 0;
+      }
+      .socialWrapper > a {
+        width: 25px;
+        height: 25px;
+        border-radius: 4px;
+        margin-right: 5px;
+      }
+      .socialWrapper > a > img {
+        object-fit: contain;
+        width: 25px;
+        height: 25px;
+      }
+      @media screen and (max-width: 480px) {
+        .container {
+          width: 80%;
+          padding: 1rem;
+        }
+        .signature {
+          display: block;
+        }
+        .logoWrapper {
+          width: 25%;
+          padding: 10px;
+          padding-left: 0;
+        }
+        .dividerWrapper {
+          width: 100% !important;
+          height: 2px;
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-start;
+          align-items: flex-start;
+          margin: 10px 0;
+        }
+        .dividerWrapper > div {
+          width: 50%;
+          height: 1px;
+          background-color: rgb(218, 218, 218);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="parentWrapper">
+      <div class="container">
+        <h5>Canceling Your Order</h5>
+
+        <p>Hi ${first_name},</p>
+        <br />
+
+        <p>
+          We're sorry to see you go and want to make this transition as smooth
+          as possible. Your subscription has been successfully canceled, and
+          we're here to help with any final details or questions you may have.
+        </p>
+
+        <p>
+          If there's anything else we can assist you with, whether related to
+          your account or our other services, please don't hesitate to reach
+          out. Our team is ready to support you however we can.
+        </p>
+
+        <p>
+          Thank you for being a valued part of our community. We appreciate the
+          time you spent with us, and remember you can resubscribe at anytime.
+        </p>
+
+        <br />
+        <div class="signature">
+          <div class="logoWrapper">
+            <img
+              src="https://cdn.shopify.com/s/files/1/0783/4802/6165/files/bigly.png?v=1727644792"
+              alt="logo"
+            />
+          </div>
+          <div class="dividerWrapper">
+            <div></div>
+          </div>
+          <div class="textWrapper">
+            <h6>
+              <strong>John Doe</strong>
+            </h6>
+            <h6>Customer Service Agent<br /></h6>
+            <a href="mailto:johndoe@example.com">johndoe@example.com</a><br />
+            <span>Company Name</span><br />
+            <div class="socialWrapper">
+              <a href="">
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0783/4802/6165/files/facebook_2168281.png?v=1731015538"
+                  alt="fb"
+              /></a>
+              <a href="">
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0783/4802/6165/files/tiktok_3116491.png?v=1731015538"
+                  alt="tt"
+              /></a>
+              <a href="">
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0783/4802/6165/files/instagram_1384015.png?v=1731015538"
+                  alt="ig"
+              /></a>
+              <a href="">
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0783/4802/6165/files/x-icon.png?v=1731015628"
+                  alt="x"
+              /></a>
+              <a href="">
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0783/4802/6165/files/yt-icon.png?v=1731015628"
+                  alt="yt"
+              /></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

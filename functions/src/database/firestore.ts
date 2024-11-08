@@ -489,7 +489,7 @@ export const updateSubcollectionDocument = async (
 };
 
 /**
- * Fetch paginated Items from a Firestore nested collection.
+ * Fetch paginated items from a Firestore nested collection.
  *
  * @param {string} root - The root collection name.
  * @param {string} id - The root document ID.
@@ -515,15 +515,19 @@ export const fetchPaginatedSubcollection = async (
     }
 
     const orderDirection = direction === "next" ? "desc" : "asc";
-    const query = await admin
+    const queryRef = admin
       .firestore()
       .collection(root)
       .doc(id)
       .collection(collection)
       .orderBy("created_at", orderDirection)
-      .startAt(timestamp)
-      .limit(250)
-      .get();
+      .limit(250);
+
+    // Use `startAfter` for the 'next' direction to fetch older items
+    const query =
+      direction === "next"
+        ? await queryRef.startAfter(timestamp).get()
+        : await queryRef.endBefore(timestamp).get(); // Use `endBefore` for `prev` (if navigating back)
 
     if (query.empty) {
       return {

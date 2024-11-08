@@ -89,11 +89,11 @@ export const handleReceiveEmails = async (
   res: express.Response,
 ) => {
   const {domain} = req.params;
-  const {time} = req.query;
-  const seconds = typeof time === "string" ? time : "";
+  // const {time} = req.query;
+  // const seconds = typeof time === "string" ? time : "";
   functions.logger.info(` 📧 [/FETCH]: Fetch emails from gmail for ${domain}`);
 
-  const {data, status, message} = await fetchEmails(domain, seconds);
+  const {data, status, message} = await fetchEmails(domain);
 
   res.status(status).json({data, message});
 };

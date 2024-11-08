@@ -153,6 +153,7 @@ export const sendGmailEmail = async (
   //   message,
   // ].join("\n");
 
+  /* eslint-disable operator-linebreak */
   const signature = emailSignature(merchant);
   const email =
     "From: 'me'\r\n" +
@@ -292,6 +293,7 @@ export const sendGmailEmail = async (
     "</div>" +
     "</div>" +
     "</body></html>";
+  /* eslint-enable operator-linebreak */
 
   const encodedEmail = Buffer.from(email)
     .toString("base64")
@@ -325,7 +327,7 @@ export const sendGmailEmail = async (
   });
 };
 
-export const fetchEmails = async (domain: string, seconds: string) => {
+export const fetchEmails = async (domain: string) => {
   if (!domain) return createResponse(400, "Missing Domain", null);
 
   // const {data} = await fetchRootDocument("shopify_merchant", domain);

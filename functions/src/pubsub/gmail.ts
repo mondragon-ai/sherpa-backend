@@ -160,7 +160,7 @@ export const getEmailFromHistory = async (
   const history_id = profileResponse.data.historyId;
 
   try {
-    const history = await getHistoryFromID(gmail, history_id || "", data);
+    const history = await getHistoryFromID(gmail, history_id || "");
     if (!history || !history.data.history) {
       const messaage = await getMessagesFromData(gmail, merchant);
       if (!messaage) return null;
@@ -221,7 +221,6 @@ export const handleCleaningHistory = async (
 export const getHistoryFromID = async (
   gmail: gmail_v1.Gmail,
   history_id: string,
-  data: GmailNotifications,
 ) => {
   const history = await gmail.users.history.list({
     userId: "me",

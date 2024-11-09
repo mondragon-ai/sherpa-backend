@@ -126,8 +126,12 @@ export const startChat = async (
   const {customer, order} = await fetchCustomerData(merchant, payload);
 
   // Validate order & email
-  if (customer?.email && order && order?.email !== "") {
-    if (order?.email !== email) {
+  if (
+    customer?.email.toLocaleLowerCase() &&
+    order &&
+    order?.email.toLocaleLowerCase() !== ""
+  ) {
+    if (order?.email.toLocaleLowerCase() !== email.toLocaleLowerCase()) {
       return createResponse(409, "Email Must Match", {chat: null});
     }
   }

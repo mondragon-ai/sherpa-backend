@@ -22,6 +22,7 @@ export type ProductNode = {
   title: string;
   status: string;
   totalInventory: number;
+  tracksInventory: boolean;
   onlineStorePreviewUrl: string;
   media: Media;
 };
@@ -63,6 +64,7 @@ export type CleanedNodeProduct = {
   image: string;
   id: string;
   url: string;
+  track_inventory: boolean;
   status: string;
   stock_level: number;
 };

@@ -25,6 +25,7 @@ export const fetchShopifyProducts = async (
               title
               status
               totalInventory
+              tracksInventory
               onlineStorePreviewUrl
               media(first: 1) {
                 edges {

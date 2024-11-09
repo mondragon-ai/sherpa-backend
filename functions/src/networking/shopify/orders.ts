@@ -4,6 +4,7 @@ import {
   cleanCustomerOrdersPayload,
   cleanOrderEditPayload,
 } from "../../lib/payloads/shopify/orders";
+import * as funcitons from "firebase-functions";
 import {ChatDocument} from "../../lib/types/chats";
 import {EmailDocument} from "../../lib/types/emails";
 import {MerchantDocument} from "../../lib/types/merchant";
@@ -63,6 +64,12 @@ export const fetchCustomerOrderList = async (
                   product{
                     id
                   }
+                  image {
+                    url
+                  }
+                  sellingPlan {
+                    sellingPlanId
+                  }
                 }
               }
             }
@@ -77,15 +84,16 @@ export const fetchCustomerOrderList = async (
   };
 
   const {data} = await shopifyGraphQlRequest(shop, shpat, {query, variables});
-  const products = data as ShopifyOrdersResponse["data"];
+  const orders = data as ShopifyOrdersResponse["data"];
+  funcitons.logger.info({order_list: orders});
 
-  if (!products.orders) {
+  if (!orders.orders) {
     return null;
   }
 
-  if (!products.orders.edges) return null;
+  if (!orders.orders.edges) return null;
 
-  const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
+  const cleaned_orders = cleanCustomerOrdersPayload(orders.orders.edges);
 
   return cleaned_orders;
 };
@@ -130,6 +138,12 @@ export const fetchShopifyOrder = async (
               product {
                 id
               }
+              image {
+                url
+              }
+              sellingPlan {
+                sellingPlanId
+              }
             }
           }
         }
@@ -142,6 +156,7 @@ export const fetchShopifyOrder = async (
   if (!data) return null;
   const order = data as ShopifOrderResponse["data"];
   if (!order || !order.order) return null;
+  funcitons.logger.info({order_by_id: order});
 
   const cleaned_order = cleanCustomerOrderPayload(order.order);
 
@@ -189,6 +204,12 @@ export const fetchShopifyOrderByName = async (
                   product {
                     id
                   }
+                  image {
+                    url
+                  }
+                  sellingPlan {
+                    sellingPlanId
+                  }
                 }
               }
             }
@@ -204,17 +225,18 @@ export const fetchShopifyOrderByName = async (
 
   const shop = domain.split(".")[0];
   const {data} = await shopifyGraphQlRequest(shop, shpat, {query, variables});
-  const products = data as ShopifyOrdersResponse["data"];
+  const orders = data as ShopifyOrdersResponse["data"];
 
-  if (!products.orders) return null;
-  if (!products.orders.edges) return null;
+  if (!orders.orders) return null;
+  if (!orders.orders.edges) return null;
+  funcitons.logger.info({order_by_name: orders});
 
-  console.log({order_name: products.orders.edges});
-  const cleaned_orders = cleanCustomerOrdersPayload(products.orders.edges);
+  const cleaned_orders = cleanCustomerOrdersPayload(orders.orders.edges);
 
   return cleaned_orders;
 };
 
+// ACTIONS
 export const cancelOrder = async (
   chat: ChatDocument | EmailDocument,
   merchant: MerchantDocument,

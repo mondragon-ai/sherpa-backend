@@ -40,8 +40,8 @@ export const initCreateTicketAnalytics = (
     sentiment_analysis: {positive: 0, negative: 0, neutral: 0},
     category_csat: {},
     top_errors: {},
-    top_issues: {[chat.issue || "none"]: 1},
-    top_tickets: {[chat.classification || "none"]: 1},
+    top_issues: {[chat.issue || "unknown"]: 1},
+    top_tickets: {[chat.classification || "unknown"]: 1},
     created_at: time,
     updated_at: time,
     amount_saved: [],
@@ -81,11 +81,11 @@ export const initResolveTicketAnalytics = (
           neutral: chat.rating === "neutral" ? 1 : 0,
         }
       : {positive: 0, negative: 0, neutral: 0},
-    sentiment_analysis: chat.rating
+    sentiment_analysis: chat.sentiment
       ? {
-          positive: chat.rating === "positive" ? 1 : 0,
-          negative: chat.rating === "negative" ? 1 : 0,
-          neutral: chat.rating === "neutral" ? 1 : 0,
+          positive: chat.sentiment === "positive" ? 1 : 0,
+          negative: chat.sentiment === "negative" ? 1 : 0,
+          neutral: chat.sentiment === "neutral" ? 1 : 0,
         }
       : {positive: 0, negative: 0, neutral: 0},
     category_csat:
@@ -98,9 +98,11 @@ export const initResolveTicketAnalytics = (
             },
           }
         : {},
-    top_errors: chat.issue ? {[chat.issue]: 1} : {none: 1},
-    top_issues: chat.issue ? {[chat.issue]: 1} : {none: 1},
-    top_tickets: chat.classification ? {[chat.classification]: 1} : {none: 1},
+    top_errors: chat.error_info ? {[chat.error_info]: 1} : {},
+    top_issues: chat.issue ? {[chat.issue]: 1} : {unknown: 1},
+    top_tickets: chat.classification
+      ? {[chat.classification]: 1}
+      : {unknown: 1},
     created_at: time,
     updated_at: time,
     amount_saved: order ? [order] : [],

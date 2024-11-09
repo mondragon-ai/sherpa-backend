@@ -7,10 +7,8 @@ import {
   getMonthStartUnixTimeStampFromTimezone,
 } from "../../../util/formatters/time";
 import {
-  appendToCategoryCSAT,
   appendToCSAT,
   appendToError,
-  appendToResolutionRatio,
   appendToSentimentAnalysis,
   appendToTickets,
   appendToTopIssues,
@@ -19,6 +17,7 @@ import {
 import {ChatDocument} from "../../types/chats";
 import {EmailDocument} from "../../types/emails";
 import {AnalyticsDocument, LineChart} from "../../types/analytics";
+import {ClassificationTypes} from "../../types/shared";
 
 export const createTicketAnalytics = async (
   type: "chat" | "email",
@@ -70,12 +69,12 @@ export const createDailyTicketAnalytics = async (
   let daily = data as AnalyticsDocument;
 
   if (!daily) {
-    daily = initCreateTicketAnalytics(today, type, chat);
+    return initCreateTicketAnalytics(today, type, chat);
   } else {
     const new_ticket = {date: `${chat.updated_at}`, value: 1} as LineChart;
 
-    const agent = chat.suggested_action_done ? "sherpa" : "human";
-    daily = {
+    return {
+      ...daily,
       id: today,
       total_chats:
         type == "chat" ? [...daily.total_chats, new_ticket] : daily.total_chats,
@@ -84,30 +83,23 @@ export const createDailyTicketAnalytics = async (
           ? [...daily.total_emails, new_ticket]
           : daily.total_emails,
       total_volume: [...daily.total_volume, new_ticket],
-      resolution_ratio: appendToResolutionRatio(agent, daily),
       csat: chat.rating ? appendToCSAT(chat.rating, daily) : daily.csat,
       sentiment_analysis: chat.sentiment
         ? appendToSentimentAnalysis(chat.sentiment, daily)
         : daily.sentiment_analysis,
-      category_csat:
-        chat.classification && chat.rating
-          ? appendToCategoryCSAT(chat.classification, chat.rating, daily)
-          : daily.category_csat,
-      top_errors: chat.classification
-        ? appendToError(chat.classification, daily)
+      top_errors: chat.error_info
+        ? appendToError(chat.error_info as ClassificationTypes, daily)
         : daily.top_errors,
       top_issues: chat.issue
         ? appendToTopIssues(chat.issue, daily)
         : daily.top_issues,
       top_tickets: chat.classification
         ? appendToTickets(chat.classification, daily)
-        : daily.top_issues,
+        : daily.top_tickets,
       created_at: today,
       updated_at: today,
-      amount_saved: [],
     };
   }
-  return daily;
 };
 
 export const createMonthlyTicketAnalytics = async (
@@ -126,12 +118,12 @@ export const createMonthlyTicketAnalytics = async (
   let monthly = data as AnalyticsDocument;
 
   if (!monthly) {
-    monthly = initCreateTicketAnalytics(month, type, chat);
+    return initCreateTicketAnalytics(month, type, chat);
   } else {
     const new_ticket = {date: `${chat.updated_at}`, value: 1} as LineChart;
 
-    const agent = chat.suggested_action_done ? "sherpa" : "human";
     monthly = {
+      ...monthly,
       id: month,
       total_chats:
         type == "chat"
@@ -142,27 +134,21 @@ export const createMonthlyTicketAnalytics = async (
           ? [...monthly.total_emails, new_ticket]
           : monthly.total_emails,
       total_volume: [...monthly.total_volume, new_ticket],
-      resolution_ratio: appendToResolutionRatio(agent, monthly),
       csat: chat.rating ? appendToCSAT(chat.rating, monthly) : monthly.csat,
       sentiment_analysis: chat.sentiment
         ? appendToSentimentAnalysis(chat.sentiment, monthly)
         : monthly.sentiment_analysis,
-      category_csat:
-        chat.classification && chat.rating
-          ? appendToCategoryCSAT(chat.classification, chat.rating, monthly)
-          : monthly.category_csat,
-      top_errors: chat.classification
-        ? appendToError(chat.classification, monthly)
+      top_errors: chat.error_info
+        ? appendToError(chat.error_info as ClassificationTypes, monthly)
         : monthly.top_errors,
       top_issues: chat.issue
         ? appendToTopIssues(chat.issue, monthly)
         : monthly.top_issues,
       top_tickets: chat.classification
         ? appendToTickets(chat.classification, monthly)
-        : monthly.top_issues,
+        : monthly.top_tickets,
       created_at: month,
       updated_at: month,
-      amount_saved: [],
     };
   }
   return monthly;

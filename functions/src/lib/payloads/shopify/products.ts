@@ -12,6 +12,7 @@ export const cleanSearchedProductsPayload = (nodes: ProductEdge[]) => {
       title: n.node.title,
       image: n.node.media.edges[0].node.preview.image.url,
       id: n.node.id,
+      track_inventory: n.node.tracksInventory,
       url: n.node.onlineStorePreviewUrl,
       status: n.node.status,
       stock_level: n.node.totalInventory,

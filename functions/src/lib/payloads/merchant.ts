@@ -143,9 +143,9 @@ export const merchantPayload = async (
       price: 12,
       token: shpat,
     },
-    store.domain,
+    store.myshopify_domain,
   );
-  if (!payload.id) return payload;
+  if (!discount.id) return payload;
 
   return {
     ...payload,

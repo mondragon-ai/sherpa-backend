@@ -22,8 +22,8 @@ export const createDiscountRule = async (
       "mutation discountCodeBasicCreate($basicCodeDiscount: DiscountCodeBasicInput!) { discountCodeBasicCreate(basicCodeDiscount: $basicCodeDiscount) { codeDiscountNode { id codeDiscount { ... on DiscountCodeBasic { title codes(first: 10) { nodes { id code } } startsAt endsAt } } } userErrors { field code message } } }",
     variables: {
       basicCodeDiscount: {
-        title: "20% off all items during the summer of 2022",
-        code: "subs",
+        title: "Sherpa - Save Order",
+        code: "SAVEORDER872",
         startsAt: "2022-06-21T00:00:00Z",
         endsAt: "2025-09-21T00:00:00Z",
         customerSelection: {
@@ -46,7 +46,11 @@ export const createDiscountRule = async (
   const {data} = await shopifyGraphQlRequest(shop, discount.token, payload);
   const result = data as DiscountCodeCreateResponse["data"];
 
-  if (!result.discountCodeBasicCreate) {
+  if (
+    !result.discountCodeBasicCreate ||
+    !result.discountCodeBasicCreate.codeDiscountNode ||
+    !result.discountCodeBasicCreate.codeDiscountNode?.id
+  ) {
     return {
       id: "",
       title: "",

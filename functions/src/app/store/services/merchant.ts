@@ -105,7 +105,6 @@ const handleMerchantNotInstalled = async (
   const store = await fetchShopifyMerchantShop(shpat, shop);
 
   const payload = await merchantPayload(token, store);
-  console.log({payload});
 
   await createRootDocument("domain_map", domain, {
     myshopify_domain: store.myshopify_domain,
@@ -119,7 +118,7 @@ const handleMerchantNotInstalled = async (
     payload,
   );
 
-  if (status < 300) {
+  if (status > 300) {
     return createResponse(
       status,
       "Merchant could not be saved successfully - " + text,

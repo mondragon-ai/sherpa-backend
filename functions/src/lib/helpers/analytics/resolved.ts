@@ -17,6 +17,7 @@ import {
 import {ChatDocument} from "../../types/chats";
 import {EmailDocument} from "../../types/emails";
 import {AnalyticsDocument, LineChart} from "../../types/analytics";
+import {ClassificationTypes} from "../../types/shared";
 
 export const resolveTicketAnalytics = async (
   type: "chat" | "email",
@@ -68,7 +69,7 @@ export const resolveDailyTicketAnalytics = async (
   let daily = data as AnalyticsDocument;
 
   if (!daily) {
-    daily = initResolveTicketAnalytics(today, type, chat);
+    return initResolveTicketAnalytics(today, type, chat);
   } else {
     const agent = chat.suggested_action ? "sherpa" : "human";
     /* eslint-disable indent */
@@ -92,8 +93,8 @@ export const resolveDailyTicketAnalytics = async (
         chat.classification && chat.rating
           ? appendToCategoryCSAT(chat.classification, chat.rating, daily)
           : daily.category_csat,
-      top_errors: chat.classification
-        ? appendToError(chat.classification, daily)
+      top_errors: chat.error_info
+        ? appendToError(chat.error_info as ClassificationTypes, daily)
         : daily.top_errors,
       updated_at: today,
       amount_saved: order
@@ -121,7 +122,7 @@ export const resolveMonthlyTicketAnalytics = async (
   let monthly = data as AnalyticsDocument;
 
   if (!monthly) {
-    monthly = initResolveTicketAnalytics(month, type, chat);
+    return initResolveTicketAnalytics(month, type, chat);
   } else {
     const agent = chat.suggested_action_done ? "sherpa" : "human";
     /* eslint-disable indent */
@@ -145,8 +146,8 @@ export const resolveMonthlyTicketAnalytics = async (
         chat.classification && chat.rating
           ? appendToCategoryCSAT(chat.classification, chat.rating, monthly)
           : monthly.category_csat,
-      top_errors: chat.classification
-        ? appendToError(chat.classification, monthly)
+      top_errors: chat.error_info
+        ? appendToError(chat.error_info as ClassificationTypes, monthly)
         : monthly.top_errors,
       updated_at: month,
       amount_saved: order

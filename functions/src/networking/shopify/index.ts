@@ -31,7 +31,7 @@ export const shopifyGraphQlRequest = async (
     const data = await response.json();
 
     if (data.errors) {
-      console.error(data.errors[0]);
+      console.error(data);
       return {status: 400, message: "Error", data: data.errors[0]};
     }
 

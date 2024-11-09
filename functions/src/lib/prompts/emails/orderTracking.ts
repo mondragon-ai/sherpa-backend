@@ -18,7 +18,8 @@ export const buildOrderTrackingEmailPayload = (
     </p>
     <p>
       I'm pleased to inform you that your order has been shipped! You can track the progress of your delivery using the following tracking link: <a href="${tracking_url}">Track Your Order</a>.
-    </p>    <p>
+    </p>
+    <p>
       Our team is working diligently to ensure a smooth and timely delivery for you. We've marked your support request as "Resolved" for now, but please don't hesitate to reach out if you have any further questions or concerns.
     </p>
     <p>

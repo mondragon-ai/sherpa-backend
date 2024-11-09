@@ -99,6 +99,10 @@ export type LineItemNode = {
   product: {
     id: string;
   };
+  image: {
+    url: string;
+  };
+  sellingPlan: null | any;
 };
 
 export type Variant = {
@@ -124,6 +128,8 @@ export type CleanedLineItems = {
   title: string;
   quantity: number;
   product_id: string;
+  image: string;
+  selling_plan?: null | any;
 };
 
 export type OrderCancelResponse = {

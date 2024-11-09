@@ -20,6 +20,10 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
       options: li.node.variantTitle || "",
       quantity: li.node.quantity || 0,
       product_id: li.node && li.node.product ? li.node.product.id : "",
+      image:
+        li?.node?.image?.url ||
+        "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-image_large.png?v=1530129081",
+      selling_plan: li.node.sellingPlan || null,
     }));
 
     const time_stamp = new Date(n.node.createdAt).getSeconds();
@@ -56,6 +60,10 @@ export const cleanCustomerOrderPayload = (order: ShopifyOrder) => {
     options: li.node.variantTitle || "",
     quantity: li.node.quantity || "",
     product_id: li.node && li.node.product ? li.node.product.id : "",
+    image:
+      li?.node?.image?.url ||
+      "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-image_large.png?v=1530129081",
+    selling_plan: li.node.sellingPlan || null,
   }));
 
   const date = new Date(order.createdAt);

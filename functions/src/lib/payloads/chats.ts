@@ -75,7 +75,7 @@ export const initializeChatPyaload = (
   return {
     edited: false,
     suggested_email: "",
-    specific_issue: payload.specific_issue,
+    specific_issue: payload.specific_issue || "",
     email_sent: false,
     manual: false,
     manually_triggerd: false,
@@ -83,7 +83,7 @@ export const initializeChatPyaload = (
     action_trained: false,
     rating: null,
     classification: null,
-    issue: payload.issue,
+    issue: payload.issue || "unknown",
     suggested_action_done: false,
     summary: "",
     error_info: "",

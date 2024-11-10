@@ -24,6 +24,7 @@ export const updateMerchantUsage = async (
 
   // Check if free chats exist
   if (free_trial && free_chats - 1 >= 0) {
+    console.log(`${domain}: Free Charge ${free_chats - 1}`);
     merchant.free_chats -= 1;
     if (free_chats - 1 <= 0) {
       merchant.free_trial = false;
@@ -49,11 +50,13 @@ export const createUsageRecord = async (
   // Fetch App Sub
   const billing = await fetchBillingLineItems(shop, shpat);
   if (!billing) {
+    console.error(`${shop}: No Billing Found`);
     return {capped: false, charged: false};
   }
 
   // Check if cap limit reached
   if (billing.balance + USAGE_CHARGE_INCREMENT_AMOUNT > billing.limit) {
+    console.error(`${shop}: Cap Reached`);
     return {capped: true, charged: false};
   }
 
@@ -131,6 +134,7 @@ export const attemptCharge = async (
   if (!charge) return {capped: false, charged: false};
 
   if (!charge.appUsageRecordCreate.appUsageRecord.id) {
+    console.error(`${shop}: No Billing Found`);
     return {capped: false, charged: false};
   }
 

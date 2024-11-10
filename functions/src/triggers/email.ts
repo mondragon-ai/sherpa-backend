@@ -9,8 +9,6 @@ import {resolveTicketAnalytics} from "../lib/helpers/analytics/resolved";
 export const emailCreated = functions.firestore
   .document("/shopify_merchant/{shopify_merchantID}/emails/{chatID}")
   .onCreate(async (snap) => {
-    console.log("CREATED");
-
     const data = snap.exists ? snap.data() : null;
     if (!data) return;
 
@@ -31,8 +29,6 @@ export const emailCreated = functions.firestore
 export const emailUpdated = functions.firestore
   .document("/shopify_merchant/{shopify_merchantID}/emails/{chatID}")
   .onUpdate(async (snap) => {
-    console.log("UPDATE");
-
     const before = snap.before.exists ? snap.before.data() : null;
     if (!before) return;
     const before_emails = before as unknown as EmailDocument;
@@ -46,12 +42,14 @@ export const emailUpdated = functions.firestore
 
     // Update Analytics - New Ticket
     if (before_emails.status !== "open" && after_emails.status == "open") {
+      console.log("[START ANALYTICS]");
       await createTicketAnalytics("email", after_emails);
       await resolveTicket(domain, id, "email");
     }
 
     // Update Analytics - Resolved Ticket
     if (before_emails.status == "open" && after_emails.status !== "open") {
+      console.log("[RESOLVE ANALYTICS]");
       await resolveTicketAnalytics("email", after_emails);
     }
   });

@@ -115,6 +115,7 @@ export type OrderData = {
   order_number: number;
   created_at: number;
   line_items: LineItem[];
+  email: string;
 };
 
 export type LineItem = {
@@ -123,6 +124,8 @@ export type LineItem = {
   title: string;
   product_id: string;
   variant_id: string;
+  image: string;
+  selling_plan?: null | any;
 };
 
 export type OAuthResponse = {

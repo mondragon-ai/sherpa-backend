@@ -29,7 +29,6 @@ export const rechargeAPIRequests = async (
 
   const url = `${base}${resource}`;
 
-  console.log({options, url});
   try {
     const response = await fetch(url, options);
 

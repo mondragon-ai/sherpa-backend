@@ -10,8 +10,6 @@ import {resolveTicket} from "../queues/resolveTicket";
 export const chatsCreated = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
   .onCreate(async (snap) => {
-    console.log("CREATED");
-
     const data = snap.exists ? snap.data() : null;
     if (!data) return;
 
@@ -30,14 +28,14 @@ export const chatsCreated = functions.firestore
     await updateToAlgolia("sherpa_chats", domain, payload);
 
     // Update Analytics - New Ticket
+    console.log("[START ANALYTICS]");
+    functions.logger.info(chat);
     await createTicketAnalytics("chat", chat);
   });
 
 export const chatUpdated = functions.firestore
   .document("/shopify_merchant/{domain}/chats/{chatID}")
   .onUpdate(async (snap) => {
-    console.log("UPDATE");
-
     const before = snap.before.exists ? snap.before.data() : null;
     if (!before) return;
     const before_chat = before as unknown as ChatDocument;
@@ -51,12 +49,16 @@ export const chatUpdated = functions.firestore
 
     // Update Analytics - New Ticket
     if (before_chat.status !== "open" && after_chat.status == "open") {
+      console.log("[START ANALYTICS]");
+      functions.logger.info(after_chat);
       await createTicketAnalytics("chat", after_chat);
       await resolveTicket(domain, id, "chat");
     }
 
     // Update Analytics - Resolved Ticket
     if (before_chat.status == "open" && after_chat.status !== "open") {
+      console.log("[RESOLVE ANALYTICS]");
+      functions.logger.info(after_chat);
       await resolveTicketAnalytics("chat", after_chat);
     }
   });

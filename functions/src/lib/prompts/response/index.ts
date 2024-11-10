@@ -64,7 +64,11 @@ export const buildOrderPrompt = (
               ? `[var id: (${item.variant_id})  prod id: (${item.product_id})]`
               : null;
 
-            return `  -- ${item.quantity} x ${item.title} (${item.options}) ${ids}`;
+            const subs = item.selling_plan
+              ? "Recurring Subscription"
+              : "no subscription";
+
+            return `  -- ${item.quantity} x ${item.title} (${item.options}) ${subs} ${ids}`;
           })
           .join("\n") || "N/A"
       }

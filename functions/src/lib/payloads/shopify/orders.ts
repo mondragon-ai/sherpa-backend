@@ -9,10 +9,20 @@ import {
 export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
   const cleaned: CleanedCustomerOrder[] = [];
   for (const n of nodes) {
-    const tracking =
-      n.node.fulfillments[0] && n.node.fulfillments[0].trackingInfo[0]
-        ? n.node.fulfillments[0].trackingInfo[0].url
-        : "";
+    const fulfillments = n.node.fulfillments && n.node.fulfillments.length;
+    let tracking = "";
+
+    if (fulfillments) {
+      for (const full of n.node.fulfillments) {
+        if (full.trackingInfo.length && full.trackingInfo[0].url) {
+          tracking = full.trackingInfo[0].url;
+        }
+      }
+    }
+    // const tracking =
+    //   n.node.fulfillments[0] && n.node.fulfillments[0].trackingInfo[0]
+    //     ? n.node.fulfillments[0].trackingInfo[0].url
+    //     : "";
 
     const line_items = (n.node.lineItems.edges || []).map((li) => ({
       title: li.node.title || "",
@@ -47,12 +57,16 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
 };
 
 export const cleanCustomerOrderPayload = (order: ShopifyOrder) => {
-  const tracking =
-    order.fulfillments &&
-    order.fulfillments[0] &&
-    order.fulfillments[0].trackingInfo[0]
-      ? order.fulfillments[0].trackingInfo[0].url
-      : "";
+  const fulfillments = order.fulfillments && order.fulfillments.length;
+  let tracking = "";
+
+  if (fulfillments) {
+    for (const full of order.fulfillments) {
+      if (full.trackingInfo.length && full.trackingInfo[0].url) {
+        tracking = full.trackingInfo[0].url;
+      }
+    }
+  }
 
   const line_items = (order.lineItems.edges || []).map((li) => ({
     title: li.node.title || "",

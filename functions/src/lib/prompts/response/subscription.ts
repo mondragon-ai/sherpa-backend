@@ -12,7 +12,7 @@ export const buildSubscriptiontPayload = (
   const {configurations} = merchant;
   const faqs =
     merchant.configurations.subscriptions.faqs
-      .map((f) => `- [${f.q}]: ${f.q}`)
+      .map((f) => `- [${f.q}]: ${f.a}`)
       .join("\n") || "- No faqs available";
   return `
     ${basePrompt(merchant, chat, classification)}

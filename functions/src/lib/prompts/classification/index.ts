@@ -16,6 +16,6 @@ export const CLASSIFICATION_PROMPT = `
 
     ## Instructions:
     - ONLY classify the user's message into one of the categories listed above. Do not add any additional categories.
-    - If the user's message does not fit into any of the categories, classify it as NONE.
-    - If the user's message contains multiple categories, classify it as the category that is most relevant to the user's message.
+    - If the user's message does not fit into any of the categories, classify it as UNKNOWN.
+    - If the user's message contains multiple categories, classify it as the category that is most relevant to the user's first interaction.
 `;

@@ -3,12 +3,12 @@ export const SUGGESTED_ACTION_PROMPT = `
 
     - cancel_subscription: The user wants to cancel their subscription (i.e. a recurring payment).
     - cancel_order: The user wants to cancel their order.
-    - apply_discount: The user first asked to cancel their order but the agent offered a discount on their next order, and the customer accepted. NOTE: this is a special case because we need the 3 conditions to met: 1) the request to cancel, 2) the agent offering the discount, and 3) the customer ACCEPTING the discount.
+    - apply_discount: This classification applies only if all three conditions are met: (1) the user initially asked to cancel their order, (2) the agent offered a discount on their next order, and (3) the customer explicitly accepted the discount instead of proceeding with the cancellation. If the customer does not accept the discount, do not classify as apply_discount.
     - change_address: The user wants to change their address regarding their order.
     - change_product: The user wants to change the product in their current order.
     - resolve: If the user is only asking questions about the store or products, then mark it as resolve.
 
-    Your task is to classify the conversation into one of the categories based on the context and keywords provided in the chat history, focusing on identifying the user's primary request.
+    Your task is to classify the conversation into one of the categories based on the context and keywords provided in the chat history. Use the **initial message from the customer** as a primary basis for determining the category, as it often indicates the main intent.
 
     ## Instructions:
     - **Single Classification**: Classify the conversation into only one of the categories listed above. Do not create or add any new categories.

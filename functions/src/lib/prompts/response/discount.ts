@@ -12,7 +12,7 @@ export const buildDiscountPayload = (
   const {configurations} = merchant;
   const faqs =
     merchant.configurations.discounts.faqs
-      .map((f) => `- [${f.q}]: ${f.q}`)
+      .map((f) => `- [${f.q}]: ${f.a}`)
       .join("\n") || "- no faqs";
 
   return `

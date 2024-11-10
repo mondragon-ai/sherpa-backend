@@ -66,7 +66,7 @@ export const createDailyTicketAnalytics = async (
     `${today}`,
   );
 
-  let daily = data as AnalyticsDocument;
+  const daily = data as AnalyticsDocument;
 
   if (!daily) {
     return initCreateTicketAnalytics(today, type, chat);
@@ -115,14 +115,14 @@ export const createMonthlyTicketAnalytics = async (
     `${month}`,
   );
 
-  let monthly = data as AnalyticsDocument;
+  const monthly = data as AnalyticsDocument;
 
   if (!monthly) {
     return initCreateTicketAnalytics(month, type, chat);
   } else {
     const new_ticket = {date: `${chat.updated_at}`, value: 1} as LineChart;
 
-    monthly = {
+    return {
       ...monthly,
       id: month,
       total_chats:

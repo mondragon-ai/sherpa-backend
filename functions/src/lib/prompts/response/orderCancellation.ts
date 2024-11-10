@@ -10,6 +10,10 @@ export const buildOrderCancelPayload = (
   classification: ClassificationTypes,
 ) => {
   const {configurations} = merchant;
+  const faqs =
+    merchant.configurations.cancelation.faqs
+      .map((f) => `- [${f.q}]: ${f.a}`)
+      .join("\n") || "- No faqs available";
 
   const discount_value = chat.order ? configurations.price_rules.value : "";
 
@@ -20,6 +24,12 @@ export const buildOrderCancelPayload = (
     ${buildCustomerPrompt(chat)}
 
     ${buildOrderPrompt(chat)}
+
+    ## Subscription/Membership Conditions
+    - ${configurations.cancelation.overview}
+    
+    ## Subscription FAQ
+    ${faqs}
 
 
     ## Conditions

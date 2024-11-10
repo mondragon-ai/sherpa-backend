@@ -217,3 +217,373 @@
     </div>
   </body>
 </html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="./closed-window.js"></script>
+    <link rel="stylesheet" href="./chat-window.css" />
+  </head>
+  <body>
+
+    <button
+      id="closed-window"
+      is="closed-window"
+      style="display: block; z-index: 9001"
+    >
+      <div class="closed-chat-btn" style="display: block"></div>
+    </button>
+
+
+    <div
+      data-shopify-domain="{{ shop.permanent_domain | json }}"
+      id="chat-window"
+      style="display: none; z-index: 9001"
+    >
+
+      <div
+        class="chat-header"
+        style="background: linear-gradient(135deg, black 0%, black 100%)"
+      >
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+          "
+        >
+          <div style="display: flex; flex-direction: row; width: 75%">
+            <div class="avatars-wrapper">
+              <div class="header-ava"></div>
+            </div>
+            <h2 class="twolines">
+              <span class="top-heading">Chat with </span> Kimmy
+            </h2>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: row;
+              width: 25%;
+              justify-content: flex-end;
+            "
+          >
+            <button
+              id="minimize-btn"
+              class="material-icons exit-chat"
+              type="button"
+              aria-label="Minimize"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+                id="ic-minimize"
+              >
+                <path d="M0 0h24v24H0z" fill="none"></path>
+                <path
+                  d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="offline-message">
+          <span class="online">2 Agents online</span>
+        </div>
+      </div>
+
+
+      <div id="pre_check" style="display: block">
+        <div id="precheck-group">
+          <div class="prefetchRow">
+
+            <div class="col">
+              <label htmlFor="order_number">What can I help you with?</label>
+              <div class="customInput">
+                <select id="issue">
+                  <option value="ORDER">Please Select One</option>
+                  <option value="ORDER">Order Question</option>
+                  <option value="GENERAL">General Question</option>
+                  <option value="PRODUCT">Product Question</option>
+                  <option value="SUBSCRIPTION">Subscription Help</option>
+                  <option value="SHIPPING">Address Issues</option>
+                  <option value="EXCHANGE">Exchange Product</option>
+                  <option value="REFUND">Refund / Return Product</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="orderContainer" class="col">
+              <label htmlFor="specific_issue"
+                >Specific Question (optional)</label
+              >
+              <div class="customInput">
+                <input
+                  id="specific_issue"
+                  placeholder="status udpdate"
+                  name="specific_issue"
+                  type="text"
+                />
+              </div>
+            </div>
+
+            <div id="email_gen" class="col" style="display: none">
+              <label htmlFor="email_optional">Customer Email</label>
+              <div class="customInput">
+                <input
+                  id="email_optional"
+                  placeholder="john@email.com"
+                  name="email_optional"
+                  type="email"
+                />
+              </div>
+            </div>
+
+            <div id="precheck_error" style="display: block"></div>
+
+            <div class="customInput row">
+              <button id="next_stage">Next</button>
+            </div>
+            <div class="customInput row">
+              <button id="start_chat" style="display: none">Start Chat</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="product_check" style="display: none">
+        <div id="precheck-group">
+          <div class="prefetchRow">
+            <div class="nav-row" id="product_back">
+              <span>back</span>
+            </div>
+            <div id="orderContainer" class="col">
+              <label htmlFor="product_search">Product Search</label>
+              <div class="customInput">
+                <input
+                  id="product_search"
+                  placeholder="Title or SKU"
+                  name="product_search"
+                  type="text"
+                />
+              </div>
+            </div>
+
+            <div id="product_error" style="display: block"></div>
+
+            <div class="customInput row">
+              <button id="product_btn">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="product_list" style="display: none">
+        <div id="precheck-group">
+          <div class="prefetchRow">
+            <div class="nav-row" id="product_list_back">
+              <span>back</span>
+            </div>
+            <div id="error_msg" style="display: block"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="customer_check" style="display: none">
+        <div id="precheck-group">
+          <div class="prefetchRow">
+            <div class="nav-row" id="customer_back">
+              <span>back</span>
+            </div>
+            <div id="orderContainer" class="col">
+              <label htmlFor="email_input">Customer Email</label>
+              <div class="customInput">
+                <input
+                  id="email_input"
+                  placeholder="john@email.com"
+                  name="email_input"
+                  type="email"
+                />
+              </div>
+            </div>
+
+            <div id="customer_error" style="display: block"></div>
+
+            <div class="customInput row">
+              <button id="customer_btn">Find Orders</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="order_check" style="display: none">
+        <div id="precheck-group">
+          <div class="prefetchRow">
+            <div class="nav-row" id="order_back">
+              <span>back</span>
+            </div>
+            <div id="windowHdr">
+              <span> Please select an order to start</span>
+            </div>
+            <div id="order_error" style="display: block"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="chat_window" style="display: none">
+        <div id="conversation-group">
+          <div
+            id="messages"
+            aria-live="polite"
+            aria-atomic="false"
+            data-testid="messagesLog"
+          ></div>
+          <div id="conversation-scroll"></div>
+        </div>
+
+
+        <div class="input-group">
+          <div class="drag-active-wrapper footer-input-wrapper">
+            <hr />
+            <textarea
+              id="new-message-textarea"
+              rows="1"
+              placeholder="Enter your message..."
+              class=""
+              aria-label="New message"
+              data-testid="newMessageTextarea"
+            ></textarea>
+          </div>
+        </div>
+
+
+        <div
+          id="button"
+          data-testid="widgetButton"
+          class="chat-open mobile-size__large bubbleAnimation-appear-done bubbleAnimation-enter-done"
+        >
+          <div class="buttonWave"></div>
+          <button
+            type="button"
+            id="button-body"
+            data-testid="widgetButtonBody"
+            class="chrome"
+            tabindex="0"
+            aria-label="Close chat widget"
+          >
+            <i class="material-icons type1 for-closed">
+              <svg
+                id="ic_bubble"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"
+                ></path>
+                <path d="M0 0h24v24H0z" fill="none"></path>
+              </svg>
+            </i>
+            <i class="material-icons type2 for-closed">
+              <svg
+                id="ic_create"
+                fill="blue"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                ></path>
+                <path d="M0 0h24v24H0z" fill="none"></path>
+              </svg>
+            </i>
+            <i
+              class="material-icons type1 for-opened active"
+              style="color: rgb(255, 255, 255)"
+            >
+              <svg
+                id="ic_send"
+                fill="#FFFFFF"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                <path d="M0 0h24v24H0z" fill="none"></path>
+              </svg>
+            </i>
+            <i class="material-icons type2 for-opened active">
+              <svg
+                id="ic_send"
+                fill="#FFFFFF"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                <path d="M0 0h24v24H0z" fill="none"></path>
+              </svg>
+            </i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .closed-chat-btn {
+        background: url("./start_icon.png") no-repeat center / contain;
+        width: 100px;
+        background-position: top;
+        height: 29px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        position: absolute;
+        top: 31px;
+        right: 0px;
+        border-radius: 5px;
+      }
+      .header-ava {
+        background: url("./bot.png") no-repeat center / cover !important;
+        width: 52px;
+        height: 52px;
+        border-radius: 24px;
+        float: left;
+        display: block !important;
+      }
+    </style>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var store_domain = "shophodgetwins.myshopify.com";
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("domain", store_domain);
+        }
+        console.log({store_domain});
+      });
+    </script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+      defer
+    ></script>
+  </body>
+</html> -->

@@ -388,6 +388,7 @@ export const automateAction = async (
     suggested,
     merchant,
     action,
+    error,
   );
 
   if (!performed) {

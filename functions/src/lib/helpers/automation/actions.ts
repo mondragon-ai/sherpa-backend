@@ -168,12 +168,16 @@ const handleSubscription = async (
   }
 
   const recharge_customer = customer as RechargeCustomers;
-  const recharge_id = recharge_customer.customers[0].id;
-  if (!recharge_id) {
+  if (
+    !recharge_customer.customers ||
+    !recharge_customer?.customers[0] ||
+    !recharge_customer?.customers[0]?.id
+  ) {
     console.error("Finding Recharge Customer ID");
     return {performed: false, action: "", error: "cancel_subscription"};
   }
 
+  const recharge_id = recharge_customer?.customers[0].id;
   const sub = await getRechargeSubscription(merchant, recharge_id);
   if (!sub) {
     console.error("Finding Recharge Subscription ID");

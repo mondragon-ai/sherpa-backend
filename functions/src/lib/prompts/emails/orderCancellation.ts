@@ -13,7 +13,7 @@ export const buildOrderCancelEmailPayload = (
     </p>
     <br />
     <p>
-      We're sorry to hear that you needed to cancel your order, but we understand and are here to help. Your order (#${order_number}) has been successfully canceled, and we've processed a refund.
+      We're sorry to hear that you needed to cancel your order, but we understand and are here to help. Your order (${order_number}) has been successfully canceled, and we've processed a refund.
     </p>
     <p>
     Please allow 3-5 business days for the refund to appear on your statement, depending on your bank's processing time.

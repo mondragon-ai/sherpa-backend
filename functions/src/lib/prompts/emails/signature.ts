@@ -4,12 +4,15 @@ export const emailSignature = (merchant: MerchantDocument) => {
   const {logo, facebook, twitter, tiktok, youtube, instagram, name, company} =
     merchant.configurations.email_signature;
 
-  const logo_img = logo !== "" ? `<img src='${logo}' alt='logo'/>` : null;
+  const logo_img =
+    logo !== ""
+      ? `<img src='${logo}' alt='logo'/>`
+      : "<div style='display: none;'></div>";
 
   const createImageLink = (url: string, imgSrc: string, alt: string) => {
     return url
       ? `<a href='${url}'><img src='${imgSrc}' alt='${alt}' /></a>`
-      : null;
+      : "<div style='display: none;'></div>";
   };
 
   const fbImg = createImageLink(

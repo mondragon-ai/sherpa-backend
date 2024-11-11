@@ -57,6 +57,8 @@ export const receiveGmailNotification = functions
     const scrubbed = await getEmailFromHistory(data, access_token, merchant);
     if (!scrubbed) return createResponse(400, "Can't Clean", null);
 
+    console.log({from: scrubbed[0].from, me: data.emailAddress});
+
     const cleaned = await cleanEmailFromHtml(scrubbed[0].content.join(" "));
 
     const msg = `**Subject**:<br> ${scrubbed[0].subject}<br><br> **Message**:<br> ${cleaned} `;
@@ -151,10 +153,6 @@ export const getEmailFromHistory = async (
   const oAuth2Client = new google.auth.OAuth2();
   oAuth2Client.setCredentials({access_token: token});
   const gmail = google.gmail({version: "v1", auth: oAuth2Client});
-
-  const profile = await gmail.users.getProfile({userId: "me"});
-  const sender = profile.data.emailAddress;
-  if (data.emailAddress == sender) return null;
 
   const profileResponse = await gmail.users.getProfile({userId: "me"});
   const history_id = profileResponse.data.historyId;

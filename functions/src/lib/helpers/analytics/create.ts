@@ -7,17 +7,12 @@ import {
   getMonthStartUnixTimeStampFromTimezone,
 } from "../../../util/formatters/time";
 import {
-  appendToCSAT,
-  appendToError,
-  appendToSentimentAnalysis,
-  appendToTickets,
   appendToTopIssues,
   initCreateTicketAnalytics,
 } from "../../payloads/analytics";
 import {ChatDocument} from "../../types/chats";
 import {EmailDocument} from "../../types/emails";
 import {AnalyticsDocument, LineChart} from "../../types/analytics";
-import {ClassificationTypes} from "../../types/shared";
 
 export const createTicketAnalytics = async (
   type: "chat" | "email",
@@ -83,19 +78,9 @@ export const createDailyTicketAnalytics = async (
           ? [...daily.total_emails, new_ticket]
           : daily.total_emails,
       total_volume: [...daily.total_volume, new_ticket],
-      csat: chat.rating ? appendToCSAT(chat.rating, daily) : daily.csat,
-      sentiment_analysis: chat.sentiment
-        ? appendToSentimentAnalysis(chat.sentiment, daily)
-        : daily.sentiment_analysis,
-      top_errors: chat.error_info
-        ? appendToError(chat.error_info as ClassificationTypes, daily)
-        : daily.top_errors,
       top_issues: chat.issue
         ? appendToTopIssues(chat.issue, daily)
         : daily.top_issues,
-      top_tickets: chat.classification
-        ? appendToTickets(chat.classification, daily)
-        : daily.top_tickets,
       created_at: today,
       updated_at: today,
     };
@@ -134,19 +119,9 @@ export const createMonthlyTicketAnalytics = async (
           ? [...monthly.total_emails, new_ticket]
           : monthly.total_emails,
       total_volume: [...monthly.total_volume, new_ticket],
-      csat: chat.rating ? appendToCSAT(chat.rating, monthly) : monthly.csat,
-      sentiment_analysis: chat.sentiment
-        ? appendToSentimentAnalysis(chat.sentiment, monthly)
-        : monthly.sentiment_analysis,
-      top_errors: chat.error_info
-        ? appendToError(chat.error_info as ClassificationTypes, monthly)
-        : monthly.top_errors,
       top_issues: chat.issue
         ? appendToTopIssues(chat.issue, monthly)
         : monthly.top_issues,
-      top_tickets: chat.classification
-        ? appendToTickets(chat.classification, monthly)
-        : monthly.top_tickets,
       created_at: month,
       updated_at: month,
     };

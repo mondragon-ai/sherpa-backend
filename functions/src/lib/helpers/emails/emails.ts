@@ -24,18 +24,20 @@ import {buildCancelSubscriptionEmailPayload} from "../../prompts/emails/cancelSu
 import {buildAddressChangeCustomerEmailPayload} from "../../prompts/emails/changeAddressCustomer";
 import {buildOrderCancelPendingEmailPayload} from "../../prompts/emails/orderCancellationPending";
 import {buildOrderCancelUnavailableEmailPayload} from "../../prompts/emails/orderCancellationUnavailable";
+import {buildNoOrderPayload} from "../../prompts/emails/noOrder";
+import {buildNoSubscriptionFoundPayload} from "../../prompts/emails/subscriptionNotFound";
 
 export const generateSuggestedEmail = (
   chat: ChatDocument | EmailDocument,
   suggested_action: SuggestedActions,
   merchant: MerchantDocument,
   actions?: string,
+  error?: string,
 ) => {
   const {order} = chat;
 
   if (!order) {
-    return "";
-    // TODO: Create non order email template
+    return buildNoOrderPayload(chat);
   }
 
   switch (suggested_action) {
@@ -50,11 +52,10 @@ export const generateSuggestedEmail = (
         status === "unfulfilled" ||
         status === "on_hold" ||
         status === "open" ||
-        status === "in_progress" ||
         status === "scheduled"
       ) {
         return buildOrderCancelEmailPayload(chat);
-      } else if (order.fulfillment_status === "pending") {
+      } else if (status === "in_progress" || status === "pending") {
         return buildOrderCancelPendingEmailPayload(chat, merchant);
       } else {
         return buildOrderCancelUnavailableEmailPayload(chat, merchant);
@@ -98,8 +99,10 @@ export const generateSuggestedEmail = (
       return buildResolveEmailPayload(chat);
     }
     case "cancel_subscription": {
-      // TODO: create freeze email template
-      // TODO: create Cant Find Subscriptio email template
+      if (error) {
+        return buildNoSubscriptionFoundPayload(chat);
+      }
+      if (actions == "freeze") return ""; // TODO: create freeze email template
       return buildCancelSubscriptionEmailPayload(chat);
     }
     case "change_product": {

@@ -12,6 +12,7 @@ import {
   appendToError,
   appendToResolutionRatio,
   appendToSentimentAnalysis,
+  appendToTickets,
   initResolveTicketAnalytics,
 } from "../../payloads/analytics";
 import {ChatDocument} from "../../types/chats";
@@ -96,6 +97,9 @@ export const resolveDailyTicketAnalytics = async (
       top_errors: chat.error_info
         ? appendToError(chat.error_info as ClassificationTypes, daily)
         : daily.top_errors,
+      top_tickets: chat.classification
+        ? appendToTickets(chat.classification, daily)
+        : daily.top_tickets,
       updated_at: today,
       amount_saved: order
         ? [...(daily.amount_saved || []), order]
@@ -149,6 +153,9 @@ export const resolveMonthlyTicketAnalytics = async (
       top_errors: chat.error_info
         ? appendToError(chat.error_info as ClassificationTypes, monthly)
         : monthly.top_errors,
+      top_tickets: chat.classification
+        ? appendToTickets(chat.classification, monthly)
+        : monthly.top_tickets,
       updated_at: month,
       amount_saved: order
         ? [...(monthly.amount_saved || []), order]

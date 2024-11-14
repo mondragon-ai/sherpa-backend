@@ -12,7 +12,11 @@ import {CleanedCustomerOrder} from "../../types/shopify/orders";
 import {buildResolveEmailPayload} from "../../prompts/emails/resolve";
 import {cleanCustomerPayload} from "../../payloads/shopify/customers";
 import {buildDiscountEmailPayload} from "../../prompts/emails/discount";
-import {ClassificationTypes, SuggestedActions} from "../../types/shared";
+import {
+  ClassificationTypes,
+  OrderData,
+  SuggestedActions,
+} from "../../types/shared";
 import {extractOrderNumber} from "../../../networking/openAi/extraction";
 import {fetchShopifyCustomer} from "../../../networking/shopify/customers";
 import {buildOrderStatusEmailPayload} from "../../prompts/emails/orderStatus";
@@ -26,6 +30,8 @@ import {buildOrderCancelPendingEmailPayload} from "../../prompts/emails/orderCan
 import {buildOrderCancelUnavailableEmailPayload} from "../../prompts/emails/orderCancellationUnavailable";
 import {buildNoOrderPayload} from "../../prompts/emails/noOrder";
 import {buildNoSubscriptionFoundPayload} from "../../prompts/emails/subscriptionNotFound";
+import {buildOrderPartiallyFulfilled} from "../../prompts/emails/orderPartiallyFulfilled";
+import {orderInProgress} from "../../prompts/emails/orderInProgress";
 
 export const generateSuggestedEmail = (
   chat: ChatDocument | EmailDocument,
@@ -46,12 +52,14 @@ export const generateSuggestedEmail = (
       return buildDiscountEmailPayload(chat, actions);
     }
     case "cancel_order": {
-      const status = order.fulfillment_status.toLocaleUpperCase();
+      const status =
+        order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
       if (
         status === "hold" ||
         status === "unfulfilled" ||
         status === "on_hold" ||
         status === "open" ||
+        status === "partially_fulfilled" ||
         status === "scheduled"
       ) {
         return buildOrderCancelEmailPayload(chat);
@@ -72,6 +80,7 @@ export const generateSuggestedEmail = (
         status === "on_hold" ||
         status === "open" ||
         status === "in_progress" ||
+        status === "partially_fulfilled" ||
         status === "scheduled"
       ) {
         return buildAddressChangeCustomerEmailPayload(chat, actions);
@@ -79,7 +88,8 @@ export const generateSuggestedEmail = (
       return buildAddressChangeOrderEmailPayload(chat, actions);
     }
     case "resolve": {
-      const status = order.fulfillment_status.toLocaleUpperCase();
+      const status =
+        order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
       if (chat.classification == ClassificationTypes.OrderStatus) {
         if (
           status === "hold" ||
@@ -87,14 +97,15 @@ export const generateSuggestedEmail = (
           status === "unfulfilled" ||
           status === "on_hold" ||
           status === "open" ||
-          status === "in_progress" ||
           status === "scheduled"
         ) {
           return buildOrderStatusEmailPayload(chat);
-        } else {
-          return buildOrderTrackingEmailPayload(chat);
+        } else if (status === "partially_fulfilled") {
+          return buildOrderPartiallyFulfilled(chat);
+        } else if (status === "in_progress") {
+          return orderInProgress(chat);
         }
-        // TODO: Create in_progress order email template (3rd party fulfillment)
+        return buildOrderTrackingEmailPayload(chat);
       }
       return buildResolveEmailPayload(chat);
     }

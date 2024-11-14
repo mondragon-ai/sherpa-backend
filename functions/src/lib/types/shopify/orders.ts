@@ -102,6 +102,7 @@ export type LineItemNode = {
   image: {
     url: string;
   };
+  requiresShipping: boolean;
   sellingPlan: null | any;
 };
 
@@ -130,6 +131,7 @@ export type CleanedLineItems = {
   product_id: string;
   image: string;
   selling_plan?: null | any;
+  is_physical: boolean;
 };
 
 export type OrderCancelResponse = {

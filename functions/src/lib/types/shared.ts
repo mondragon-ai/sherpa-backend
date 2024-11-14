@@ -109,7 +109,8 @@ export type OrderData = {
     | "transit"
     | "in_progress"
     | "scheduled"
-    | "unfulfilled";
+    | "unfulfilled"
+    | "partially_fulfilled";
   payment_status: "hold" | "paid";
   tracking_url: string;
   order_number: number;
@@ -126,6 +127,7 @@ export type LineItem = {
   variant_id: string;
   image: string;
   selling_plan?: null | any;
+  is_physical: boolean;
 };
 
 export type OAuthResponse = {

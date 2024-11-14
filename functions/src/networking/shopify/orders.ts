@@ -67,6 +67,7 @@ export const fetchCustomerOrderList = async (
                   image {
                     url
                   }
+                  requiresShipping
                   sellingPlan {
                     sellingPlanId
                   }
@@ -141,6 +142,7 @@ export const fetchShopifyOrder = async (
               image {
                 url
               }
+              requiresShipping
               sellingPlan {
                 sellingPlanId
               }
@@ -207,6 +209,7 @@ export const fetchShopifyOrderByName = async (
                   image {
                     url
                   }
+                  requiresShipping
                   sellingPlan {
                     sellingPlanId
                   }

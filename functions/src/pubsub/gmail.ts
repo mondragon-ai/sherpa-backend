@@ -59,7 +59,14 @@ export const receiveGmailNotification = functions
     const scrubbed = await getEmailFromHistory(data, access_token, merchant);
     if (!scrubbed) return createResponse(400, "Can't Clean", null);
 
-    console.log({from: scrubbed[0].from, me: data.emailAddress});
+    if (
+      scrubbed[0].from == data.emailAddress ||
+      scrubbed[0].from == "lilbitypretty1@yahoo.com"
+    ) {
+      return;
+    }
+
+    functions.logger.info({email_body: scrubbed[0].content});
 
     const cleaned = await cleanEmailFromHtml(scrubbed[0].content.join(" "));
 

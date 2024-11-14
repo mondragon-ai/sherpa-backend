@@ -1,4 +1,3 @@
-import * as functions from "firebase-functions";
 import {openAIRequest} from ".";
 import {CLEAN_EMAIL_PROMPT} from "../../lib/prompts/extractEmail";
 import {ChatCompletionResponse} from "../../lib/types/openai/classifition";
@@ -7,8 +6,6 @@ export const cleanEmailFromHtml = async (
   body: string,
 ): Promise<string | null> => {
   const token = process.env.CLASSIFICATION_API || "";
-
-  functions.logger.info({email_body: body});
 
   const payload = {
     model: "gpt-3.5-turbo",

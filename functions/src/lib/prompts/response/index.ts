@@ -6,8 +6,8 @@ import {ClassificationTypes} from "../../types/shared";
 export const buildCustomerPrompt = (chat: ChatDocument | EmailDocument) => {
   if (!chat || !chat.customer) {
     return `
-          ## Customer Data
-          - Customer Not Found
+        ## Customer Data
+        - Customer Not Found
       `;
   }
 
@@ -32,8 +32,8 @@ export const buildOrderPrompt = (
 ) => {
   if (!chat || !chat.order) {
     return `
-        ## Order Data:
-        - Order Not Found
+      ## Order Data:
+      - Order Not Found
     `;
   }
 
@@ -68,7 +68,9 @@ export const buildOrderPrompt = (
               ? "Recurring Subscription"
               : "no subscription";
 
-            return `  -- ${item.quantity} x ${item.title} (${item.options}) ${subs} ${ids}`;
+            const digital = item.is_physical ? "" : "(Is Digital)";
+
+            return `  -- ${item.quantity} x ${item.title} (${item.options}) ${subs} ${ids} ${digital}`;
           })
           .join("\n") || "N/A"
       }

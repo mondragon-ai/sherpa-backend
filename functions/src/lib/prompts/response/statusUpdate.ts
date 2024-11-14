@@ -26,6 +26,8 @@ export const buildStatusUpdate = (
       - **Provide Tracking Information**: Only provide the tracking number or tracking link if it's available in the order summary. If available, share the link and inform the customer about the expected delivery timeline.
       - **No Expedited Shipping**: Inform customers that expedited shipping options are not available at this time. Apologize for any inconvenience if they inquire about faster shipping.
       - ${configurations.shipping}
+      - **Partially Fulfilled**: This usually means a non-physical / digital product has been sent or fulfilled and the other items are pending -> bascially unfulfilled
+      - **In Progress**: This usually means a 3rd party entity (partner) is fulfilling certain items -> bascially unfulfilled.
 
     - **Missing Customer/Order Data**:
       - If customer or order data is unavailable, request the order number or email associated with the order. Inform the customer that a supervisor will review the request within 24-72 hours.

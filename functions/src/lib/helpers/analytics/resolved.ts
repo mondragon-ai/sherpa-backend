@@ -72,7 +72,7 @@ export const resolveDailyTicketAnalytics = async (
   if (!daily) {
     return initResolveTicketAnalytics(today, type, chat);
   } else {
-    const agent = chat.suggested_action ? "sherpa" : "human";
+    const agent = chat.suggested_action_done ? "sherpa" : "human";
     /* eslint-disable indent */
     const discount_used = chat.suggested_action == "apply_discount";
     const order: LineChart | null = discount_used

@@ -156,7 +156,7 @@ export const fetchShopifyOrder = async (
   if (!data) return null;
   const order = data as ShopifOrderResponse["data"];
   if (!order || !order.order) return null;
-  funcitons.logger.info({order_by_id: order});
+  // funcitons.logger.info({order_by_id: order});
 
   const cleaned_order = cleanCustomerOrderPayload(order.order);
 
@@ -229,7 +229,7 @@ export const fetchShopifyOrderByName = async (
 
   if (!orders.orders) return null;
   if (!orders.orders.edges) return null;
-  funcitons.logger.info({order_by_name: orders});
+  // funcitons.logger.info({order_by_name: orders});
 
   const cleaned_orders = cleanCustomerOrdersPayload(orders.orders.edges);
 

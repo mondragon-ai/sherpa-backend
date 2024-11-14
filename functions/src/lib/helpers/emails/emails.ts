@@ -181,6 +181,7 @@ export const fetchCustomerDataFromEmail = async (
   const {id: domain, access_token} = merchant;
 
   const order_number = await extractOrderNumber(message);
+  console.log({order_number});
 
   const shpat = await decryptMsg(access_token);
   const customer = await fetchShopifyCustomer(domain, shpat, email);

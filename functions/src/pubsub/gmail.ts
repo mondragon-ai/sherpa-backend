@@ -40,6 +40,8 @@ export const receiveGmailNotification = functions
     const email = data.emailAddress;
     if (!email) return;
 
+    if (data.emailAddress == "angel@gobigly.com") return;
+
     const {data: map_doc} = await fetchRootDocument("email_map", email);
     const map = map_doc as EmailMap;
     if (!map) return;

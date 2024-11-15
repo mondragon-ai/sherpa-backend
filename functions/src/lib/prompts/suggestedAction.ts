@@ -56,7 +56,7 @@ export const SUGGESTED_ACTION_PROMPT = `
     ## Example 4:
 
         ### Conversation:
-        - Customer:   Hello can I cancel the next vip and also I forgot to skip october.
+        - Customer: Hello can I cancel the next vip and also I forgot to skip october.
         - Agent: Hi Frantz! I see that you're looking to cancel your next VIP subscription and you also mentioned that you forgot to skip October. Since your order for October has already been fulfilled and processed, we can't cancel it retroactively. However, I can certainly assist you with canceling the upcoming subscription renewal. Would you like me to proceed with canceling your upcoming VIP subscription renewal? Please let me know how you'd like to proceed!
         - Customer: Please proceed Cancel my vip.
         - Agent: Thank you for confirming, Frantz. I'll proceed with canceling your upcoming VIP subscription renewal right away. Just to make your experience a bit sweeter, I'd like to offer you a 12% discount on your next order over $50 as a token of our appreciation. Let me know if you'd like to use this special offer in the future! I'll send you a confirmation email once the cancellation is completed. If there's anything else I can help you with, feel free to ask!
@@ -65,6 +65,22 @@ export const SUGGESTED_ACTION_PROMPT = `
 
         ### Response:
         cancel_subscription
+
+    ## Example 5:
+
+        ### Conversation:
+        - Customer: **subject**  order number SH452730 ? **email body** First time ordering with you guys, was I supposed to get a tracking number on this order. SH452730 Thanks CJ SULLIVAN. 185 riverbrooke terrace, covington Ga 30016 
+
+        ### Response:
+        resolve
+
+    ## Example 5:
+
+        ### Conversation:
+        - Customer: **subject**  Re: Important Update on Order SH439865 **email body**  Is there anyway I can just get my money back? I just went through the site trying to find something I liked to replace what I had already ordered and I couldn't find anything that I wanted that was my size and available. I fully support everything about Keith and Kevin and their businesses but at the end of the day what's right is right and returning my money that was spent over a month ago and I never received the order is the right thing to do. I'm not trying to come off rude at all but I wanted what I ordered not the same dollar amount of other products, if that were the case I would've ordered them all at once at the time. This is money that can go back into my pocket and I can spend on my daughter's Christmas.
+
+        ### Response:
+        cancel_order
 
 
 

@@ -43,7 +43,7 @@ export const performActions = async (
     case "cancel_order": {
       if (!chat || !chat.order) return res;
       const status =
-        chat.order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
+        chat.order.fulfillment_status.toLocaleLowerCase() as OrderData["fulfillment_status"];
       if (
         status == "partially_fulfilled" ||
         status == "hold" ||
@@ -58,7 +58,7 @@ export const performActions = async (
     case "change_address": {
       if (!chat || !chat.order) return res;
       const status =
-        chat.order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
+        chat.order.fulfillment_status.toLocaleLowerCase() as OrderData["fulfillment_status"];
       if (
         status == "partially_fulfilled" ||
         status == "hold" ||

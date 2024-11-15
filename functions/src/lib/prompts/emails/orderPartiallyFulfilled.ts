@@ -18,7 +18,7 @@ export const buildOrderPartiallyFulfilled = (
     </p>
     <br />
     <p>
-  Thank you for your order! We wanted to let you know that part of your order (#${order_number}) has been partially fulfilled and is on its way.
+  Thank you for your order! We wanted to let you know that part of your order (${order_number}) has been partially fulfilled and is on its way.
     </p>
     <p>
   The remaining items are currently being picked, packed, and prepared for shipment. We're working hard to get everything to you as quickly as possible. Please allow for normal processing and shipping times for these items.

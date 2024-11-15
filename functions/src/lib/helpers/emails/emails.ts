@@ -53,7 +53,7 @@ export const generateSuggestedEmail = (
     }
     case "cancel_order": {
       const status =
-        order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
+        order.fulfillment_status.toLocaleLowerCase() as OrderData["fulfillment_status"];
       if (
         status === "hold" ||
         status === "unfulfilled" ||
@@ -70,7 +70,7 @@ export const generateSuggestedEmail = (
       }
     }
     case "change_address": {
-      const status = order.fulfillment_status.toLocaleUpperCase();
+      const status = order.fulfillment_status.toLocaleLowerCase();
       if (!actions) return "";
       // TODO: Create address not found order email template
       if (
@@ -89,7 +89,7 @@ export const generateSuggestedEmail = (
     }
     case "resolve": {
       const status =
-        order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
+        order.fulfillment_status.toLocaleLowerCase() as OrderData["fulfillment_status"];
       console.log("[RESOLVE]: ", status);
       if (chat.classification == ClassificationTypes.OrderStatus) {
         if (

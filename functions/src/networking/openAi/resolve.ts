@@ -23,12 +23,17 @@ export const generateSuggestedActionsGPT = async (
     max_completion_tokens: 10,
   };
 
+  console.log({prompt});
+
   const token = process.env.SUGGESTED_ACTION_API || "";
   const {data} = await openAIRequest("/chat/completions", token, payload);
   const response = data as ChatCompletionResponse;
   const suggested_action = response.choices[0].message.content;
   if (!suggested_action) return null;
 
-  console.log({ACTIONS_TOKENS: response.usage.total_tokens.toFixed(1)});
+  console.log({
+    ACTIONS_TOKENS: response.usage.total_tokens.toFixed(1),
+    suggested_action,
+  });
   return suggested_action as SuggestedActions;
 };

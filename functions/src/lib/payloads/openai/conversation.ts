@@ -1,6 +1,9 @@
+import {EmailConversation} from "../../types/emails";
 import {Conversation} from "../../types/shared";
 
-export const generateChatMessages = (conversation: Conversation[]): string => {
+export const generateChatMessages = (
+  conversation: Conversation[] | EmailConversation[],
+): string => {
   let messages = "**Conversation History** <br>" + "\n";
 
   const sortedConversation = conversation
@@ -19,7 +22,13 @@ export const generateChatMessages = (conversation: Conversation[]): string => {
     if (c.sender === "agent" && !c.is_note) {
       messages += `- Agent: ${c.message}.\n`;
     } else if (c.sender === "customer") {
-      messages += `- Customer: ${c.message}.\n`;
+      if ((c as any).subject) {
+        messages += `- Customer: **subject**: ${
+          (c as any).subject
+        } **email body**: ${c.message}.\n`;
+      } else {
+        messages += `- Customer: ${c.message}.\n`;
+      }
     }
   }
 

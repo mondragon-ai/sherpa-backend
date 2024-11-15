@@ -14,7 +14,7 @@ export const buildOrderStatusEmailPayload = (
   </p>
   <br />
   <p>
-    Thank you for reaching out regarding the status of your order (#${order_number}). We wanted to inform you that your order is currently marked as "${fulfillment_status}". We appreciate your patience.
+    Thank you for reaching out regarding the status of your order (${order_number}). We wanted to inform you that your order is currently marked as "${fulfillment_status}". We appreciate your patience.
   </p>
   <p>
     Please rest assured that our team is actively working to expedite the processing of your order. We have marked your support request as "Resolved" for now, but please don't hesitate to contact us if you have any further questions or concerns.

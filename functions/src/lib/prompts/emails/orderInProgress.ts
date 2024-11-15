@@ -16,7 +16,7 @@ export const orderInProgress = (chat: ChatDocument | EmailDocument) => {
     </p>
     <br />
     <p>
-    Thank you for your order! We wanted to update you on the status of your order (#${order_number}).
+    Thank you for your order! We wanted to update you on the status of your order (${order_number}).
     </p>
     <p>
     Currently, your order is marked as "In Progress" because it's being prepared and fulfilled by one of our trusted third-party partners. This process may take a bit longer, as it's handled outside of our usual fulfillment centers. Rest assured, they are working diligently to complete your order.

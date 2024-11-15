@@ -17,7 +17,7 @@ import {EmailDocument} from "../../types/emails";
 import {checkForChangedLineItems} from "./orders";
 import {MerchantDocument} from "../../types/merchant";
 import {fetchRequestedProducts} from "../shopify/products";
-import {LineItem, SuggestedActions} from "../../types/shared";
+import {LineItem, OrderData, SuggestedActions} from "../../types/shared";
 import {NewShippingAddress} from "../../types/shopify/orders";
 import {cleanGPTResponse} from "../../../util/formatters/text";
 import {RechargeCustomers} from "../../types/recharge/customers";
@@ -41,11 +41,33 @@ export const performActions = async (
       break;
     }
     case "cancel_order": {
-      res = await cancelOrder(chat, merchant);
+      if (!chat || !chat.order) return res;
+      const status =
+        chat.order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
+      if (
+        status == "partially_fulfilled" ||
+        status == "hold" ||
+        status == "unfulfilled" ||
+        status == "scheduled" ||
+        status == "on_hold"
+      ) {
+        res = await cancelOrder(chat, merchant);
+      }
       break;
     }
     case "change_address": {
-      res = await changeAddress(chat, merchant);
+      if (!chat || !chat.order) return res;
+      const status =
+        chat.order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
+      if (
+        status == "partially_fulfilled" ||
+        status == "hold" ||
+        status == "unfulfilled" ||
+        status == "scheduled" ||
+        status == "on_hold"
+      ) {
+        res = await changeAddress(chat, merchant);
+      }
       break;
     }
     case "resolve": {

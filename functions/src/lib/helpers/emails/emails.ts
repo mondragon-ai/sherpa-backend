@@ -90,6 +90,7 @@ export const generateSuggestedEmail = (
     case "resolve": {
       const status =
         order.fulfillment_status.toLocaleUpperCase() as OrderData["fulfillment_status"];
+      console.log("[RESOLVE]: ", status);
       if (chat.classification == ClassificationTypes.OrderStatus) {
         if (
           status === "hold" ||
@@ -199,7 +200,7 @@ export const fetchCustomerDataFromEmail = async (
   if (!customer) return {customer: null, order: null};
 
   let orders: CleanedCustomerOrder[] | null = null;
-  if (order_number) {
+  if (order_number && !order_number?.includes("null")) {
     orders = await fetchShopifyOrderByName(domain, shpat, order_number);
   }
 

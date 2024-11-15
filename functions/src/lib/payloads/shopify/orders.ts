@@ -37,7 +37,9 @@ export const cleanCustomerOrdersPayload = (nodes: OrderEdge[]) => {
       is_physical: li.node.requiresShipping,
     }));
 
-    const time_stamp = new Date(n.node.createdAt).getSeconds();
+    // const time_stamp = new Date(n.node.createdAt).getSeconds();
+    const date = new Date(n.node.createdAt);
+    const time_stamp = Math.floor(date.getTime() / 1000);
     cleaned.push({
       tracking_url: tracking,
       order_number: n.node.name || "",

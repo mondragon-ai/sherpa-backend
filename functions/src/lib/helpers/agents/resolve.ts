@@ -12,7 +12,7 @@ export const generateSuggestedAction = async (
   const conversation = generateChatMessages(chat.conversation);
   const customer_summary = generateCustomerSummary(chat, is_action);
 
-  let prompt = customer_summary + "\n" + conversation;
+  const prompt = customer_summary + "\n" + conversation;
   const action = await generateSuggestedActionsGPT(prompt);
   if (!action) return {action: "resolve", prompt};
 

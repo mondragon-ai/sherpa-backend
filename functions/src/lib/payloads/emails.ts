@@ -59,7 +59,7 @@ export const createEmailPayload = async (
       conversation: [
         ...prev_email.conversation,
         {
-          time: time,
+          time: Math.round(Number(time) - 5),
           is_note: false,
           message: "",
           sender: "agent",
@@ -72,7 +72,7 @@ export const createEmailPayload = async (
           attachments: [],
         },
         {
-          time: internal_date,
+          time: time,
           is_note: false,
           message: message,
           sender: "customer",
@@ -143,7 +143,7 @@ export const initializeEmailPyaload = async (
     id: cleaned_email.from || ID,
     conversation: [
       {
-        time: time,
+        time: Math.round(Number(time) - 5),
         is_note: false,
         message: "",
         sender: "agent",
@@ -156,7 +156,7 @@ export const initializeEmailPyaload = async (
         attachments: [],
       },
       {
-        time: internal_date,
+        time: time,
         is_note: false,
         message: message,
         sender: "customer",

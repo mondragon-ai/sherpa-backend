@@ -518,11 +518,33 @@ export const removeGmail = async (domain: string) => {
 
   const {data} = await fetchRootDocument("shopify_merchant", domain);
   const merchant = data as MerchantDocument;
+  if (!merchant) {
+    return createResponse(400, "Merchant not found", null);
+  }
+
+  const {status} = await stopGmailNotification(merchant);
+  if (status > 300) return createResponse(400, "Couldnt Remove Watch", null);
 
   merchant.updated_at = getCurrentUnixTimeStampFromTimezone(merchant.timezone);
   const apps = merchant.apps.filter((a) => a.name !== "gmail");
   merchant.apps = apps;
   await updateRootDocument("shopify_merchant", merchant.id, merchant);
 
-  return createResponse(200, "Removed Recharge", null);
+  return createResponse(200, "Removed Gmail", null);
+};
+
+export const stopGmailNotification = async (merchant: MerchantDocument) => {
+  const access_token = await getValidGmailAccessToken(merchant);
+  if (!access_token) return createResponse(401, "No Token", null);
+
+  const oAuth2Client = new google.auth.OAuth2();
+  oAuth2Client.setCredentials({access_token: access_token});
+  const gmail = google.gmail({version: "v1", auth: oAuth2Client});
+
+  const response = await gmail.users.stop({userId: "me"});
+  if (response.status > 300) {
+    return createResponse(response.status as Status, response.statusText, null);
+  }
+
+  return createResponse(200, "Stopped Listeing", null);
 };
